@@ -3,9 +3,9 @@ use std::convert::TryFrom;
 use anyhow::{Context, Error};
 use k256::ecdsa::VerifyingKey;
 
-pub use crate::proto::cosmos::crypto::secp256k1::PubKey as Secp256k1PubKey;
+pub use crate::types::proto::cosmos::crypto::secp256k1::PubKey as Secp256k1PubKey;
 #[cfg(feature = "ethermint")]
-pub use crate::proto::ethermint::crypto::v1::ethsecp256k1::PubKey as EthSecp256k1PubKey;
+pub use crate::types::proto::ethermint::crypto::v1::ethsecp256k1::PubKey as EthSecp256k1PubKey;
 
 pub const SECP256K1_PUB_KEY_TYPE_URL: &str = "/cosmos.crypto.secp256k1.PubKey";
 #[cfg(feature = "ethermint")]

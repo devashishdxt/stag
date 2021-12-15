@@ -12,8 +12,8 @@ use sha2::Sha256;
 use sha3::Keccak256;
 
 #[cfg(feature = "ethermint")]
-use crate::cosmos::crypto::{EthSecp256k1PubKey, ETH_SECP256K1_PUB_KEY_TYPE_URL};
-use crate::{
+use crate::types::cosmos::crypto::{EthSecp256k1PubKey, ETH_SECP256K1_PUB_KEY_TYPE_URL};
+use crate::types::{
     cosmos::crypto::{Secp256k1PubKey, SECP256K1_PUB_KEY_TYPE_URL},
     proto::AnyConvert,
 };

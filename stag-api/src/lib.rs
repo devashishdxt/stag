@@ -15,17 +15,21 @@
 //! stag.burn(chain_id, 50, "GLD");
 //! ```
 
-#[macro_use]
-mod proto;
-
-mod cosmos;
-mod ics;
-mod public_key;
 mod signer;
-mod transaction_broadcaster;
+mod stag;
+mod storage;
+mod tendermint;
+mod time_util;
+mod types;
 
 pub use self::{
-    ics::core::ics24_host::identifier::ChainId,
-    public_key::{PublicKey, PublicKeyAlgo},
     signer::{GetPublicKey, Message, Signer},
+    stag::{Stag, StagConfig},
+    types::{
+        chain_state::{ChainConfig, ChainState, ConnectionDetails, Fee},
+        ics::core::ics24_host::identifier::{
+            ChainId, ChannelId, ClientId, ConnectionId, Identifier, PortId,
+        },
+        public_key::{PublicKey, PublicKeyAlgo},
+    },
 };

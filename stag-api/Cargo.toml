@@ -9,29 +9,47 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [features]
-default = ["ethermint"]
+default = ["ethermint", "wasm"]
 ethermint = ["sha3"]
+non-wasm = ["surf/curl-client"]
+wasm = ["getrandom", "js-sys", "rexie", "surf/wasm-client"]
 
 [dependencies]
 anyhow = "1.0.51"
+async-lock = "2.4.0"
 async-trait = "0.1.51"
 bech32 = "0.8.1"
 cosmos-sdk-proto = { version = "0.8.0", default-features = false }
+getrandom = { version = "0.2.3", default-features = false, features = [
+    "js",
+], optional = true }
 hex = { version = "0.4.3", features = ["serde"] }
+js-sys = { version = "0.3.55", optional = true }
+jsonrpc-types = "0.3.3"
 k256 = "0.9.6"
+num-rational = { version = "0.4.0", features = ["serde"] }
+primitive-types = "0.10.1"
 prost = "0.9.0"
 prost-types = "0.9.0"
 rand = "0.8.4"
 regex = "1.5.4"
-reqwest = "0.11.7"
+rexie = { path = "../../rexie", optional = true }
 ripemd160 = "0.9.1"
+rust_decimal = "1.18.0"
 serde = { version = "1.0.130", features = ["derive"] }
+serde-wasm-bindgen = "0.3.1"
+serde_json = "1.0.73"
 sha2 = "0.9.8"
 sha3 = { version = "0.9.1", optional = true }
+surf = { version = "2.3.2", default-features = false, features = [
+    "encoding",
+    "middleware-logger",
+] }
 tendermint = "0.23.1"
-
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-getrandom = { version = "0.2.3", features = ["js"] }
+tendermint-light-client = { version = "0.23.2", default-features = false }
+tendermint-rpc = "0.23.2"
+time = { version = "0.3.5", features = ["serde"] }
+url = "2.2.2"
 
 [build-dependencies]
 prost-build = "0.9.0"

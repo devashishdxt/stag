@@ -1,7 +1,7 @@
 use anyhow::Result;
 use async_trait::async_trait;
 
-use crate::{ics::core::ics24_host::identifier::ChainId, public_key::PublicKey};
+use crate::{ChainId, PublicKey};
 
 /// This trait must be implemented by all the public key providers (e.g. mnemonic, ledger, etc.)
 pub trait GetPublicKey {

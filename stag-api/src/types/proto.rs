@@ -40,7 +40,7 @@ pub fn proto_encode<M: Message>(message: &M) -> Result<Vec<u8>> {
 
 macro_rules! impl_any_conversion {
     ($type: ty, $type_url: ident) => {
-        impl $crate::proto::AnyConvert for $type {
+        impl $crate::types::proto::AnyConvert for $type {
             fn from_any(value: &::prost_types::Any) -> ::anyhow::Result<Self> {
                 ::anyhow::ensure!(
                     value.type_url == $type_url,
@@ -55,7 +55,7 @@ macro_rules! impl_any_conversion {
             fn to_any(&self) -> ::anyhow::Result<::prost_types::Any> {
                 Ok(::prost_types::Any {
                     type_url: $type_url.to_owned(),
-                    value: $crate::proto::proto_encode(self)?,
+                    value: $crate::types::proto::proto_encode(self)?,
                 })
             }
         }

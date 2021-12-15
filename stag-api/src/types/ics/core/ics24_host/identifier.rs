@@ -7,7 +7,7 @@ use rand::{distributions::Alphanumeric, Rng};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
-use crate::ics::core::ics02_client::client_type::ClientType;
+use crate::types::ics::core::ics02_client::client_type::ClientType;
 
 pub(crate) const MAX_IDENTIFIER_LEN: usize = 64;
 const VALID_CHAIN_ID_PATTERN: &str = r"^.+[^-]-{1}[1-9][0-9]*$";
@@ -84,7 +84,7 @@ impl ChannelId {
 }
 
 /// A chain identifier
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ChainId {
     id: Identifier,
     version: u64,
@@ -94,6 +94,25 @@ impl ChainId {
     /// Returns version of chain id
     pub fn version(&self) -> u64 {
         self.version
+    }
+}
+
+impl Serialize for ChainId {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&self.to_string())
+    }
+}
+
+impl<'de> Deserialize<'de> for ChainId {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        ChainId::from_str(&s).map_err(serde::de::Error::custom)
     }
 }
 
