@@ -9,33 +9,44 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [features]
-default = ["ethermint", "wasm"]
+default = [
+    "ethermint",
+    "indexed-db-storage",
+    "mnemonic-signer",
+    "tracing-event-handler",
+    "wasm",
+]
 ethermint = ["sha3"]
-non-wasm = ["surf/curl-client"]
-wasm = ["getrandom", "js-sys", "rexie", "surf/wasm-client"]
+indexed-db-storage = ["rexie", "wasm"]
+mnemonic-signer = ["bip32"]
+non-wasm = ["surf/curl-client", "tonic/transport", "tonic-build/transport"]
+tracing-event-handler = ["tracing"]
+wasm = ["getrandom", "grpc-web-client", "js-sys", "surf/wasm-client"]
 
 [dependencies]
 anyhow = "1.0.51"
 async-lock = "2.4.0"
 async-trait = "0.1.51"
 bech32 = "0.8.1"
-cosmos-sdk-proto = { version = "0.8.0", default-features = false }
+bip32 = { version = "0.2.2", features = ["bip39"], optional = true }
 getrandom = { version = "0.2.3", default-features = false, features = [
     "js",
 ], optional = true }
+grpc-web-client = { git = "https://github.com/titanous/grpc-web-client", optional = true }
 hex = { version = "0.4.3", features = ["serde"] }
 js-sys = { version = "0.3.55", optional = true }
 jsonrpc-types = "0.3.3"
 k256 = "0.9.6"
 num-rational = { version = "0.4.0", features = ["serde"] }
-primitive-types = "0.10.1"
+primitive-types = { version = "0.10.1", features = ["serde"] }
 prost = "0.9.0"
 prost-types = "0.9.0"
 rand = "0.8.4"
 regex = "1.5.4"
-rexie = { path = "../../rexie", optional = true }
+rexie = { path = "../../rexie", default-features = false, optional = true }
 ripemd160 = "0.9.1"
 rust_decimal = "1.18.0"
+sealed = "0.3.0"
 serde = { version = "1.0.130", features = ["derive"] }
 serde-wasm-bindgen = "0.3.1"
 serde_json = "1.0.73"
@@ -49,7 +60,18 @@ tendermint = "0.23.1"
 tendermint-light-client = { version = "0.23.2", default-features = false }
 tendermint-rpc = "0.23.2"
 time = { version = "0.3.5", features = ["serde"] }
+tonic = { version = "0.6.2", default-features = false, features = [
+    "codegen",
+    "prost",
+] }
+tracing = { version = "0.1.29", optional = true }
 url = "2.2.2"
+urlencoding = "2.1.0"
+wasm-bindgen = "0.2.78"
+wasm-bindgen-futures = "0.4.28"
 
 [build-dependencies]
-prost-build = "0.9.0"
+tonic-build = { version = "0.6.2", default-features = false, features = [
+    "rustfmt",
+    "prost",
+] }

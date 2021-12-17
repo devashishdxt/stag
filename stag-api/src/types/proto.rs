@@ -1,7 +1,49 @@
 pub mod cosmos {
+    pub mod bank {
+        pub mod v1beta1 {
+            tonic::include_proto!("cosmos.bank.v1beta1");
+        }
+    }
+
+    pub mod base {
+        pub mod query {
+            pub mod v1beta1 {
+                tonic::include_proto!("cosmos.base.query.v1beta1");
+            }
+        }
+
+        pub mod v1beta1 {
+            tonic::include_proto!("cosmos.base.v1beta1");
+        }
+    }
+
     pub mod crypto {
+        pub mod multisig {
+            pub mod v1beta1 {
+                tonic::include_proto!("cosmos.crypto.multisig.v1beta1");
+            }
+        }
+
         pub mod secp256k1 {
-            include!(concat!(env!("OUT_DIR"), "/cosmos.crypto.secp256k1.rs"));
+            tonic::include_proto!("cosmos.crypto.secp256k1");
+        }
+    }
+
+    pub mod tx {
+        pub mod signing {
+            pub mod v1beta1 {
+                tonic::include_proto!("cosmos.tx.signing.v1beta1");
+            }
+        }
+
+        pub mod v1beta1 {
+            tonic::include_proto!("cosmos.tx.v1beta1");
+        }
+    }
+
+    pub mod upgrade {
+        pub mod v1beta1 {
+            tonic::include_proto!("cosmos.upgrade.v1beta1");
         }
     }
 }
@@ -11,13 +53,30 @@ pub mod ethermint {
     pub mod crypto {
         pub mod v1 {
             pub mod ethsecp256k1 {
-                include!(concat!(
-                    env!("OUT_DIR"),
-                    "/ethermint.crypto.v1.ethsecp256k1.rs"
-                ));
+                tonic::include_proto!("ethermint.crypto.v1.ethsecp256k1");
             }
         }
     }
+}
+
+pub mod ibc {
+    pub mod core {
+        pub mod client {
+            pub mod v1 {
+                tonic::include_proto!("ibc.core.client.v1");
+            }
+        }
+
+        pub mod commitment {
+            pub mod v1 {
+                tonic::include_proto!("ibc.core.commitment.v1");
+            }
+        }
+    }
+}
+
+pub mod ics23 {
+    tonic::include_proto!("ics23");
 }
 
 use anyhow::{Context, Result};

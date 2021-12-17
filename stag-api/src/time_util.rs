@@ -1,12 +1,16 @@
-use anyhow::{anyhow, Result};
-use time::{Month, OffsetDateTime};
+#[cfg(feature = "wasm")]
+use anyhow::anyhow;
+use anyhow::Result;
+#[cfg(feature = "wasm")]
+use time::Month;
+use time::OffsetDateTime;
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(not(feature = "wasm"))]
 pub fn now_utc() -> Result<OffsetDateTime> {
     Ok(OffsetDateTime::now_utc())
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(feature = "wasm")]
 pub fn now_utc() -> Result<OffsetDateTime> {
     use time::PrimitiveDateTime;
 
@@ -28,7 +32,7 @@ pub fn now_utc() -> Result<OffsetDateTime> {
     Ok(PrimitiveDateTime::new(primitive_date, primitive_time).assume_utc())
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(feature = "wasm")]
 fn get_month(month: u32) -> Result<Month> {
     match month {
         0 => Ok(Month::January),

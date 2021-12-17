@@ -1,10 +1,12 @@
 use anyhow::Result;
-use cosmos_sdk_proto::cosmos::tx::v1beta1::TxRaw;
 use tendermint_light_client::types::{LightBlock, ValidatorSet};
 use tendermint_rpc::endpoint::{broadcast, commit, status, validators};
 use url::Url;
 
-use crate::{tendermint::json_rpc_client::JsonRpcClient, types::proto::proto_encode};
+use crate::{
+    tendermint::json_rpc_client::JsonRpcClient,
+    types::proto::{cosmos::tx::v1beta1::TxRaw, proto_encode},
+};
 
 /// Responsible for broadcasting transactions to tendermint using JSON-RPC
 #[derive(Debug)]

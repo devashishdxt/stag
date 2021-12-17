@@ -1,13 +1,30 @@
 use std::time::Duration;
 
+#[cfg(not(feature = "wasm"))]
+use anyhow::Context;
+use anyhow::{ensure, Result};
+#[cfg(feature = "wasm")]
+use grpc_web_client::Client;
 use num_rational::Ratio;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
-use tendermint::{block::Height as BlockHeight, node::Id as NodeId};
+use sha2::{Digest, Sha256};
+use tendermint::node::Id as NodeId;
 use time::OffsetDateTime;
+#[cfg(not(feature = "wasm"))]
+use tonic::transport::Channel;
 use url::Url;
 
-use crate::{ChainId, ChannelId, ClientId, ConnectionId, Identifier, PortId};
+use crate::{
+    signer::GetPublicKey,
+    types::{
+        ics::core::ics24_host::path::DenomTrace,
+        proto::cosmos::bank::v1beta1::{
+            query_client::QueryClient as BankQueryClient, QueryBalanceRequest,
+        },
+    },
+    ChainId, ChannelId, ClientId, ConnectionId, Identifier, PortId,
+};
 
 /// State of an IBC enabled chain
 #[derive(Debug, Serialize, Deserialize)]
@@ -52,7 +69,7 @@ pub struct ConnectionDetails {
 }
 
 /// Configuration related to an IBC enabled chain
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ChainConfig {
     /// gRPC address
@@ -81,7 +98,7 @@ pub struct ChainConfig {
 }
 
 /// Fee and gas configuration
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Fee {
     /// Fee amount
@@ -90,4 +107,93 @@ pub struct Fee {
     pub denom: Identifier,
     /// Gas limit
     pub gas_limit: u64,
+}
+
+/// Signer's public key entry for an IBC enabled chain
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ChainKey {
+    /// ID of key
+    pub id: i64,
+    /// Chain ID
+    pub chain_id: ChainId,
+    /// Public key of signer
+    pub public_key: String,
+    /// Creation time of chain key entry
+    pub created_at: OffsetDateTime,
+}
+
+/// Signer's public key entry for an IBC enabled chain
+#[derive(Debug, Serialize)]
+pub struct ChainKeyRequest<'a> {
+    /// Chain ID
+    pub chain_id: &'a ChainId,
+    /// Public key of signer
+    pub public_key: &'a str,
+    /// Creation time of chain key entry
+    pub created_at: OffsetDateTime,
+}
+
+impl ChainState {
+    /// Returns the IBC denom of given denomination based on connection details. Returns `None` if connection details
+    /// are not present.
+    pub fn get_ibc_denom(&self, denom: &Identifier) -> Result<String> {
+        let connection_details = self.connection_details.as_ref();
+        ensure!(
+            connection_details.is_some(),
+            "connection is not established with given chain"
+        );
+        let connection_details = connection_details.unwrap();
+        ensure!(
+            connection_details.solo_machine_channel_id.is_some(),
+            "can't find solo machine channel, channel is already closed"
+        );
+
+        let denom_trace = DenomTrace::new(
+            &self.config.port_id,
+            connection_details.solo_machine_channel_id.as_ref().unwrap(),
+            denom,
+        );
+
+        let hash = Sha256::digest(denom_trace.to_string().as_bytes());
+
+        Ok(format!("ibc/{}", hex::encode_upper(hash)))
+    }
+
+    /// Fetches on-chain balance of given denom
+    pub async fn get_balance(
+        &self,
+        signer: impl GetPublicKey,
+        denom: &Identifier,
+    ) -> Result<Decimal> {
+        let mut query_client = get_bank_query_client(self.config.grpc_addr.to_string()).await?;
+
+        let denom = self.get_ibc_denom(denom)?;
+
+        let request = QueryBalanceRequest {
+            address: signer.to_account_address(&self.id)?,
+            denom,
+        };
+
+        Ok(query_client
+            .balance(request)
+            .await?
+            .into_inner()
+            .balance
+            .map(|coin| coin.amount.parse())
+            .transpose()?
+            .unwrap_or_default())
+    }
+}
+
+#[cfg(feature = "wasm")]
+async fn get_bank_query_client(grpc_addr: String) -> Result<BankQueryClient<Client>> {
+    let grpc_client = Client::new(grpc_addr);
+    Ok(BankQueryClient::new(grpc_client))
+}
+
+#[cfg(not(feature = "wasm"))]
+async fn get_bank_query_client(grpc_addr: String) -> Result<BankQueryClient<Channel>> {
+    BankQueryClient::connect(grpc_addr)
+        .await
+        .context("error when initializing grpc client")
 }

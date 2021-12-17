@@ -15,6 +15,8 @@
 //! stag.burn(chain_id, 50, "GLD");
 //! ```
 
+mod event;
+mod service;
 mod signer;
 mod stag;
 mod storage;
@@ -23,13 +25,24 @@ mod time_util;
 mod types;
 
 pub use self::{
-    signer::{GetPublicKey, Message, Signer},
-    stag::{Stag, StagConfig},
+    event::EventHandlerConfig,
+    signer::SignerConfig,
+    stag::Stag,
+    storage::StorageConfig,
     types::{
-        chain_state::{ChainConfig, ChainState, ConnectionDetails, Fee},
+        chain_state::{ChainConfig, ChainKey, ChainState, ConnectionDetails, Fee},
         ics::core::ics24_host::identifier::{
             ChainId, ChannelId, ClientId, ConnectionId, Identifier, PortId,
         },
         public_key::{PublicKey, PublicKeyAlgo},
     },
 };
+
+#[cfg(feature = "tracing-event-handler")]
+pub use self::event::TracingEventHandler;
+
+#[cfg(feature = "indexed-db-storage")]
+pub use self::storage::IndexedDb;
+
+#[cfg(feature = "mnemonic-signer")]
+pub use self::signer::MnemonicSigner;
