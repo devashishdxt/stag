@@ -2,10 +2,13 @@ use anyhow::Result;
 use async_trait::async_trait;
 use sealed::sealed;
 
+use crate::trait_util::Base;
+
 #[cfg(feature = "indexed-db-storage")]
 use super::indexed_db_storage::IndexedDbStorage;
 use super::TransactionProvider;
 
+#[cfg_attr(feature = "doc", doc(cfg(feature = "indexed-db-storage")))]
 #[cfg(feature = "indexed-db-storage")]
 /// Storage backend for browsers using Indexed DB
 pub struct IndexedDb {
@@ -29,14 +32,19 @@ impl IndexedDb {
 #[cfg_attr(not(feature = "wasm"), async_trait)]
 #[cfg_attr(feature = "wasm", async_trait(?Send))]
 #[sealed]
-pub trait StorageConfig {
+/// Configuration for storage backend
+pub trait StorageConfig: Base {
+    /// Concrete storage backend type that this config will produce
     type Storage: TransactionProvider;
 
+    /// Create concrete storage backend from this config
     async fn into_storage(self) -> Result<Self::Storage>;
 }
 
+#[cfg_attr(feature = "doc", doc(cfg(feature = "indexed-db-storage")))]
 #[cfg(feature = "indexed-db-storage")]
-#[async_trait(?Send)]
+#[cfg_attr(not(feature = "wasm"), async_trait)]
+#[cfg_attr(feature = "wasm", async_trait(?Send))]
 #[sealed]
 impl StorageConfig for IndexedDb {
     type Storage = IndexedDbStorage;

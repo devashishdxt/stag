@@ -15,6 +15,20 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     tonic_build::configure()
         .build_server(false)
+        .extern_path(
+            ".cosmos.auth.v1beta1",
+            "::cosmos_sdk_proto::cosmos::auth::v1beta1",
+        )
+        .extern_path(".cosmos.base", "::cosmos_sdk_proto::cosmos::base")
+        .extern_path(
+            ".cosmos.bank.v1beta1",
+            "::cosmos_sdk_proto::cosmos::bank::v1beta1",
+        )
+        .extern_path(
+            ".cosmos.staking.v1beta1",
+            "::cosmos_sdk_proto::cosmos::staking::v1beta1",
+        )
+        .extern_path(".ibc.core", "::cosmos_sdk_proto::ibc::core")
         .compile(&files, &["proto"])?;
 
     Ok(())

@@ -2,14 +2,12 @@ use core::fmt;
 use std::{convert::TryFrom, ops::Deref, str::FromStr};
 
 use anyhow::{ensure, Error};
+use cosmos_sdk_proto::ibc::core::commitment::v1::MerklePrefix;
 use rand::{distributions::Alphanumeric, Rng};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
-use crate::types::{
-    ics::core::ics02_client::client_type::ClientType,
-    proto::ibc::core::commitment::v1::MerklePrefix,
-};
+use crate::types::ics::core::ics02_client::client_type::ClientType;
 
 pub(crate) const MAX_IDENTIFIER_LEN: usize = 64;
 const VALID_CHAIN_ID_PATTERN: &str = r"^.+[^-]-{1}[1-9][0-9]*$";

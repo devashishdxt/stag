@@ -3,7 +3,7 @@ use std::{cmp::Ordering, convert::TryFrom};
 use anyhow::{anyhow, ensure, Context, Error};
 use tendermint::block::Height as BlockHeight;
 
-use crate::types::proto::ibc::core::client::v1::Height;
+use cosmos_sdk_proto::ibc::core::client::v1::Height;
 
 pub trait IHeight: Sized {
     fn new(revision_number: u64, revision_height: u64) -> Self;

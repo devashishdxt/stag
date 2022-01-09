@@ -1,10 +1,9 @@
 // Some part of this file is taken from the original project. https://github.com/informalsystems/tendermint-rs
 // Copyright © 2020 Informal Systems
 
-use std::{ops::Deref, sync::Arc, time::Duration};
+use std::{sync::Arc, time::Duration};
 
 use anyhow::{anyhow, bail, Context, Result};
-use async_lock::Mutex;
 use tendermint::{block::Height, trust_threshold::TrustThresholdFraction, Hash, Time};
 use tendermint_light_client::{
     components::{
@@ -16,19 +15,31 @@ use tendermint_light_client::{
     store::memory::MemoryStore,
     types::{LightBlock, Status},
 };
+use tokio::sync::Mutex;
 use url::Url;
 
-use crate::{tendermint::tendermint_client::TendermintClient, time_util::now_utc, ChainState};
+use crate::{time_util::now_utc, types::chain_state::ChainState};
 
-pub struct LightClient {
+use super::tendermint_client::TendermintClient;
+
+/// Tendermint light client
+pub struct LightClient<T>
+where
+    T: TendermintClient,
+{
+    url: Url,
     state: Arc<Mutex<State>>,
-    tendermint_client: TendermintClient,
+    tendermint_client: T,
     verifier: ProdVerifier,
     options: Options,
 }
 
-impl LightClient {
-    pub async fn new(url: Url, chain_state: &ChainState) -> Result<Self> {
+impl<T> LightClient<T>
+where
+    T: TendermintClient,
+{
+    /// Creates a new tendermint light client
+    pub async fn new(url: Url, tendermint_client: T, chain_state: &ChainState) -> Result<Self> {
         let options = Options {
             trust_threshold: TrustThresholdFraction::new(
                 *chain_state.config.trust_level.numer(),
@@ -40,8 +51,9 @@ impl LightClient {
         };
 
         let this = LightClient {
+            url,
             state: Arc::new(Mutex::new(State::new(MemoryStore::new()))),
-            tendermint_client: TendermintClient::new(url),
+            tendermint_client,
             verifier: Default::default(),
             options,
         };
@@ -55,36 +67,9 @@ impl LightClient {
         Ok(this)
     }
 
-    pub async fn trust_block(&self, trusted_height: u32, trusted_hash: [u8; 32]) -> Result<()> {
-        let trusted_block = self
-            .tendermint_client
-            .light_block(Some(trusted_height))
-            .await?;
-
-        if trusted_block.height() != trusted_height.into() {
-            bail!(
-                "Trusted block height [{}] does not match trusted height [{}]",
-                trusted_block.height(),
-                trusted_height
-            );
-        }
-
-        let header_hash = trusted_block.signed_header.header.hash();
-        let trusted_hash = Hash::Sha256(trusted_hash);
-
-        if header_hash != trusted_hash {
-            bail!(
-                "Trusted block hash [{}] does not match trusted hash [{}]",
-                header_hash,
-                trusted_hash
-            );
-        }
-
-        self.trust_light_block(trusted_block).await
-    }
-
+    /// Runs the light client verification process until the latest block
     pub async fn verify_to_highest(&self) -> Result<LightBlock> {
-        let target_block = self.tendermint_client.light_block(None).await?;
+        let target_block = self.tendermint_client.light_block(&self.url, None).await?;
         let target_height = target_block.height();
 
         let mut state = self.state.lock().await;
@@ -110,6 +95,35 @@ impl LightClient {
         }
     }
 
+    /// Adds a block to trusted state
+    async fn trust_block(&self, trusted_height: u32, trusted_hash: [u8; 32]) -> Result<()> {
+        let trusted_block = self
+            .tendermint_client
+            .light_block(&self.url, Some(trusted_height))
+            .await?;
+
+        if trusted_block.height() != trusted_height.into() {
+            bail!(
+                "Trusted block height [{}] does not match trusted height [{}]",
+                trusted_block.height(),
+                trusted_height
+            );
+        }
+
+        let header_hash = trusted_block.signed_header.header.hash();
+        let trusted_hash = Hash::Sha256(trusted_hash);
+
+        if header_hash != trusted_hash {
+            bail!(
+                "Trusted block hash [{}] does not match trusted hash [{}]",
+                header_hash,
+                trusted_hash
+            );
+        }
+
+        self.trust_light_block(trusted_block).await
+    }
+
     /// Set the given light block as the initial trusted state.
     async fn trust_light_block(&self, trusted_block: LightBlock) -> Result<()> {
         self.validate(&trusted_block)?;
@@ -122,6 +136,7 @@ impl LightClient {
         Ok(())
     }
 
+    /// Validates a light block
     fn validate(&self, light_block: &LightBlock) -> Result<()> {
         let now = now()?;
 
@@ -291,7 +306,7 @@ impl LightClient {
     ///
     /// ## Postcondition
     /// - The provider of block that is returned matches the given peer.
-    pub async fn get_or_fetch_block(
+    async fn get_or_fetch_block(
         &self,
         height: Height,
         state: &mut State,
@@ -304,20 +319,12 @@ impl LightClient {
 
         let block = self
             .tendermint_client
-            .light_block(Some(height.value().try_into()?))
+            .light_block(&self.url, Some(height.value().try_into()?))
             .await?;
 
         state.light_store.insert(block.clone(), Status::Unverified);
 
         Ok((block, Status::Unverified))
-    }
-}
-
-impl Deref for LightClient {
-    type Target = TendermintClient;
-
-    fn deref(&self) -> &Self::Target {
-        &self.tendermint_client
     }
 }
 
@@ -379,6 +386,7 @@ fn next_validators_match(light_block: &LightBlock) -> Result<()> {
     }
 }
 
+/// Returns current time
 fn now() -> Result<Time> {
     let offset_date_time = now_utc()?;
     offset_date_time.try_into().context("invalid time")

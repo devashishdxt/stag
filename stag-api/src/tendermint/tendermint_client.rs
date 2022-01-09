@@ -1,69 +1,69 @@
 use anyhow::Result;
+use async_trait::async_trait;
+use cosmos_sdk_proto::cosmos::tx::v1beta1::TxRaw;
 use tendermint_light_client::types::{LightBlock, ValidatorSet};
 use tendermint_rpc::endpoint::{broadcast, commit, status, validators};
 use url::Url;
 
-use crate::{
-    tendermint::json_rpc_client::JsonRpcClient,
-    types::proto::{cosmos::tx::v1beta1::TxRaw, proto_encode},
-};
+use crate::{tendermint::rpc_client::JsonRpcClient, types::proto_util::proto_encode};
 
-/// Responsible for broadcasting transactions to tendermint using JSON-RPC
-#[derive(Debug)]
-pub struct TendermintClient {
-    rpc_client: JsonRpcClient,
-    url: Url,
-}
+#[cfg_attr(not(feature = "wasm"), async_trait)]
+#[cfg_attr(feature = "wasm", async_trait(?Send))]
+/// Helper trait to send a transaction to a tendermint node (auto-implemented for json rpc client)
+pub trait TendermintClient: JsonRpcClient {
+    /// Sends status request to tendermint node
+    async fn status(&self, url: &Url) -> Result<status::Response> {
+        self.send(url, "status", status::Request).await
+    }
 
-impl TendermintClient {
-    /// Creates a new tendermint RPC client
-    pub fn new(url: Url) -> Self {
-        Self {
-            rpc_client: JsonRpcClient::new(),
+    /// Sends broadcast_tx request to tendermint node
+    async fn broadcast_tx(
+        &self,
+        url: &Url,
+        transaction: TxRaw,
+    ) -> Result<broadcast::tx_commit::Response> {
+        self.send(
             url,
-        }
+            "broadcast_tx_commit",
+            broadcast::tx_commit::Request {
+                tx: proto_encode(&transaction)?.into(),
+            },
+        )
+        .await
     }
 
-    pub fn set_url(&mut self, url: Url) {
-        self.url = url;
+    /// Sends commit request to tendermint node
+    async fn commit(&self, url: &Url, height: Option<u32>) -> Result<commit::Response> {
+        let height = height.map(Into::into);
+        self.send(url, "commit", commit::Request { height }).await
     }
 
-    pub async fn light_block(&self, height: Option<u32>) -> Result<LightBlock> {
-        let signed_header = self.commit(height).await?.signed_header;
+    /// Sends validators request to tendermint node
+    async fn validators(
+        &self,
+        url: &Url,
+        height: Option<u32>,
+        page_number: Option<usize>,
+        per_page: Option<u8>,
+    ) -> Result<validators::Response> {
+        let mut request = validators::Request::default();
+        request.height = height.map(Into::into);
+        request.page = page_number.map(Into::into);
+        request.per_page = per_page.map(Into::into);
 
-        let height = signed_header.header.height;
-        let proposer_address = signed_header.header.proposer_address;
-
-        let validators = ValidatorSet::with_proposer(
-            self.all_validators(Some(height.value().try_into()?))
-                .await?
-                .validators,
-            proposer_address,
-        )?;
-
-        let next_validators = ValidatorSet::without_proposer(
-            self.all_validators(Some(height.increment().value().try_into()?))
-                .await?
-                .validators,
-        );
-
-        let provider = self.status().await?.node_info.id;
-
-        Ok(LightBlock {
-            signed_header,
-            validators,
-            next_validators,
-            provider,
-        })
+        self.send(url, "validators", request).await
     }
 
-    pub async fn all_validators(&self, height: Option<u32>) -> Result<validators::Response> {
+    /// Fetches all the validators from tendermint node
+    async fn all_validators(&self, url: &Url, height: Option<u32>) -> Result<validators::Response> {
         let mut validators = Vec::new();
 
         let mut page_number = 1;
 
         loop {
-            let response = self.validators(height, Some(page_number), Some(30)).await?;
+            let response = self
+                .validators(url, height, Some(page_number), Some(30))
+                .await?;
             validators.extend(response.validators);
 
             if validators.len() as i32 == response.total {
@@ -78,44 +78,37 @@ impl TendermintClient {
         }
     }
 
-    pub async fn validators(
-        &self,
-        height: Option<u32>,
-        page_number: Option<usize>,
-        per_page: Option<u8>,
-    ) -> Result<validators::Response> {
-        let mut request = validators::Request::default();
-        request.height = height.map(Into::into);
-        request.page = page_number.map(Into::into);
-        request.per_page = per_page.map(Into::into);
+    /// Fetches light block from tendermint node
+    async fn light_block(&self, url: &Url, height: Option<u32>) -> Result<LightBlock> {
+        let signed_header = self.commit(url, height).await?.signed_header;
 
-        self.rpc_client.send(&self.url, "validators", request).await
-    }
+        let height = signed_header.header.height;
+        let proposer_address = signed_header.header.proposer_address;
 
-    pub async fn commit(&self, height: Option<u32>) -> Result<commit::Response> {
-        let height = height.map(Into::into);
+        let validators = ValidatorSet::with_proposer(
+            self.all_validators(url, Some(height.value().try_into()?))
+                .await?
+                .validators,
+            proposer_address,
+        )?;
 
-        self.rpc_client
-            .send(&self.url, "commit", commit::Request { height })
-            .await
-    }
+        let next_validators = ValidatorSet::without_proposer(
+            self.all_validators(url, Some(height.increment().value().try_into()?))
+                .await?
+                .validators,
+        );
 
-    pub async fn status(&self) -> Result<status::Response> {
-        self.rpc_client
-            .send(&self.url, "status", status::Request)
-            .await
-    }
+        let provider = self.status(url).await?.node_info.id;
 
-    /// Broadcasts transaction and returns transaction hash and deliver_tx response
-    pub async fn broadcast_tx(&self, transaction: TxRaw) -> Result<broadcast::tx_commit::Response> {
-        self.rpc_client
-            .send(
-                &self.url,
-                "broadcast_tx_commit",
-                broadcast::tx_commit::Request {
-                    tx: proto_encode(&transaction)?.into(),
-                },
-            )
-            .await
+        Ok(LightBlock {
+            signed_header,
+            validators,
+            next_validators,
+            provider,
+        })
     }
 }
+
+#[cfg_attr(not(feature = "wasm"), async_trait)]
+#[cfg_attr(feature = "wasm", async_trait(?Send))]
+impl<C> TendermintClient for C where C: JsonRpcClient {}

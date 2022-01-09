@@ -1,34 +1,39 @@
 [package]
 name = "stag-api"
 version = "0.1.0"
+authors = ["Devashish Dixit <devashishdxt@gmail.com>"]
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
 [features]
 default = [
+    "console_error_panic_hook",
     "ethermint",
     "indexed-db-storage",
     "mnemonic-signer",
+    "reqwest-client",
     "tracing-event-handler",
     "wasm",
+    # "non-wasm",
 ]
+doc = []
 ethermint = ["sha3"]
 indexed-db-storage = ["rexie", "wasm"]
 mnemonic-signer = ["bip32"]
-non-wasm = ["surf/curl-client", "tonic/transport", "tonic-build/transport"]
+non-wasm = ["tonic/transport", "tonic-build/transport"]
+reqwest-client = ["reqwest"]
 tracing-event-handler = ["tracing"]
-wasm = ["getrandom", "grpc-web-client", "js-sys", "surf/wasm-client"]
+wasm = ["getrandom", "grpc-web-client", "js-sys"]
 
 [dependencies]
-anyhow = "1.0.51"
-async-lock = "2.4.0"
-async-trait = "0.1.51"
+anyhow = "1.0.52"
+async-trait = "0.1.52"
 bech32 = "0.8.1"
-bip32 = { version = "0.2.2", features = ["bip39"], optional = true }
+bip32 = { version = "0.3.0", features = ["bip39"], optional = true }
+console_error_panic_hook = { version = "0.1.7", optional = true }
+cosmos-sdk-proto = { version = "0.8.0", default-features = false }
 getrandom = { version = "0.2.3", default-features = false, features = [
     "js",
 ], optional = true }
@@ -36,39 +41,41 @@ grpc-web-client = { git = "https://github.com/titanous/grpc-web-client", optiona
 hex = { version = "0.4.3", features = ["serde"] }
 js-sys = { version = "0.3.55", optional = true }
 jsonrpc-types = "0.3.3"
-k256 = "0.9.6"
+k256 = "0.10.1"
 num-rational = { version = "0.4.0", features = ["serde"] }
 primitive-types = { version = "0.10.1", features = ["serde"] }
 prost = "0.9.0"
 prost-types = "0.9.0"
 rand = "0.8.4"
 regex = "1.5.4"
+reqwest = { version = "0.11.8", optional = true }
 rexie = { path = "../../rexie", default-features = false, optional = true }
 ripemd160 = "0.9.1"
-rust_decimal = "1.18.0"
+rust_decimal = "1.19.0"
 sealed = "0.3.0"
-serde = { version = "1.0.130", features = ["derive"] }
-serde-wasm-bindgen = "0.3.1"
-serde_json = "1.0.73"
-sha2 = "0.9.8"
+serde = { version = "1.0.133", features = ["derive"] }
+serde-wasm-bindgen = "0.4.1"
+serde_json = "1.0.74"
+sha2 = "0.9.9"
 sha3 = { version = "0.9.1", optional = true }
-surf = { version = "2.3.2", default-features = false, features = [
-    "encoding",
-    "middleware-logger",
-] }
-tendermint = "0.23.1"
-tendermint-light-client = { version = "0.23.2", default-features = false }
-tendermint-rpc = "0.23.2"
+tendermint = "0.23.3"
+tendermint-light-client = { version = "0.23.3", default-features = false }
+tendermint-rpc = "0.23.3"
 time = { version = "0.3.5", features = ["serde"] }
+tokio = { version = "1.15.0", features = ["sync"] }
 tonic = { version = "0.6.2", default-features = false, features = [
     "codegen",
     "prost",
 ] }
 tracing = { version = "0.1.29", optional = true }
-url = "2.2.2"
+url = { version = "2.2.2", features = ["serde"] }
 urlencoding = "2.1.0"
 wasm-bindgen = "0.2.78"
 wasm-bindgen-futures = "0.4.28"
+wee_alloc = { version = "0.4.5", optional = true }
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.28"
 
 [build-dependencies]
 tonic-build = { version = "0.6.2", default-features = false, features = [

@@ -2,12 +2,12 @@ use std::{fmt, str::FromStr};
 
 use anyhow::{anyhow, Error, Result};
 use bech32::{ToBase32, Variant};
-use k256::ecdsa::VerifyingKey;
+use k256::{ecdsa::VerifyingKey, elliptic_curve::sec1::ToEncodedPoint};
 use prost::Message;
 use prost_types::Any;
-use ripemd160::{Digest, Ripemd160};
+use ripemd160::Ripemd160;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use sha2::Sha256;
+use sha2::{Digest, Sha256};
 #[cfg(feature = "ethermint")]
 use sha3::Keccak256;
 
@@ -15,8 +15,10 @@ use sha3::Keccak256;
 use crate::types::cosmos::crypto::{EthSecp256k1PubKey, ETH_SECP256K1_PUB_KEY_TYPE_URL};
 use crate::types::{
     cosmos::crypto::{Secp256k1PubKey, SECP256K1_PUB_KEY_TYPE_URL},
-    proto::AnyConvert,
+    proto_util::AnyConvert,
 };
+
+use super::cosmos::crypto::{from_verifying_key, into_verifying_key};
 
 /// Supported algorithms for address generation
 #[derive(Debug, Clone, Copy)]
@@ -107,9 +109,8 @@ impl PublicKey {
             Self::EthSecp256k1(ref key) => {
                 use k256::EncodedPoint;
 
-                let encoded_point: EncodedPoint = key.into();
-                let hash =
-                    Keccak256::digest(&encoded_point.to_untagged_bytes().unwrap())[12..].to_vec();
+                let encoded_point: EncodedPoint = key.to_encoded_point(false);
+                let hash = Keccak256::digest(&encoded_point.as_bytes()[1..])[12..].to_vec();
 
                 Ok(hash)
             }
@@ -147,7 +148,7 @@ impl AnyConvert for PublicKey {
             }
             SECP256K1_PUB_KEY_TYPE_URL => {
                 let public_key: Secp256k1PubKey = Secp256k1PubKey::decode(value.value.as_slice())?;
-                Ok(Self::Secp256k1(TryFrom::try_from(&public_key)?))
+                Ok(Self::Secp256k1(into_verifying_key(&public_key)?))
             }
             other => Err(anyhow!("unknown type url for `Any` type: `{}`", other)),
         }
@@ -161,7 +162,7 @@ impl AnyConvert for PublicKey {
                 public_key.to_any()
             }
             Self::Secp256k1(ref key) => {
-                let public_key: Secp256k1PubKey = key.into();
+                let public_key: Secp256k1PubKey = from_verifying_key(key);
                 public_key.to_any()
             }
         }

@@ -1,0 +1,222 @@
+use anyhow::{anyhow, Result};
+use cosmos_sdk_proto::ibc::core::channel::v1::{
+    Channel, Counterparty as ChannelCounterparty, Order as ChannelOrder, State as ChannelState,
+};
+
+use crate::{
+    event::{Event, EventHandler},
+    service::ibc_service::common::{ensure_response_success, extract_attribute},
+    signer::Signer,
+    stag::StagContext,
+    storage::Transaction,
+    tendermint::TendermintClient,
+    transaction_builder,
+    types::{
+        chain_state::ChainState,
+        ics::core::ics24_host::identifier::{ChannelId, ConnectionId, PortId},
+    },
+};
+
+pub async fn open_channel<C, T>(
+    context: &C,
+    transaction: &T,
+    chain_state: &mut ChainState,
+    request_id: Option<&str>,
+    memo: String,
+    solo_machine_connection_id: &ConnectionId,
+    tendermint_connection_id: &ConnectionId,
+) -> Result<(ChannelId, ChannelId)>
+where
+    C: StagContext,
+    C::Signer: Signer,
+    C::RpcClient: TendermintClient,
+    T: Transaction,
+{
+    let solo_machine_channel_id = channel_open_init(
+        context,
+        chain_state,
+        solo_machine_connection_id,
+        memo.clone(),
+        request_id,
+    )
+    .await?;
+
+    context
+        .handle_event(Event::InitializedChannelOnTendermint {
+            channel_id: solo_machine_channel_id.clone(),
+        })
+        .await?;
+
+    let tendermint_channel_id = channel_open_try(
+        transaction,
+        &chain_state.config.port_id,
+        &solo_machine_channel_id,
+        tendermint_connection_id,
+    )
+    .await?;
+
+    context
+        .handle_event(Event::InitializedChannelOnSoloMachine {
+            channel_id: tendermint_channel_id.clone(),
+        })
+        .await?;
+
+    channel_open_ack(
+        context,
+        transaction,
+        chain_state,
+        &solo_machine_channel_id,
+        &tendermint_channel_id,
+        memo,
+        request_id,
+    )
+    .await?;
+
+    context
+        .handle_event(Event::ConfirmedChannelOnTendermint {
+            channel_id: solo_machine_channel_id.clone(),
+        })
+        .await?;
+
+    channel_open_confirm(
+        transaction,
+        &chain_state.config.port_id,
+        &tendermint_channel_id,
+    )
+    .await?;
+
+    context
+        .handle_event(Event::ConfirmedChannelOnSoloMachine {
+            channel_id: tendermint_channel_id.clone(),
+        })
+        .await?;
+
+    Ok((solo_machine_channel_id, tendermint_channel_id))
+}
+
+async fn channel_open_init<C>(
+    context: &C,
+    chain_state: &ChainState,
+    solo_machine_connection_id: &ConnectionId,
+    memo: String,
+    request_id: Option<&str>,
+) -> Result<ChannelId>
+where
+    C: StagContext,
+    C::Signer: Signer,
+    C::RpcClient: TendermintClient,
+{
+    let msg = transaction_builder::msg_channel_open_init(
+        context,
+        chain_state,
+        solo_machine_connection_id,
+        memo,
+        request_id,
+    )
+    .await?;
+
+    let response = context
+        .rpc_client()
+        .broadcast_tx(&chain_state.config.rpc_addr, msg)
+        .await?;
+
+    ensure_response_success(&response)?;
+
+    extract_attribute(
+        &response.deliver_tx.events,
+        "channel_open_init",
+        "channel_id",
+    )?
+    .parse()
+}
+
+async fn channel_open_try<T>(
+    transaction: &T,
+    port_id: &PortId,
+    solo_machine_channel_id: &ChannelId,
+    tendermint_connection_id: &ConnectionId,
+) -> Result<ChannelId>
+where
+    T: Transaction,
+{
+    let channel_id = ChannelId::generate();
+
+    let channel = Channel {
+        state: ChannelState::Tryopen.into(),
+        ordering: ChannelOrder::Unordered.into(),
+        counterparty: Some(ChannelCounterparty {
+            port_id: port_id.to_string(),
+            channel_id: solo_machine_channel_id.to_string(),
+        }),
+        connection_hops: vec![tendermint_connection_id.to_string()],
+        version: "ics20-1".to_string(),
+    };
+
+    transaction
+        .add_channel(port_id, &channel_id, &channel)
+        .await?;
+
+    Ok(channel_id)
+}
+
+async fn channel_open_ack<C, T>(
+    context: &C,
+    transaction: &T,
+    chain_state: &mut ChainState,
+    solo_machine_channel_id: &ChannelId,
+    tendermint_channel_id: &ChannelId,
+    memo: String,
+    request_id: Option<&str>,
+) -> Result<()>
+where
+    C: StagContext,
+    C::Signer: Signer,
+    C::RpcClient: TendermintClient,
+    T: Transaction,
+{
+    let msg = transaction_builder::msg_channel_open_ack(
+        context,
+        transaction,
+        chain_state,
+        solo_machine_channel_id,
+        tendermint_channel_id,
+        memo,
+        request_id,
+    )
+    .await?;
+
+    let response = context
+        .rpc_client()
+        .broadcast_tx(&chain_state.config.rpc_addr, msg)
+        .await?;
+
+    ensure_response_success(&response)?;
+
+    Ok(())
+}
+
+async fn channel_open_confirm<T>(
+    transaction: &T,
+    port_id: &PortId,
+    channel_id: &ChannelId,
+) -> Result<()>
+where
+    T: Transaction,
+{
+    let mut channel = transaction
+        .get_channel(port_id, channel_id)
+        .await?
+        .ok_or_else(|| {
+            anyhow!(
+                "channel for channel id ({}) and port id ({}) not found",
+                channel_id,
+                port_id
+            )
+        })?;
+
+    channel.set_state(ChannelState::Open);
+
+    transaction
+        .update_channel(port_id, channel_id, &channel)
+        .await
+}

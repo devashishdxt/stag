@@ -3,6 +3,7 @@ use std::time::Duration;
 #[cfg(not(feature = "wasm"))]
 use anyhow::Context;
 use anyhow::{ensure, Result};
+use cosmos_sdk_proto::cosmos::bank::v1beta1::QueryBalanceRequest;
 #[cfg(feature = "wasm")]
 use grpc_web_client::Client;
 use num_rational::Ratio;
@@ -18,12 +19,12 @@ use url::Url;
 use crate::{
     signer::GetPublicKey,
     types::{
-        ics::core::ics24_host::path::DenomTrace,
-        proto::cosmos::bank::v1beta1::{
-            query_client::QueryClient as BankQueryClient, QueryBalanceRequest,
+        ics::core::ics24_host::{
+            identifier::{ChainId, ChannelId, ClientId, ConnectionId, Identifier, PortId},
+            path::DenomTrace,
         },
+        proto::cosmos::bank::v1beta1::query_client::QueryClient as BankQueryClient,
     },
-    ChainId, ChannelId, ClientId, ConnectionId, Identifier, PortId,
 };
 
 /// State of an IBC enabled chain
@@ -95,6 +96,8 @@ pub struct ChainConfig {
     /// Block hash at trusted height of the chain
     #[serde(with = "hex::serde")]
     pub trusted_hash: [u8; 32],
+    /// Number of blocks after which a packet times out
+    pub packet_timeout_height_offset: u64,
 }
 
 /// Fee and gas configuration
@@ -162,7 +165,7 @@ impl ChainState {
     /// Fetches on-chain balance of given denom
     pub async fn get_balance(
         &self,
-        signer: impl GetPublicKey,
+        signer: &impl GetPublicKey,
         denom: &Identifier,
     ) -> Result<Decimal> {
         let mut query_client = get_bank_query_client(self.config.grpc_addr.to_string()).await?;

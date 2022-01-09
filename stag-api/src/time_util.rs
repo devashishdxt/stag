@@ -1,3 +1,4 @@
+//! Time related utilities.
 #[cfg(feature = "wasm")]
 use anyhow::anyhow;
 use anyhow::Result;
@@ -6,11 +7,13 @@ use time::Month;
 use time::OffsetDateTime;
 
 #[cfg(not(feature = "wasm"))]
+/// Returns current date time in UTC
 pub fn now_utc() -> Result<OffsetDateTime> {
     Ok(OffsetDateTime::now_utc())
 }
 
 #[cfg(feature = "wasm")]
+/// Returns current date time in UTC
 pub fn now_utc() -> Result<OffsetDateTime> {
     use time::PrimitiveDateTime;
 

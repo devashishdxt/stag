@@ -6,7 +6,10 @@ use bip32::{DerivationPath, ExtendedPrivateKey, Language, Mnemonic};
 use k256::ecdsa::{signature::DigestSigner, Signature, SigningKey};
 use sha2::Digest;
 
-use crate::{ChainId, PublicKey, PublicKeyAlgo};
+use crate::types::{
+    ics::core::ics24_host::identifier::ChainId,
+    public_key::{PublicKey, PublicKeyAlgo},
+};
 
 use super::{GetPublicKey, Message, Signer};
 
@@ -20,6 +23,7 @@ pub struct MnemonicSigner {
     config_map: HashMap<ChainId, MnemonicSignerConfig>,
 }
 
+/// Configuration for mnemonic signer
 #[derive(Clone)]
 pub struct MnemonicSignerConfig {
     /// Mnemonic of signer
@@ -33,6 +37,7 @@ pub struct MnemonicSignerConfig {
 }
 
 impl MnemonicSignerConfig {
+    /// Creates a new instance of mnemonic signer configuration
     pub fn new(
         mnemonic: &str,
         hd_path: Option<&str>,
@@ -57,10 +62,12 @@ impl MnemonicSignerConfig {
 }
 
 impl MnemonicSigner {
+    /// Creates a new instance of mnemonic signer
     pub fn new(config_map: HashMap<ChainId, MnemonicSignerConfig>) -> Self {
         Self { config_map }
     }
 
+    /// Returns configuration for a chain id
     fn get_config(&self, chain_id: &ChainId) -> Result<&MnemonicSignerConfig> {
         self.config_map
             .get(chain_id)
@@ -69,6 +76,7 @@ impl MnemonicSigner {
 }
 
 impl MnemonicSignerConfig {
+    /// Returns the signing key
     fn get_signing_key(&self) -> Result<SigningKey> {
         let seed = self.mnemonic.to_seed("");
         let hd_path = DerivationPath::from_str(&self.hd_path).context("invalid HD path")?;
@@ -78,6 +86,7 @@ impl MnemonicSignerConfig {
         Ok(private_key.into())
     }
 
+    /// Returns the public key
     fn get_public_key(&self) -> Result<PublicKey> {
         let signing_key = self.get_signing_key()?;
         let verifying_key = signing_key.verifying_key();
@@ -89,11 +98,13 @@ impl MnemonicSignerConfig {
         }
     }
 
+    /// Returns account address prefix
     fn get_account_prefix(&self) -> &str {
         &self.account_prefix
     }
 
-    fn to_account_address(&self) -> Result<String> {
+    /// Returns the account address
+    fn get_account_address(&self) -> Result<String> {
         self.get_public_key()?
             .account_address(self.get_account_prefix())
     }
@@ -109,7 +120,7 @@ impl GetPublicKey for MnemonicSigner {
     }
 
     fn to_account_address(&self, chain_id: &ChainId) -> Result<String> {
-        self.get_config(chain_id)?.to_account_address()
+        self.get_config(chain_id)?.get_account_address()
     }
 }
 

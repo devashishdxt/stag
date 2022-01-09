@@ -5,20 +5,25 @@ use std::collections::HashMap;
 use anyhow::Result;
 use sealed::sealed;
 
+use crate::trait_util::Base;
 #[cfg(feature = "mnemonic-signer")]
-use crate::{ChainId, PublicKeyAlgo};
+use crate::types::{ics::core::ics24_host::identifier::ChainId, public_key::PublicKeyAlgo};
 
 #[cfg(feature = "mnemonic-signer")]
 use super::mnemonic_signer::{MnemonicSigner as MnemonicSignerImpl, MnemonicSignerConfig};
 use super::Signer;
 
+/// Configuration for signer
 #[sealed]
-pub trait SignerConfig {
+pub trait SignerConfig: Base {
+    /// Concrete signer type that this config will produce
     type Signer: Signer;
 
+    /// Create concrete signer from this config
     fn into_signer(self) -> Self::Signer;
 }
 
+#[cfg_attr(feature = "doc", doc(cfg(feature = "mnemonic-signer")))]
 #[cfg(feature = "mnemonic-signer")]
 #[derive(Default)]
 /// Signer backend using mnemonic
@@ -51,6 +56,7 @@ impl MnemonicSigner {
     }
 }
 
+#[cfg_attr(feature = "doc", doc(cfg(feature = "mnemonic-signer")))]
 #[cfg(feature = "mnemonic-signer")]
 #[sealed]
 impl SignerConfig for MnemonicSigner {
