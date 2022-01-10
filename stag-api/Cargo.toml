@@ -49,7 +49,7 @@ prost-types = "0.9.0"
 rand = "0.8.4"
 regex = "1.5.4"
 reqwest = { version = "0.11.8", optional = true }
-rexie = { path = "../../rexie", default-features = false, optional = true }
+rexie = { version = "0.1.0", default-features = false, optional = true }
 ripemd160 = "0.9.1"
 rust_decimal = "1.19.0"
 sealed = "0.3.0"
