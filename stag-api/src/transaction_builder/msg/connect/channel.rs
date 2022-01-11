@@ -13,7 +13,7 @@ use cosmos_sdk_proto::{
 use crate::{
     signer::{GetPublicKey, Signer},
     stag::StagContext,
-    storage::Transaction,
+    storage::Storage,
     transaction_builder::{proofs::get_channel_proof, tx::build},
     types::{
         chain_state::ChainState,
@@ -53,9 +53,8 @@ where
     build(context, chain_state, &[message], memo, request_id).await
 }
 
-pub async fn msg_channel_open_ack<C, T>(
+pub async fn msg_channel_open_ack<C>(
     context: &C,
-    transaction: &T,
     chain_state: &mut ChainState,
     solo_machine_channel_id: &ChannelId,
     tendermint_channel_id: &ChannelId,
@@ -65,18 +64,12 @@ pub async fn msg_channel_open_ack<C, T>(
 where
     C: StagContext,
     C::Signer: Signer,
-    T: Transaction,
+    C::Storage: Storage,
 {
     let proof_height = Height::new(0, chain_state.sequence.into());
 
-    let proof_try = get_channel_proof(
-        context,
-        transaction,
-        chain_state,
-        tendermint_channel_id,
-        request_id,
-    )
-    .await?;
+    let proof_try =
+        get_channel_proof(context, chain_state, tendermint_channel_id, request_id).await?;
 
     chain_state.sequence += 1;
 

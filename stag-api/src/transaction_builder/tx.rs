@@ -11,6 +11,7 @@ use cosmos_sdk_proto::cosmos::{
 use grpc_web_client::Client;
 #[cfg(not(feature = "wasm"))]
 use tonic::transport::Channel;
+use url::Url;
 
 use crate::{
     signer::{GetPublicKey, Message, Signer},
@@ -86,7 +87,7 @@ where
     C: StagContext,
     C::Signer: GetPublicKey,
 {
-    let mut query_client = get_auth_query_client(chain_state.config.grpc_addr.to_string()).await?;
+    let mut query_client = get_auth_query_client(chain_state.config.grpc_addr.clone()).await?;
 
     let account_address = context.signer().to_account_address(&chain_state.id)?;
 
@@ -168,14 +169,20 @@ where
 }
 
 #[cfg(feature = "wasm")]
-async fn get_auth_query_client(grpc_addr: String) -> Result<AuthQueryClient<Client>> {
-    let grpc_client = Client::new(grpc_addr);
+async fn get_auth_query_client(grpc_addr: Url) -> Result<AuthQueryClient<Client>> {
+    let mut url = grpc_addr.to_string();
+
+    if url.ends_with('/') {
+        url.pop();
+    }
+
+    let grpc_client = Client::new(url);
     Ok(AuthQueryClient::new(grpc_client))
 }
 
 #[cfg(not(feature = "wasm"))]
-async fn get_auth_query_client(grpc_addr: String) -> Result<AuthQueryClient<Channel>> {
-    AuthQueryClient::connect(grpc_addr)
+async fn get_auth_query_client(grpc_addr: Url) -> Result<AuthQueryClient<Channel>> {
+    AuthQueryClient::connect(grpc_addr.to_string())
         .await
         .context("error when initializing grpc client")
 }

@@ -12,7 +12,7 @@ use crate::{
     service::ibc_service::common::{ensure_response_success, extract_attribute},
     signer::Signer,
     stag::StagContext,
-    storage::Transaction,
+    storage::Storage,
     tendermint::TendermintClient,
     transaction_builder,
     types::{
@@ -21,9 +21,8 @@ use crate::{
     },
 };
 
-pub async fn establish_connection<C, T>(
+pub async fn establish_connection<C>(
     context: &C,
-    transaction: &T,
     chain_state: &mut ChainState,
     request_id: Option<&str>,
     memo: String,
@@ -33,8 +32,8 @@ pub async fn establish_connection<C, T>(
 where
     C: StagContext,
     C::Signer: Signer,
+    C::Storage: Storage,
     C::RpcClient: TendermintClient,
-    T: Transaction,
 {
     let solo_machine_connection_id = connection_open_init(
         context,
@@ -53,7 +52,7 @@ where
         .await?;
 
     let tendermint_connection_id = connection_open_try(
-        transaction,
+        context,
         tendermint_client_id,
         solo_machine_client_id,
         &solo_machine_connection_id,
@@ -68,7 +67,6 @@ where
 
     connection_open_ack(
         context,
-        transaction,
         chain_state,
         request_id,
         memo,
@@ -84,7 +82,7 @@ where
         })
         .await?;
 
-    connection_open_confirm(transaction, &tendermint_connection_id).await?;
+    connection_open_confirm(context, &tendermint_connection_id).await?;
 
     context
         .handle_event(Event::ConfirmedConnectionOnSoloMachine {
@@ -133,14 +131,15 @@ where
     .parse()
 }
 
-async fn connection_open_try<T>(
-    transaction: &T,
+async fn connection_open_try<C>(
+    context: &C,
     tendermint_client_id: &ClientId,
     solo_machine_client_id: &ClientId,
     solo_machine_connection_id: &ConnectionId,
 ) -> Result<ConnectionId>
 where
-    T: Transaction,
+    C: StagContext,
+    C::Storage: Storage,
 {
     let connection_id = ConnectionId::generate();
 
@@ -161,17 +160,16 @@ where
         delay_period: 0,
     };
 
-    transaction
+    context
+        .storage()
         .add_connection(&connection_id, &connection)
         .await?;
 
     Ok(connection_id)
 }
 
-#[allow(clippy::too_many_arguments)]
-async fn connection_open_ack<C, T>(
+async fn connection_open_ack<C>(
     context: &C,
-    transaction: &T,
     chain_state: &mut ChainState,
     request_id: Option<&str>,
     memo: String,
@@ -182,12 +180,11 @@ async fn connection_open_ack<C, T>(
 where
     C: StagContext,
     C::Signer: Signer,
+    C::Storage: Storage,
     C::RpcClient: TendermintClient,
-    T: Transaction,
 {
     let msg = transaction_builder::msg_connection_open_ack(
         context,
-        transaction,
         chain_state,
         solo_machine_connection_id,
         tendermint_client_id,
@@ -207,18 +204,21 @@ where
     Ok(())
 }
 
-async fn connection_open_confirm<T>(transaction: &T, connection_id: &ConnectionId) -> Result<()>
+async fn connection_open_confirm<C>(context: &C, connection_id: &ConnectionId) -> Result<()>
 where
-    T: Transaction,
+    C: StagContext,
+    C::Storage: Storage,
 {
-    let mut connection = transaction
+    let mut connection = context
+        .storage()
         .get_connection(connection_id)
         .await?
         .ok_or_else(|| anyhow!("connection for connection id ({}) not found", connection_id))?;
 
     connection.set_state(ConnectionState::Open);
 
-    transaction
+    context
+        .storage()
         .update_connection(connection_id, &connection)
         .await
 }

@@ -15,6 +15,7 @@ use prost_types::Duration;
 use tendermint::block::Header;
 #[cfg(not(feature = "wasm"))]
 use tonic::transport::Channel;
+use url::Url;
 
 use crate::{
     signer::{GetPublicKey, Signer},
@@ -109,8 +110,7 @@ where
 }
 
 async fn get_unbonding_period(chain_state: &ChainState) -> Result<Duration> {
-    let mut query_client =
-        get_staking_query_client(chain_state.config.grpc_addr.to_string()).await?;
+    let mut query_client = get_staking_query_client(chain_state.config.grpc_addr.clone()).await?;
 
     query_client
         .params(QueryParamsRequest::default())
@@ -141,16 +141,22 @@ fn get_block_height(chain_state: &ChainState, header: &Header) -> Height {
 }
 
 #[cfg(feature = "wasm")]
-async fn get_staking_query_client(grpc_addr: String) -> Result<StakingQueryClient<Client>> {
-    let grpc_client = Client::new(grpc_addr);
+async fn get_staking_query_client(grpc_addr: Url) -> Result<StakingQueryClient<Client>> {
+    let mut url = grpc_addr.to_string();
+
+    if url.ends_with('/') {
+        url.pop();
+    }
+
+    let grpc_client = Client::new(url);
     Ok(StakingQueryClient::new(grpc_client))
 }
 
 #[cfg(not(feature = "wasm"))]
-async fn get_staking_query_client(grpc_addr: String) -> Result<StakingQueryClient<Channel>> {
+async fn get_staking_query_client(grpc_addr: Url) -> Result<StakingQueryClient<Channel>> {
     use anyhow::Context;
 
-    StakingQueryClient::connect(grpc_addr)
+    StakingQueryClient::connect(grpc_addr.to_string())
         .await
         .context("error when initializing grpc client")
 }

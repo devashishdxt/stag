@@ -9,7 +9,7 @@ use crate::{
     service::ibc_service::connect::connection::establish_connection,
     signer::Signer,
     stag::StagContext,
-    storage::{Storage, Transaction, TransactionProvider},
+    storage::{Storage, TransactionProvider},
     tendermint::TendermintClient,
     types::{
         chain_state::{ChainState, ConnectionDetails},
@@ -46,20 +46,8 @@ where
     C::Storage: TransactionProvider,
     C::RpcClient: TendermintClient,
 {
-    let transaction = context.storage().transaction(&[
-        "get_chain_state",
-        "update_chain_state",
-        "add_connection",
-        "get_connection",
-        "update_connection",
-        "get_channel",
-        "add_channel",
-        "update_channel",
-        "add_tendermint_client_state",
-        "add_tendermint_consensus_state",
-    ])?;
-
-    let mut chain_state = transaction
+    let mut chain_state = context
+        .storage()
         .get_chain_state(&chain_id)
         .await?
         .ok_or_else(|| anyhow!("chain details for {} not found", chain_id))?;
@@ -71,18 +59,11 @@ where
             bail!("connection is already established with given chain")
         }
         ConnectionOpenType::Full => {
-            let (solo_machine_client_id, tendermint_client_id) = create_client(
-                context,
-                &transaction,
-                &chain_state,
-                request_id.as_deref(),
-                memo.clone(),
-            )
-            .await?;
+            let (solo_machine_client_id, tendermint_client_id) =
+                create_client(context, &chain_state, request_id.as_deref(), memo.clone()).await?;
 
             let (solo_machine_connection_id, tendermint_connection_id) = establish_connection(
                 context,
-                &transaction,
                 &mut chain_state,
                 request_id.as_deref(),
                 memo.clone(),
@@ -93,7 +74,6 @@ where
 
             let (solo_machine_channel_id, tendermint_channel_id) = open_channel(
                 context,
-                &transaction,
                 &mut chain_state,
                 request_id.as_deref(),
                 memo,
@@ -113,16 +93,14 @@ where
 
             chain_state.connection_details = Some(connection_details);
 
-            transaction.update_chain_state(&chain_state).await?;
+            context.storage().update_chain_state(&chain_state).await?;
 
             context
                 .handle_event(Event::ConnectionEstablished {
                     chain_id,
                     connection_details: chain_state.connection_details.as_ref().unwrap().clone(),
                 })
-                .await?;
-
-            transaction.done().await
+                .await
         }
         ConnectionOpenType::OnlyChannel {
             ref solo_machine_connection_id,
@@ -130,7 +108,6 @@ where
         } => {
             let (solo_machine_channel_id, tendermint_channel_id) = open_channel(
                 context,
-                &transaction,
                 &mut chain_state,
                 request_id.as_deref(),
                 memo,
@@ -145,16 +122,14 @@ where
                 connection_details.tendermint_channel_id = Some(tendermint_channel_id);
             }
 
-            transaction.update_chain_state(&chain_state).await?;
+            context.storage().update_chain_state(&chain_state).await?;
 
             context
                 .handle_event(Event::ConnectionEstablished {
                     chain_id,
                     connection_details: chain_state.connection_details.as_ref().unwrap().clone(),
                 })
-                .await?;
-
-            transaction.done().await
+                .await
         }
     }
 }

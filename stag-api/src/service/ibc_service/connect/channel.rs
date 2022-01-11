@@ -8,7 +8,7 @@ use crate::{
     service::ibc_service::common::{ensure_response_success, extract_attribute},
     signer::Signer,
     stag::StagContext,
-    storage::Transaction,
+    storage::{Storage, Transaction, TransactionProvider},
     tendermint::TendermintClient,
     transaction_builder,
     types::{
@@ -17,9 +17,8 @@ use crate::{
     },
 };
 
-pub async fn open_channel<C, T>(
+pub async fn open_channel<C>(
     context: &C,
-    transaction: &T,
     chain_state: &mut ChainState,
     request_id: Option<&str>,
     memo: String,
@@ -29,8 +28,8 @@ pub async fn open_channel<C, T>(
 where
     C: StagContext,
     C::Signer: Signer,
+    C::Storage: TransactionProvider,
     C::RpcClient: TendermintClient,
-    T: Transaction,
 {
     let solo_machine_channel_id = channel_open_init(
         context,
@@ -48,7 +47,7 @@ where
         .await?;
 
     let tendermint_channel_id = channel_open_try(
-        transaction,
+        context,
         &chain_state.config.port_id,
         &solo_machine_channel_id,
         tendermint_connection_id,
@@ -63,7 +62,6 @@ where
 
     channel_open_ack(
         context,
-        transaction,
         chain_state,
         &solo_machine_channel_id,
         &tendermint_channel_id,
@@ -78,12 +76,7 @@ where
         })
         .await?;
 
-    channel_open_confirm(
-        transaction,
-        &chain_state.config.port_id,
-        &tendermint_channel_id,
-    )
-    .await?;
+    channel_open_confirm(context, &chain_state.config.port_id, &tendermint_channel_id).await?;
 
     context
         .handle_event(Event::ConfirmedChannelOnSoloMachine {
@@ -130,14 +123,15 @@ where
     .parse()
 }
 
-async fn channel_open_try<T>(
-    transaction: &T,
+async fn channel_open_try<C>(
+    context: &C,
     port_id: &PortId,
     solo_machine_channel_id: &ChannelId,
     tendermint_connection_id: &ConnectionId,
 ) -> Result<ChannelId>
 where
-    T: Transaction,
+    C: StagContext,
+    C::Storage: Storage,
 {
     let channel_id = ChannelId::generate();
 
@@ -152,16 +146,16 @@ where
         version: "ics20-1".to_string(),
     };
 
-    transaction
+    context
+        .storage()
         .add_channel(port_id, &channel_id, &channel)
         .await?;
 
     Ok(channel_id)
 }
 
-async fn channel_open_ack<C, T>(
+async fn channel_open_ack<C>(
     context: &C,
-    transaction: &T,
     chain_state: &mut ChainState,
     solo_machine_channel_id: &ChannelId,
     tendermint_channel_id: &ChannelId,
@@ -171,12 +165,11 @@ async fn channel_open_ack<C, T>(
 where
     C: StagContext,
     C::Signer: Signer,
+    C::Storage: Storage,
     C::RpcClient: TendermintClient,
-    T: Transaction,
 {
     let msg = transaction_builder::msg_channel_open_ack(
         context,
-        transaction,
         chain_state,
         solo_machine_channel_id,
         tendermint_channel_id,
@@ -195,14 +188,19 @@ where
     Ok(())
 }
 
-async fn channel_open_confirm<T>(
-    transaction: &T,
+async fn channel_open_confirm<C>(
+    context: &C,
     port_id: &PortId,
     channel_id: &ChannelId,
 ) -> Result<()>
 where
-    T: Transaction,
+    C: StagContext,
+    C::Storage: TransactionProvider,
 {
+    let transaction = context
+        .storage()
+        .transaction(&["get_channel", "update_channel"])?;
+
     let mut channel = transaction
         .get_channel(port_id, channel_id)
         .await?
@@ -218,5 +216,7 @@ where
 
     transaction
         .update_channel(port_id, channel_id, &channel)
-        .await
+        .await?;
+
+    transaction.done().await
 }

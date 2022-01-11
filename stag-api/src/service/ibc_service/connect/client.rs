@@ -5,7 +5,7 @@ use crate::{
     service::ibc_service::common::{ensure_response_success, extract_attribute},
     signer::Signer,
     stag::StagContext,
-    storage::{Transaction, TransactionProvider},
+    storage::Storage,
     tendermint::{LightClient, TendermintClient},
     transaction_builder,
     types::{
@@ -14,9 +14,8 @@ use crate::{
     },
 };
 
-pub async fn create_client<C, T>(
+pub async fn create_client<C>(
     context: &C,
-    transaction: &T,
     chain_state: &ChainState,
     request_id: Option<&str>,
     memo: String,
@@ -24,9 +23,8 @@ pub async fn create_client<C, T>(
 where
     C: StagContext,
     C::Signer: Signer,
-    C::Storage: TransactionProvider,
+    C::Storage: Storage,
     C::RpcClient: TendermintClient,
-    T: Transaction,
 {
     let solo_machine_client_id =
         create_solo_machine_client(context, chain_state, request_id, memo).await?;
@@ -37,7 +35,7 @@ where
         })
         .await?;
 
-    let tendermint_client_id = create_tendermint_client(context, transaction, chain_state).await?;
+    let tendermint_client_id = create_tendermint_client(context, chain_state).await?;
 
     context
         .handle_event(Event::CreatedTendermintClient {
@@ -73,15 +71,11 @@ where
     extract_attribute(&response.deliver_tx.events, "create_client", "client_id")?.parse()
 }
 
-async fn create_tendermint_client<C, T>(
-    context: &C,
-    transaction: &T,
-    chain_state: &ChainState,
-) -> Result<ClientId>
+async fn create_tendermint_client<C>(context: &C, chain_state: &ChainState) -> Result<ClientId>
 where
     C: StagContext,
+    C::Storage: Storage,
     C::RpcClient: TendermintClient,
-    T: Transaction,
 {
     let light_client = LightClient::new(
         chain_state.config.rpc_addr.clone(),
@@ -99,10 +93,12 @@ where
         .as_ref()
         .ok_or_else(|| anyhow!("latest height cannot be absent in client state"))?;
 
-    transaction
+    context
+        .storage()
         .add_tendermint_client_state(&client_id, &client_state)
         .await?;
-    transaction
+    context
+        .storage()
         .add_tendermint_consensus_state(&client_id, latest_height, &consensus_state)
         .await?;
 

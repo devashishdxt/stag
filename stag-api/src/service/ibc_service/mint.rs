@@ -5,7 +5,7 @@ use crate::{
     event::{Event, EventHandler},
     signer::{GetPublicKey, Signer},
     stag::StagContext,
-    storage::{Storage, Transaction, TransactionProvider},
+    storage::Storage,
     tendermint::{JsonRpcClient, TendermintClient},
     transaction_builder,
     types::{
@@ -29,16 +29,14 @@ pub async fn mint_tokens<C>(
 where
     C: StagContext,
     C::Signer: Signer,
-    C::Storage: TransactionProvider,
+    C::Storage: Storage,
     C::RpcClient: JsonRpcClient,
 {
     let address = context.signer().to_account_address(&chain_id)?;
     let receiver = receiver.unwrap_or_else(|| address.clone());
 
-    let transaction = context
+    let mut chain_state = context
         .storage()
-        .transaction(&["get_chain_state", "update_chain_state"])?;
-    let mut chain_state = transaction
         .get_chain_state(&chain_id)
         .await?
         .ok_or_else(|| anyhow!("chain details for {} not found", chain_id))?;
@@ -61,8 +59,7 @@ where
 
     let transaction_hash = ensure_response_success(&response)?;
 
-    transaction.update_chain_state(&chain_state).await?;
-    transaction.done().await?;
+    context.storage().update_chain_state(&chain_state).await?;
 
     let success: bool = extract_attribute(
         &response.deliver_tx.events,

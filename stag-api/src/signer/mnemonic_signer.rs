@@ -148,3 +148,19 @@ impl Signer for MnemonicSigner {
         Ok(signature.as_ref().to_vec())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::MnemonicSignerConfig;
+
+    #[test]
+    fn test_mnemonic_signer() {
+        let config = MnemonicSignerConfig::new("fantasy quarter expect shock number scheme office brass guess attract cake easily dash walnut must puppy drink junior gorilla flag unusual cover among reform", None, None, None).unwrap();
+        let account_address = config.get_account_address().unwrap();
+
+        assert_eq!(
+            account_address,
+            "cosmos1qx0cppqkpwyyjvcl8p4s5eehrftfp00wdtkuyz"
+        );
+    }
+}

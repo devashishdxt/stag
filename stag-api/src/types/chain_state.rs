@@ -168,7 +168,7 @@ impl ChainState {
         signer: &impl GetPublicKey,
         denom: &Identifier,
     ) -> Result<Decimal> {
-        let mut query_client = get_bank_query_client(self.config.grpc_addr.to_string()).await?;
+        let mut query_client = get_bank_query_client(self.config.grpc_addr.clone()).await?;
 
         let denom = self.get_ibc_denom(denom)?;
 
@@ -189,14 +189,20 @@ impl ChainState {
 }
 
 #[cfg(feature = "wasm")]
-async fn get_bank_query_client(grpc_addr: String) -> Result<BankQueryClient<Client>> {
-    let grpc_client = Client::new(grpc_addr);
+async fn get_bank_query_client(grpc_addr: Url) -> Result<BankQueryClient<Client>> {
+    let mut url = grpc_addr.to_string();
+
+    if url.ends_with('/') {
+        url.pop();
+    }
+
+    let grpc_client = Client::new(url);
     Ok(BankQueryClient::new(grpc_client))
 }
 
 #[cfg(not(feature = "wasm"))]
-async fn get_bank_query_client(grpc_addr: String) -> Result<BankQueryClient<Channel>> {
-    BankQueryClient::connect(grpc_addr)
+async fn get_bank_query_client(grpc_addr: Url) -> Result<BankQueryClient<Channel>> {
+    BankQueryClient::connect(grpc_addr.to_string())
         .await
         .context("error when initializing grpc client")
 }

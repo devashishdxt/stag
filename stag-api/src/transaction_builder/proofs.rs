@@ -5,7 +5,7 @@ use prost_types::Any;
 use crate::{
     signer::Signer,
     stag::StagContext,
-    storage::Transaction,
+    storage::Storage,
     types::{
         chain_state::ChainState,
         ics::core::{
@@ -125,9 +125,8 @@ where
     timestamped_sign(context, chain_state, sign_bytes, request_id).await
 }
 
-pub async fn get_channel_proof<C, T>(
+pub async fn get_channel_proof<C>(
     context: &C,
-    transaction: &T,
     chain_state: &ChainState,
     channel_id: &ChannelId,
     request_id: Option<&str>,
@@ -135,9 +134,10 @@ pub async fn get_channel_proof<C, T>(
 where
     C: StagContext,
     C::Signer: Signer,
-    T: Transaction,
+    C::Storage: Storage,
 {
-    let channel = transaction
+    let channel = context
+        .storage()
         .get_channel(&chain_state.config.port_id, channel_id)
         .await?
         .ok_or_else(|| {
@@ -169,9 +169,8 @@ where
     timestamped_sign(context, chain_state, sign_bytes, request_id).await
 }
 
-pub async fn get_connection_proof<C, T>(
+pub async fn get_connection_proof<C>(
     context: &C,
-    transaction: &T,
     chain_state: &ChainState,
     connection_id: &ConnectionId,
     request_id: Option<&str>,
@@ -179,9 +178,10 @@ pub async fn get_connection_proof<C, T>(
 where
     C: StagContext,
     C::Signer: Signer,
-    T: Transaction,
+    C::Storage: Storage,
 {
-    let connection = transaction
+    let connection = context
+        .storage()
         .get_connection(connection_id)
         .await?
         .ok_or_else(|| anyhow!("connection with id {} not found", connection_id))?;
@@ -207,9 +207,8 @@ where
     timestamped_sign(context, chain_state, sign_bytes, request_id).await
 }
 
-pub async fn get_client_proof<C, T>(
+pub async fn get_client_proof<C>(
     context: &C,
-    transaction: &T,
     chain_state: &ChainState,
     client_id: &ClientId,
     request_id: Option<&str>,
@@ -217,9 +216,10 @@ pub async fn get_client_proof<C, T>(
 where
     C: StagContext,
     C::Signer: Signer,
-    T: Transaction,
+    C::Storage: Storage,
 {
-    let client_state = transaction
+    let client_state = context
+        .storage()
         .get_tendermint_client_state(client_id)
         .await?
         .ok_or_else(|| anyhow!("client with id {} not found", client_id))?
@@ -246,9 +246,8 @@ where
     timestamped_sign(context, chain_state, sign_bytes, request_id).await
 }
 
-pub async fn get_consensus_proof<C, T>(
+pub async fn get_consensus_proof<C>(
     context: &C,
-    transaction: &T,
     chain_state: &ChainState,
     client_id: &ClientId,
     request_id: Option<&str>,
@@ -256,9 +255,10 @@ pub async fn get_consensus_proof<C, T>(
 where
     C: StagContext,
     C::Signer: Signer,
-    T: Transaction,
+    C::Storage: Storage,
 {
-    let client_state = transaction
+    let client_state = context
+        .storage()
         .get_tendermint_client_state(client_id)
         .await?
         .ok_or_else(|| anyhow!("client with id {} not found", client_id))?;
@@ -267,7 +267,8 @@ where
         .latest_height
         .ok_or_else(|| anyhow!("client state does not contain latest height"))?;
 
-    let consensus_state = transaction
+    let consensus_state = context
+        .storage()
         .get_tendermint_consensus_state(client_id, &height)
         .await?
         .ok_or_else(|| {

@@ -14,7 +14,7 @@ use cosmos_sdk_proto::{
 use crate::{
     signer::{GetPublicKey, Signer},
     stag::StagContext,
-    storage::Transaction,
+    storage::Storage,
     transaction_builder::{
         proofs::{get_client_proof, get_connection_proof, get_consensus_proof},
         tx::build,
@@ -62,9 +62,8 @@ where
 }
 
 #[allow(clippy::too_many_arguments)]
-pub async fn msg_connection_open_ack<C, T>(
+pub async fn msg_connection_open_ack<C>(
     context: &C,
-    transaction: &T,
     chain_state: &mut ChainState,
     solo_machine_connection_id: &ConnectionId,
     tendermint_client_id: &ClientId,
@@ -75,45 +74,28 @@ pub async fn msg_connection_open_ack<C, T>(
 where
     C: StagContext,
     C::Signer: Signer,
-    T: Transaction,
+    C::Storage: Storage,
 {
-    let tendermint_client_state = transaction
+    let tendermint_client_state = context
+        .storage()
         .get_tendermint_client_state(tendermint_client_id)
         .await?
         .ok_or_else(|| anyhow!("client for client id {} not found", tendermint_client_id))?;
 
     let proof_height = Height::new(0, chain_state.sequence.into());
 
-    let proof_try = get_connection_proof(
-        context,
-        transaction,
-        chain_state,
-        tendermint_connection_id,
-        request_id,
-    )
-    .await?;
+    let proof_try =
+        get_connection_proof(context, chain_state, tendermint_connection_id, request_id).await?;
 
     chain_state.sequence += 1;
 
-    let proof_client = get_client_proof(
-        context,
-        transaction,
-        chain_state,
-        tendermint_client_id,
-        request_id,
-    )
-    .await?;
+    let proof_client =
+        get_client_proof(context, chain_state, tendermint_client_id, request_id).await?;
 
     chain_state.sequence += 1;
 
-    let proof_consensus = get_consensus_proof(
-        context,
-        transaction,
-        chain_state,
-        tendermint_client_id,
-        request_id,
-    )
-    .await?;
+    let proof_consensus =
+        get_consensus_proof(context, chain_state, tendermint_client_id, request_id).await?;
 
     chain_state.sequence += 1;
 

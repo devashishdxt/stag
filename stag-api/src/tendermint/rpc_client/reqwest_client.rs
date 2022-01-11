@@ -3,7 +3,7 @@ use std::sync::{
     Arc,
 };
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use async_trait::async_trait;
 use reqwest::{header::CONTENT_TYPE, Client};
 use serde::Serialize;
@@ -38,7 +38,8 @@ impl JsonRpcClient for ReqwestClient {
             .header(CONTENT_TYPE, "application/json")
             .body(request)
             .send()
-            .await?;
+            .await
+            .context("failed to send post request")?;
 
         if !response.status().is_success() {
             return Err(anyhow!(
