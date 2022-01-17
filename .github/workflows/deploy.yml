@@ -25,7 +25,7 @@ jobs:
       - name: Build stag
         run: |
           cd stag-ui
-          trunk build --release --public-url /stag/
+          trunk build --release
       - name: Publish
         uses: peaceiris/actions-gh-pages@v3
         with:
