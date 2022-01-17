@@ -18,59 +18,59 @@ use self::{
 
 #[derive(Clone, Routable, PartialEq)]
 pub enum Route {
-    #[at("/")]
+    #[at("/stag")]
     Home,
-    #[at("/signer")]
+    #[at("/stag/signer")]
     Signer,
-    #[at("/signer/:s")]
+    #[at("/stag/signer/:s")]
     SignerNested,
-    #[at("/chain")]
+    #[at("/stag/chain")]
     Chain,
-    #[at("/chain/:s")]
+    #[at("/stag/chain/:s")]
     ChainNested,
-    #[at("/ibc")]
+    #[at("/stag/ibc")]
     Ibc,
-    #[at("/ibc/:s")]
+    #[at("/stag/ibc/:s")]
     IbcNested,
-    #[at("/history/:chain_id")]
+    #[at("/stag/history/:chain_id")]
     History { chain_id: ChainId },
     #[not_found]
-    #[at("/404")]
+    #[at("/stag/404")]
     NotFound,
 }
 
 #[derive(Clone, Routable, PartialEq)]
 pub enum SignerRoute {
-    #[at("/signer/import")]
+    #[at("/stag/signer/import")]
     Import,
     #[not_found]
-    #[at("/signer/404")]
+    #[at("/stag/signer/404")]
     NotFound,
 }
 
 #[derive(Clone, Routable, PartialEq)]
 pub enum ChainRoute {
-    #[at("/chain/add")]
+    #[at("/stag/chain/add")]
     Add,
-    #[at("/chain/get-balance")]
+    #[at("/stag/chain/get-balance")]
     GetBalance,
-    #[at("/chain/history")]
+    #[at("/stag/chain/history")]
     History,
     #[not_found]
-    #[at("/chain/404")]
+    #[at("/stag/chain/404")]
     NotFound,
 }
 
 #[derive(Clone, Routable, PartialEq)]
 pub enum IbcRoute {
-    #[at("/ibc/connect")]
+    #[at("/stag/ibc/connect")]
     Connect,
-    #[at("/ibc/mint")]
+    #[at("/stag/ibc/mint")]
     Mint,
-    #[at("/ibc/burn")]
+    #[at("/stag/ibc/burn")]
     Burn,
     #[not_found]
-    #[at("/ibc/404")]
+    #[at("/stag/ibc/404")]
     NotFound,
 }
 
