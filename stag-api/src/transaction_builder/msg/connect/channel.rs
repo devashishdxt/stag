@@ -47,7 +47,7 @@ where
             connection_hops: vec![solo_machine_connection_id.to_string()],
             version: "ics20-1".to_string(),
         }),
-        signer: context.signer().to_account_address(&chain_state.id)?,
+        signer: context.signer().to_account_address(&chain_state.id).await?,
     };
 
     build(context, chain_state, &[message], memo, request_id).await
@@ -80,7 +80,7 @@ where
         counterparty_version: "ics20-1".to_string(),
         proof_height: Some(proof_height),
         proof_try,
-        signer: context.signer().to_account_address(&chain_state.id)?,
+        signer: context.signer().to_account_address(&chain_state.id).await?,
     };
 
     build(context, chain_state, &[message], memo, request_id).await

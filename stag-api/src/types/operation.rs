@@ -5,7 +5,7 @@ use time::OffsetDateTime;
 use crate::types::ics::core::ics24_host::identifier::{ChainId, Identifier};
 
 /// Denotes an operation on an account
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Operation {
     /// ID of operation

@@ -10,6 +10,7 @@ use super::TransactionProvider;
 
 #[cfg_attr(feature = "doc", doc(cfg(feature = "indexed-db-storage")))]
 #[cfg(feature = "indexed-db-storage")]
+#[derive(Debug, Clone, PartialEq, Eq)]
 /// Storage backend for browsers using Indexed DB
 pub struct IndexedDb {
     name: String,

@@ -55,7 +55,7 @@ where
             features: vec!["ORDER_ORDERED".to_string(), "ORDER_UNORDERED".to_string()],
         }),
         delay_period: 0,
-        signer: context.signer().to_account_address(&chain_state.id)?,
+        signer: context.signer().to_account_address(&chain_state.id).await?,
     };
 
     build(context, chain_state, &[message], memo, request_id).await
@@ -112,7 +112,7 @@ where
         proof_client,
         proof_consensus,
         consensus_height: tendermint_client_state.latest_height,
-        signer: context.signer().to_account_address(&chain_state.id)?,
+        signer: context.signer().to_account_address(&chain_state.id).await?,
     };
 
     build(context, chain_state, &[message], memo, request_id).await

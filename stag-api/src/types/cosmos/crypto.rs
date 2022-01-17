@@ -1,6 +1,9 @@
+#[cfg(feature = "ethermint")]
 use std::convert::TryFrom;
 
-use anyhow::{Context, Error, Result};
+#[cfg(feature = "ethermint")]
+use anyhow::Error;
+use anyhow::{Context, Result};
 use k256::ecdsa::VerifyingKey;
 
 #[cfg(feature = "ethermint")]

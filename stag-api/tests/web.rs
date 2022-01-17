@@ -43,18 +43,25 @@ fn get_chain_config() -> ChainConfig {
     }
 }
 
+fn get_mnemonic_signer() -> MnemonicSigner {
+    MnemonicSigner::new().add_chain_config(
+        "mars-1".parse().unwrap(),
+        "practice empty client sauce pistol work ticket casual romance appear army fault palace coyote fox super salute slim catch kite wrist three hedgehog sign",
+        None,
+        None,
+        None,
+    ).unwrap()
+}
+
 #[wasm_bindgen_test]
-async fn test_solo_machine_flow() {
+async fn test_stag_flow() {
     // Build stag (IBC solo machine)
     let builder = Stag::builder()
-        .with_storage(IndexedDb::new("test")).await.unwrap()
-        .with_signer(MnemonicSigner::new().add_chain_config(
-            "mars-1".parse().unwrap(),
-            "practice empty client sauce pistol work ticket casual romance appear army fault palace coyote fox super salute slim catch kite wrist three hedgehog sign",
-            None,
-            None,
-            None,
-        ).unwrap())
+        .with_storage(IndexedDb::new("test"))
+        .await
+        .unwrap()
+        .with_signer(get_mnemonic_signer())
+        .unwrap()
         .with_rpc_client(ReqwestClient);
     let stag = builder.build();
 

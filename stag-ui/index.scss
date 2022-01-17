@@ -1,0 +1,224 @@
+
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family: 'Fira Mono', monospace;
+  color: black;
+}
+
+header {
+    padding: 1.5rem;
+    border-bottom: 0.1rem solid black;
+    text-align: center;
+}
+
+nav.top {
+    padding: 1.5rem;
+    border-bottom: 0.1rem solid black;
+    text-align: center;
+
+    a {
+        text-decoration: none;
+        padding: 0rem 1.5rem;
+        color: darkgray;
+        border-right: 0.1rem solid black;
+        transition: color 0.2s ease-out;
+
+        &:hover {
+            color: black;
+        }
+
+        &:last-of-type {
+            border-right: none;
+        }
+
+        &.active {
+            color: black;
+        }
+    }
+}
+
+nav.inner {
+    padding: 0;
+    color: darkgray;
+    text-align: center;
+
+    a {
+        display: inline-block;
+        text-decoration: none;
+        background: none;
+        border: 0.1rem solid black;
+        border-color: black;
+        border-radius: 0.25rem;
+        transition: background-color 0.2s ease-out;
+        padding: 0.5rem 2rem;
+        color: black;
+
+        &:hover {
+            background-color: lightgray;
+            cursor: pointer;
+        }
+
+        &:active {
+            background-color: gray;
+        }
+    }
+}
+
+section {
+    padding: 2rem;
+    text-align: center;
+    border-bottom: 0.1rem solid lightgray;
+
+    &:last-of-type {
+        border-bottom: none;
+    }
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin: 0;
+    letter-spacing: 0.2rem;
+}
+
+button, input, select, textarea {
+    font-family: inherit;
+    font-size: inherit;
+    padding: 0.5rem 1rem;
+    margin: 0.25rem 0;
+    box-sizing: border-box;
+    width: 100%;
+    outline: none;
+    border: 0.1rem solid;
+
+    &:disabled {
+        background-color: lightgray;
+        border-color: darkgray;
+        color: darkgray;
+        cursor: not-allowed;
+    }
+}
+
+input, textarea {
+    border-color: darkgray;
+
+    &:focus {
+        border-color: black;
+    }
+}
+
+textarea {
+    resize: vertical;
+}
+
+button {
+    background: none;
+    border-color: black;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s ease-out;
+
+    &:hover {
+        background-color: lightgray;
+        cursor: pointer;
+    }
+
+    &:active {
+        background-color: gray;
+    }
+}
+
+form {
+    display: grid;
+    grid-template-columns: max-content auto;
+    gap: 1rem;
+    padding: 2rem;
+    min-width: 20rem;
+    align-items: center;
+
+    p {
+        text-align: right;
+    }
+
+    button {
+        grid-column: 2 / 3;
+    }
+
+    input[type="checkbox"] {
+        width: max-content;
+    }
+}
+
+table {
+    display: inline-table;
+    border-collapse: collapse;
+    text-align: left;
+
+    tr {
+        border-bottom: 0.1rem solid gray;
+        transition: color 0.2s ease-out;
+
+        &:last-of-type {
+            border-bottom: none;
+        }
+
+        th {
+            font-weight: bold;
+            color: black;
+        }
+
+        td {
+            color: inherit;
+        }
+
+        th, td {
+            padding: 0.5rem 1rem;
+            border-left: 0.1rem solid gray;
+
+            &:first-child {
+                border-left: none;
+            }
+
+            span.red {
+                color: red;
+            }
+
+            span.green {
+                color: green;
+            }
+        }
+    }
+}
+
+span.gap {
+    display: inline-block;
+    width: 2rem;
+}
+
+div.notification-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 100;
+    text-align: center;
+
+    div {
+        background-color: white;
+        display: inline-block;
+        margin: 10rem;
+        padding: 2rem;
+        max-width: 50%;
+        min-width: 10rem;
+
+        button {
+            margin-top: 2rem;
+        }
+    }
+}
+
+.small-fonts {
+    font-size: 0.8rem;
+}

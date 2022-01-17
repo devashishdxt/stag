@@ -5,15 +5,16 @@ use rust_decimal::Decimal;
 use crate::{
     event::NoopEventHandler,
     service::{
-        add_chain, burn_tokens, connect, get_balance, get_chain, get_ibc_denom, get_public_keys,
-        mint_tokens, update_signer,
+        add_chain, burn_tokens, connect, get_all_chains, get_balance, get_chain, get_history,
+        get_ibc_denom, get_public_keys, mint_tokens, update_signer,
     },
     signer::{NoopSigner, Signer},
-    storage::{NoopStorage, Storage, TransactionProvider},
+    storage::{NoopStorage, Storage},
     tendermint::{JsonRpcClient, NoopRpcClient},
     types::{
         chain_state::{ChainConfig, ChainKey, ChainState},
         ics::core::ics24_host::identifier::{ChainId, Identifier},
+        operation::Operation,
         public_key::PublicKey,
     },
 };
@@ -44,11 +45,20 @@ impl Stag<StagBuilder<NoopSigner, NoopStorage, NoopRpcClient, NoopEventHandler>>
 impl<C> Stag<C>
 where
     C: StagContext,
-    C::Storage: TransactionProvider,
+    C::Storage: Storage,
 {
     /// Gets current stored state for a given chain
     pub async fn get_chain(&self, chain_id: &ChainId) -> Result<Option<ChainState>> {
         get_chain(&self.context, chain_id).await
+    }
+
+    /// Gets all the stored chain states
+    pub async fn get_all_chains(
+        &self,
+        limit: Option<u32>,
+        offset: Option<u32>,
+    ) -> Result<Vec<ChainState>> {
+        get_all_chains(&self.context, limit, offset).await
     }
 
     /// Gets the final denom of a token on solo machine after sending it on given chain
@@ -65,13 +75,23 @@ where
     ) -> Result<Vec<ChainKey>> {
         get_public_keys(&self.context, chain_id, limit, offset).await
     }
+
+    /// Gets transaction history of given chain
+    pub async fn get_history(
+        &self,
+        chain_id: &ChainId,
+        limit: Option<u32>,
+        offset: Option<u32>,
+    ) -> Result<Vec<Operation>> {
+        get_history(&self.context, chain_id, limit, offset).await
+    }
 }
 
 impl<C> Stag<C>
 where
     C: StagContext,
     C::Signer: Signer,
-    C::Storage: TransactionProvider,
+    C::Storage: Storage,
 {
     /// Get on-chain balance of given denom
     pub async fn get_balance(&self, chain_id: &ChainId, denom: &Identifier) -> Result<Decimal> {
@@ -83,7 +103,7 @@ impl<C> Stag<C>
 where
     C: StagContext,
     C::Signer: Signer,
-    C::Storage: TransactionProvider,
+    C::Storage: Storage,
     C::RpcClient: JsonRpcClient,
 {
     /// Adds metadata of a given chain

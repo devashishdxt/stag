@@ -32,7 +32,7 @@ where
     C::Storage: Storage,
     C::RpcClient: JsonRpcClient,
 {
-    let address = context.signer().to_account_address(&chain_id)?;
+    let address = context.signer().to_account_address(&chain_id).await?;
     let receiver = receiver.unwrap_or_else(|| address.clone());
 
     let mut chain_state = context

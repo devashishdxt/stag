@@ -34,7 +34,11 @@ where
 
     let any_public_key = match new_public_key {
         Some(new_public_key) => new_public_key.to_any()?,
-        None => context.signer().get_public_key(&chain_state.id)?.to_any()?,
+        None => context
+            .signer()
+            .get_public_key(&chain_state.id)
+            .await?
+            .to_any()?,
     };
 
     let signature = get_header_proof(
@@ -68,7 +72,7 @@ where
     let message = MsgUpdateClient {
         client_id: connection_details.solo_machine_client_id.to_string(),
         header: Some(any_header),
-        signer: context.signer().to_account_address(&chain_state.id)?,
+        signer: context.signer().to_account_address(&chain_state.id).await?,
     };
 
     build(context, chain_state, &[message], memo, request_id).await

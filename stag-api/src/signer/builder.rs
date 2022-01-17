@@ -1,7 +1,6 @@
 #[cfg(feature = "mnemonic-signer")]
 use std::collections::HashMap;
 
-#[cfg(feature = "mnemonic-signer")]
 use anyhow::Result;
 use sealed::sealed;
 
@@ -9,6 +8,8 @@ use crate::trait_util::Base;
 #[cfg(feature = "mnemonic-signer")]
 use crate::types::{ics::core::ics24_host::identifier::ChainId, public_key::PublicKeyAlgo};
 
+#[cfg(feature = "keplr-signer")]
+use super::keplr_signer::KeplrSigner as KeplrSignerImpl;
 #[cfg(feature = "mnemonic-signer")]
 use super::mnemonic_signer::{MnemonicSigner as MnemonicSignerImpl, MnemonicSignerConfig};
 use super::Signer;
@@ -20,12 +21,29 @@ pub trait SignerConfig: Base {
     type Signer: Signer;
 
     /// Create concrete signer from this config
-    fn into_signer(self) -> Self::Signer;
+    fn into_signer(self) -> Result<Self::Signer>;
+}
+
+#[cfg_attr(feature = "doc", doc(cfg(feature = "keplr-signer")))]
+#[cfg(feature = "keplr-signer")]
+#[derive(Default)]
+/// Signer backend using keplr wallet
+pub struct KeplrSigner;
+
+#[cfg_attr(feature = "doc", doc(cfg(feature = "keplr-signer")))]
+#[cfg(feature = "keplr-signer")]
+#[sealed]
+impl SignerConfig for KeplrSigner {
+    type Signer = KeplrSignerImpl;
+
+    fn into_signer(self) -> Result<Self::Signer> {
+        KeplrSignerImpl::new()
+    }
 }
 
 #[cfg_attr(feature = "doc", doc(cfg(feature = "mnemonic-signer")))]
 #[cfg(feature = "mnemonic-signer")]
-#[derive(Default)]
+#[derive(Default, Clone, PartialEq, Eq)]
 /// Signer backend using mnemonic
 pub struct MnemonicSigner {
     config_map: HashMap<ChainId, MnemonicSignerConfig>,
@@ -54,6 +72,15 @@ impl MnemonicSigner {
 
         Ok(self)
     }
+
+    pub fn get_signers(&self) -> Result<Vec<(ChainId, String)>> {
+        self.config_map
+            .iter()
+            .map(|(chain_id, config)| -> Result<(ChainId, String)> {
+                Ok((chain_id.clone(), config.get_account_address()?))
+            })
+            .collect()
+    }
 }
 
 #[cfg_attr(feature = "doc", doc(cfg(feature = "mnemonic-signer")))]
@@ -62,7 +89,7 @@ impl MnemonicSigner {
 impl SignerConfig for MnemonicSigner {
     type Signer = MnemonicSignerImpl;
 
-    fn into_signer(self) -> Self::Signer {
-        MnemonicSignerImpl::new(self.config_map)
+    fn into_signer(self) -> Result<Self::Signer> {
+        Ok(MnemonicSignerImpl::new(self.config_map))
     }
 }

@@ -7,15 +7,14 @@ use crate::{
 };
 
 /// This trait must be implemented by all the public key providers (e.g. mnemonic, ledger, etc.)
+#[cfg_attr(not(feature = "wasm"), async_trait)]
+#[cfg_attr(feature = "wasm", async_trait(?Send))]
 pub trait GetPublicKey: Base {
     /// Returns public key of signer
-    fn get_public_key(&self, chain_id: &ChainId) -> Result<PublicKey>;
-
-    /// Returns account prefix for computing bech32 addresses
-    fn get_account_prefix(&self, chain_id: &ChainId) -> Result<String>;
+    async fn get_public_key(&self, chain_id: &ChainId) -> Result<PublicKey>;
 
     /// Returns accounts address for this signer for given prefix
-    fn to_account_address(&self, chain_id: &ChainId) -> Result<String>;
+    async fn to_account_address(&self, chain_id: &ChainId) -> Result<String>;
 }
 
 /// Type of message given to a signer

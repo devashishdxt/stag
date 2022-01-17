@@ -48,7 +48,11 @@ where
     C: StagContext,
     C::Signer: Signer,
 {
-    let any_public_key = context.signer().get_public_key(&chain_state.id)?.to_any()?;
+    let any_public_key = context
+        .signer()
+        .get_public_key(&chain_state.id)
+        .await?
+        .to_any()?;
 
     let consensus_state = SoloMachineConsensusState {
         public_key: Some(any_public_key),
@@ -68,7 +72,7 @@ where
     let message = MsgCreateClient {
         client_state: Some(any_client_state),
         consensus_state: Some(any_consensus_state),
-        signer: context.signer().to_account_address(&chain_state.id)?,
+        signer: context.signer().to_account_address(&chain_state.id).await?,
     };
 
     build(context, chain_state, &[message], memo, request_id).await

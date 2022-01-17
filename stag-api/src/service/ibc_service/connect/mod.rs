@@ -9,7 +9,7 @@ use crate::{
     service::ibc_service::connect::connection::establish_connection,
     signer::Signer,
     stag::StagContext,
-    storage::{Storage, TransactionProvider},
+    storage::Storage,
     tendermint::TendermintClient,
     types::{
         chain_state::{ChainState, ConnectionDetails},
@@ -43,7 +43,7 @@ pub async fn connect<C>(
 where
     C: StagContext,
     C::Signer: Signer,
-    C::Storage: TransactionProvider,
+    C::Storage: Storage,
     C::RpcClient: TendermintClient,
 {
     let mut chain_state = context

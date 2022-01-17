@@ -48,7 +48,7 @@ where
 
     let denom = chain_state.get_ibc_denom(denom)?;
 
-    let sender = context.signer().to_account_address(&chain_state.id)?;
+    let sender = context.signer().to_account_address(&chain_state.id).await?;
 
     let message = MsgTransfer {
         source_port: chain_state.config.port_id.to_string(),
@@ -100,7 +100,7 @@ where
         acknowledgement,
         proof_acked,
         proof_height: Some(proof_height),
-        signer: context.signer().to_account_address(&chain_state.id)?,
+        signer: context.signer().to_account_address(&chain_state.id).await?,
     };
 
     build(context, chain_state, &[message], memo, request_id).await

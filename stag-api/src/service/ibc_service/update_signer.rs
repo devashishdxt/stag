@@ -4,7 +4,7 @@ use crate::{
     event::{Event, EventHandler},
     signer::{GetPublicKey, Signer},
     stag::StagContext,
-    storage::{Storage, Transaction, TransactionProvider},
+    storage::Storage,
     tendermint::TendermintClient,
     transaction_builder,
     types::{ics::core::ics24_host::identifier::ChainId, public_key::PublicKey},
@@ -22,21 +22,17 @@ pub async fn update_signer<C>(
 where
     C: StagContext,
     C::Signer: Signer,
-    C::Storage: TransactionProvider,
+    C::Storage: Storage,
     C::RpcClient: TendermintClient,
 {
-    let transaction = context.storage().transaction(&[
-        "get_chain_state",
-        "update_chain_state",
-        "add_chain_key",
-    ])?;
-
-    let mut chain_state = transaction
+    let mut chain_state = context
+        .storage()
         .get_chain_state(&chain_id)
         .await?
         .ok_or_else(|| anyhow!("chain details for {} not found", chain_id))?;
 
-    transaction
+    context
+        .storage()
         .add_chain_key(&chain_id, &new_public_key.to_string())
         .await?;
 
@@ -56,14 +52,12 @@ where
 
     ensure_response_success(&response)?;
 
-    transaction.update_chain_state(&chain_state).await?;
-
-    transaction.done().await?;
+    context.storage().update_chain_state(&chain_state).await?;
 
     context
         .handle_event(Event::SignerUpdated {
             chain_id,
-            old_public_key: context.signer().get_public_key(&chain_state.id)?,
+            old_public_key: context.signer().get_public_key(&chain_state.id).await?,
             new_public_key,
         })
         .await

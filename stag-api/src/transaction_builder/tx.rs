@@ -43,6 +43,7 @@ where
     let (account_number, account_sequence) = get_account_details(context, chain_state).await?;
 
     let auth_info = build_auth_info(context, chain_state, account_sequence)
+        .await
         .context("unable to build auth info")?;
     let auth_info_bytes = proto_encode(&auth_info)?;
 
@@ -89,7 +90,7 @@ where
 {
     let mut query_client = get_auth_query_client(chain_state.config.grpc_addr.clone()).await?;
 
-    let account_address = context.signer().to_account_address(&chain_state.id)?;
+    let account_address = context.signer().to_account_address(&chain_state.id).await?;
 
     let response = query_client
         .account(QueryAccountRequest {
@@ -108,7 +109,7 @@ where
     Ok((base_account.account_number, base_account.sequence))
 }
 
-fn build_auth_info<C>(
+async fn build_auth_info<C>(
     context: &C,
     chain_state: &ChainState,
     account_sequence: u64,
@@ -118,7 +119,13 @@ where
     C::Signer: GetPublicKey,
 {
     let signer_info = SignerInfo {
-        public_key: Some(context.signer().get_public_key(&chain_state.id)?.to_any()?),
+        public_key: Some(
+            context
+                .signer()
+                .get_public_key(&chain_state.id)
+                .await?
+                .to_any()?,
+        ),
         mode_info: Some(ModeInfo {
             sum: Some(Sum::Single(Single { mode: 1 })),
         }),

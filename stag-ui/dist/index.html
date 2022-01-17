@@ -1,0 +1,40 @@
+<!DOCTYPE html><html><head>
+    <meta charset="utf-8">
+    <title>Stag: IBC Solo Machine</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Mono&amp;family=Open+Sans&amp;display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/index-185314a6e45a8642.css">
+
+<link rel="preload" href="/index-dd9277018544bdb8_bg.wasm" as="fetch" type="application/wasm" crossorigin="">
+<link rel="modulepreload" href="/index-dd9277018544bdb8.js"></head>
+
+<body><script type="module">import init from '/index-dd9277018544bdb8.js';init('/index-dd9277018544bdb8_bg.wasm');</script><script>(function () {
+    var url = 'ws://' + window.location.host + '/_trunk/ws';
+    var poll_interval = 5000;
+    var reload_upon_connect = () => {
+        window.setTimeout(
+            () => {
+                // when we successfully reconnect, we'll force a
+                // reload (since we presumably lost connection to
+                // trunk due to it being killed, so it will have
+                // rebuilt on restart)
+                var ws = new WebSocket(url);
+                ws.onopen = () => window.location.reload();
+                ws.onclose = reload_upon_connect;
+            },
+            poll_interval);
+    };
+
+    var ws = new WebSocket(url);
+    ws.onmessage = (ev) => {
+        const msg = JSON.parse(ev.data);
+        if (msg.reload) {
+            window.location.reload();
+        }
+    };
+    ws.onclose = reload_upon_connect;
+})()
+</script></body></html>

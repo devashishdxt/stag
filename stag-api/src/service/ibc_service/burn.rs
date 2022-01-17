@@ -6,7 +6,7 @@ use crate::{
     service::ibc_service::common::{ensure_response_success, extract_packets, process_packets},
     signer::{GetPublicKey, Signer},
     stag::StagContext,
-    storage::{Storage, TransactionProvider},
+    storage::Storage,
     tendermint::TendermintClient,
     transaction_builder,
     types::{
@@ -27,10 +27,10 @@ pub async fn burn_tokens<C>(
 where
     C: StagContext,
     C::Signer: Signer,
-    C::Storage: TransactionProvider,
+    C::Storage: Storage,
     C::RpcClient: TendermintClient,
 {
-    let address = context.signer().to_account_address(&chain_id)?;
+    let address = context.signer().to_account_address(&chain_id).await?;
     let chain_state = context
         .storage()
         .get_chain_state(&chain_id)

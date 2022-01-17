@@ -9,6 +9,7 @@ use super::JsonRpcClient;
 
 #[cfg_attr(feature = "doc", doc(cfg(feature = "reqwest-client")))]
 #[cfg(feature = "reqwest-client")]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 /// Json RPC backend using `reqwest`
 pub struct ReqwestClient;
 

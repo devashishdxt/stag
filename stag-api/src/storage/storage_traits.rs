@@ -16,7 +16,7 @@ use crate::{
         ics::core::ics24_host::identifier::{
             ChainId, ChannelId, ClientId, ConnectionId, Identifier, PortId,
         },
-        operation::OperationType,
+        operation::{Operation, OperationType},
     },
 };
 
@@ -55,6 +55,13 @@ pub trait Storage: Base {
     /// Updates a chain in the storage
     async fn update_chain_state(&self, chain_state: &ChainState) -> Result<()>;
 
+    /// Get all chains from the storage
+    async fn get_all_chain_states(
+        &self,
+        limit: Option<u32>,
+        offset: Option<u32>,
+    ) -> Result<Vec<ChainState>>;
+
     /// Adds a new public key for a given chain to the storage
     async fn add_chain_key(&self, chain_id: &ChainId, public_key: &str) -> Result<()>;
 
@@ -78,6 +85,14 @@ pub trait Storage: Base {
         operation_type: OperationType,
         transaction_hash: &str,
     ) -> Result<()>;
+
+    /// Gets all IBC operations from the storage for a given chain
+    async fn get_operations(
+        &self,
+        chain_id: &ChainId,
+        limit: Option<u32>,
+        offset: Option<u32>,
+    ) -> Result<Vec<Operation>>;
 
     /// Adds tendermint client state to the storage
     async fn add_tendermint_client_state(

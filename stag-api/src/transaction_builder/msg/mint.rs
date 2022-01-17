@@ -63,7 +63,7 @@ where
         "can't find tendermint channel, channel is already closed"
     );
 
-    let sender = context.signer().to_account_address(&chain_state.id)?;
+    let sender = context.signer().to_account_address(&chain_state.id).await?;
 
     let packet_data = TokenTransferPacketData {
         denom: denom.to_string(),

@@ -28,7 +28,7 @@ use crate::{
 };
 
 /// State of an IBC enabled chain
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ChainState {
     /// ID of chain
@@ -52,7 +52,7 @@ pub struct ChainState {
 }
 
 /// IBC connection details
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ConnectionDetails {
     /// Client ID of solo machine client on IBC enabled chain
@@ -70,7 +70,7 @@ pub struct ConnectionDetails {
 }
 
 /// Configuration related to an IBC enabled chain
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ChainConfig {
     /// gRPC address
@@ -101,7 +101,7 @@ pub struct ChainConfig {
 }
 
 /// Fee and gas configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Fee {
     /// Fee amount
@@ -173,7 +173,7 @@ impl ChainState {
         let denom = self.get_ibc_denom(denom)?;
 
         let request = QueryBalanceRequest {
-            address: signer.to_account_address(&self.id)?,
+            address: signer.to_account_address(&self.id).await?,
             denom,
         };
 
@@ -185,6 +185,14 @@ impl ChainState {
             .map(|coin| coin.amount.parse())
             .transpose()?
             .unwrap_or_default())
+    }
+
+    /// Returns true if current chain has all the connection details set
+    pub fn is_connected(&self) -> bool {
+        match self.connection_details {
+            None => false,
+            Some(ref connection_details) => connection_details.solo_machine_channel_id.is_some(),
+        }
     }
 }
 

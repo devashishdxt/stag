@@ -44,16 +44,16 @@ where
     E: EventHandler,
 {
     /// Adds signer to the context
-    pub fn with_signer<NS>(self, signer: NS) -> StagBuilder<NS::Signer, T, C, E>
+    pub fn with_signer<NS>(self, signer: NS) -> Result<StagBuilder<NS::Signer, T, C, E>>
     where
         NS: SignerConfig,
     {
-        StagBuilder {
-            signer: signer.into_signer(),
+        Ok(StagBuilder {
+            signer: signer.into_signer()?,
             storage: self.storage,
             rpc_client: self.rpc_client,
             event_handler: self.event_handler,
-        }
+        })
     }
 
     /// Adds storage to the context

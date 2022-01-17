@@ -11,7 +11,8 @@ use cosmos_sdk_proto::ibc::{
 use primitive_types::U256;
 use prost::Message;
 use rexie::{
-    Index, KeyRange, ObjectStore, Rexie, Transaction as RexieTransaction, TransactionMode,
+    Direction, Index, KeyRange, ObjectStore, Rexie, Transaction as RexieTransaction,
+    TransactionMode,
 };
 use tendermint::node::Id as NodeId;
 
@@ -24,7 +25,7 @@ use crate::{
             identifier::{ChainId, ChannelId, ClientId, ConnectionId, Identifier, PortId},
             path::{ChannelPath, ClientStatePath, ConnectionPath, ConsensusStatePath},
         },
-        operation::{OperationRequest, OperationType},
+        operation::{Operation, OperationRequest, OperationType},
         proto_util::proto_encode,
     },
 };
@@ -230,6 +231,35 @@ impl Storage for IndexedDbTransaction {
             .map(|_| ())
     }
 
+    async fn get_all_chain_states(
+        &self,
+        limit: Option<u32>,
+        offset: Option<u32>,
+    ) -> Result<Vec<ChainState>> {
+        let store = self
+            .transaction
+            .store(CHAIN_STATE_STORE_NAME)
+            .map_err(|err| anyhow!("error when getting chain_state object store: {}", err))?;
+
+        let values = store
+            .get_all(None, limit, offset, None)
+            .await
+            .map_err(|err| {
+                anyhow!(
+                    "error when getting values from chain_state object store: {}",
+                    err
+                )
+            })?;
+
+        values
+            .into_iter()
+            .map(|(_, js_value)| {
+                serde_wasm_bindgen::from_value(js_value)
+                    .map_err(|err| anyhow!("error when deserializing chain_state: {}", err))
+            })
+            .collect()
+    }
+
     async fn add_chain_key(&self, chain_id: &ChainId, public_key: &str) -> Result<()> {
         let store = self
             .transaction
@@ -280,6 +310,7 @@ impl Storage for IndexedDbTransaction {
                 ),
                 limit,
                 offset,
+                Some(Direction::Prev),
             )
             .await
             .map_err(|err| {
@@ -338,6 +369,52 @@ impl Storage for IndexedDbTransaction {
                 )
             })
             .map(|_| ())
+    }
+
+    async fn get_operations(
+        &self,
+        chain_id: &ChainId,
+        limit: Option<u32>,
+        offset: Option<u32>,
+    ) -> Result<Vec<Operation>> {
+        let store = self
+            .transaction
+            .store(OPERATIONS_STORE_NAME)
+            .map_err(|err| anyhow!("error when getting operations object store: {}", err))?;
+
+        let index = store
+            .index("chain_id")
+            .map_err(|err| anyhow!("error when getting chain id index: {}", err))?;
+
+        let js_chain_id = serde_wasm_bindgen::to_value(chain_id)
+            .map_err(|err| anyhow!("error when serializing chain_id: {}", err))?;
+
+        let pairs = index
+            .get_all(
+                Some(
+                    &KeyRange::only(&js_chain_id)
+                        .map_err(|err| anyhow!("unable to generate keyrange: {}", err))?,
+                ),
+                limit,
+                offset,
+                Some(Direction::Prev),
+            )
+            .await
+            .map_err(|err| {
+                anyhow!(
+                    "error when getting all operations for chain id [{}]: {}",
+                    chain_id,
+                    err
+                )
+            })?;
+
+        pairs
+            .into_iter()
+            .map(|(_, js_value)| {
+                serde_wasm_bindgen::from_value(js_value)
+                    .map_err(|err| anyhow!("error when deserializing operation: {}", err))
+            })
+            .collect()
     }
 
     async fn add_tendermint_client_state(
@@ -501,9 +578,11 @@ impl TransactionProvider for IndexedDbStorage {
                 "add_chain_state" => (CHAIN_STATE_STORE_NAME, true),
                 "get_chain_state" => (CHAIN_STATE_STORE_NAME, false),
                 "update_chain_state" => (CHAIN_STATE_STORE_NAME, true),
+                "get_all_chain_states" => (CHAIN_STATE_STORE_NAME, false),
                 "add_chain_key" => (CHAIN_KEY_STORE_NAME, true),
                 "get_chain_keys" => (CHAIN_KEY_STORE_NAME, false),
                 "add_operation" => (OPERATIONS_STORE_NAME, true),
+                "get_operations" => (OPERATIONS_STORE_NAME, false),
                 "add_tendermint_client_state" => (IBC_DATA_STORE_NAME, true),
                 "get_tendermint_client_state" => (IBC_DATA_STORE_NAME, false),
                 "add_tendermint_consensus_state" => (IBC_DATA_STORE_NAME, true),
@@ -579,6 +658,20 @@ impl Storage for IndexedDbStorage {
         transaction.done().await
     }
 
+    async fn get_all_chain_states(
+        &self,
+        limit: Option<u32>,
+        offset: Option<u32>,
+    ) -> Result<Vec<ChainState>> {
+        let transaction = self.transaction(&["get_all_chain_states"])?;
+
+        let result = transaction.get_all_chain_states(limit, offset).await?;
+
+        transaction.done().await?;
+
+        Ok(result)
+    }
+
     async fn add_chain_key(&self, chain_id: &ChainId, public_key: &str) -> Result<()> {
         let transaction = self.transaction(&["add_chain_key"])?;
 
@@ -627,6 +720,21 @@ impl Storage for IndexedDbStorage {
             .await?;
 
         transaction.done().await
+    }
+
+    async fn get_operations(
+        &self,
+        chain_id: &ChainId,
+        limit: Option<u32>,
+        offset: Option<u32>,
+    ) -> Result<Vec<Operation>> {
+        let transaction = self.transaction(&["get_operations"])?;
+
+        let result = transaction.get_operations(chain_id, limit, offset).await?;
+
+        transaction.done().await?;
+
+        Ok(result)
     }
 
     async fn add_tendermint_client_state(

@@ -36,6 +36,17 @@ pub struct MnemonicSignerConfig {
     pub algo: PublicKeyAlgo,
 }
 
+impl PartialEq for MnemonicSignerConfig {
+    fn eq(&self, other: &Self) -> bool {
+        self.mnemonic.phrase() == other.mnemonic.phrase()
+            && self.hd_path == other.hd_path
+            && self.account_prefix == other.account_prefix
+            && self.algo == other.algo
+    }
+}
+
+impl Eq for MnemonicSignerConfig {}
+
 impl MnemonicSignerConfig {
     /// Creates a new instance of mnemonic signer configuration
     pub fn new(
@@ -104,22 +115,20 @@ impl MnemonicSignerConfig {
     }
 
     /// Returns the account address
-    fn get_account_address(&self) -> Result<String> {
+    pub(crate) fn get_account_address(&self) -> Result<String> {
         self.get_public_key()?
             .account_address(self.get_account_prefix())
     }
 }
 
+#[cfg_attr(not(feature = "wasm"), async_trait)]
+#[cfg_attr(feature = "wasm", async_trait(?Send))]
 impl GetPublicKey for MnemonicSigner {
-    fn get_public_key(&self, chain_id: &ChainId) -> Result<PublicKey> {
+    async fn get_public_key(&self, chain_id: &ChainId) -> Result<PublicKey> {
         self.get_config(chain_id)?.get_public_key()
     }
 
-    fn get_account_prefix(&self, chain_id: &ChainId) -> Result<String> {
-        Ok(self.get_config(chain_id)?.get_account_prefix().to_owned())
-    }
-
-    fn to_account_address(&self, chain_id: &ChainId) -> Result<String> {
+    async fn to_account_address(&self, chain_id: &ChainId) -> Result<String> {
         self.get_config(chain_id)?.get_account_address()
     }
 }
@@ -151,16 +160,37 @@ impl Signer for MnemonicSigner {
 
 #[cfg(test)]
 mod tests {
-    use super::MnemonicSignerConfig;
+    use super::*;
 
     #[test]
     fn test_mnemonic_signer() {
-        let config = MnemonicSignerConfig::new("fantasy quarter expect shock number scheme office brass guess attract cake easily dash walnut must puppy drink junior gorilla flag unusual cover among reform", None, None, None).unwrap();
-        let account_address = config.get_account_address().unwrap();
+        let config = MnemonicSignerConfig::new("practice empty client sauce pistol work ticket casual romance appear army fault palace coyote fox super salute slim catch kite wrist three hedgehog sign", None, None, None).unwrap();
+
+        let signing_key = config.get_signing_key().unwrap();
+
+        let signature: Signature = match config.algo {
+            PublicKeyAlgo::Secp256k1 => signing_key.sign_digest(sha2::Sha256::new().chain(&[1])),
+            #[cfg(feature = "ethermint")]
+            PublicKeyAlgo::EthSecp256k1 => {
+                signing_key.sign_digest(sha3::Keccak256::new().chain(&[1]))
+            }
+        };
 
         assert_eq!(
-            account_address,
-            "cosmos1qx0cppqkpwyyjvcl8p4s5eehrftfp00wdtkuyz"
+            signature.as_ref().to_vec(),
+            vec![
+                111, 153, 170, 175, 174, 45, 141, 109, 219, 33, 166, 96, 118, 24, 252, 73, 189,
+                237, 250, 246, 13, 174, 51, 44, 29, 164, 211, 55, 110, 155, 240, 84, 111, 147, 217,
+                163, 5, 147, 155, 232, 251, 73, 25, 56, 119, 163, 76, 246, 77, 11, 100, 79, 174,
+                230, 255, 51, 47, 231, 46, 133, 125, 247, 214, 202
+            ]
         );
+
+        // assert_eq!(
+        //     account_address,
+        //     "cosmos1qx0cppqkpwyyjvcl8p4s5eehrftfp00wdtkuyz"
+        // );
+
+        // let signature = "b5mqr64tjW3bIaZgdhj8Sb3t+vYNrjMsHaTTN26b8FRvk9mjBZOb6PtJGTh3o0z2TQtkT67m/zMv5y6FfffWyg==";
     }
 }

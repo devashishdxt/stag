@@ -11,7 +11,7 @@ use tendermint_rpc::endpoint::broadcast::tx_commit::Response as TxCommitResponse
 use crate::{
     signer::Signer,
     stag::StagContext,
-    storage::{Storage, Transaction, TransactionProvider},
+    storage::Storage,
     tendermint::TendermintClient,
     transaction_builder,
     types::{chain_state::ChainState, ics::core::ics02_client::height::IHeight},
@@ -131,7 +131,7 @@ pub async fn process_packets<C>(
 where
     C: StagContext,
     C::Signer: Signer,
-    C::Storage: TransactionProvider,
+    C::Storage: Storage,
     C::RpcClient: TendermintClient,
 {
     let connection_details = chain_state.connection_details.clone().ok_or_else(|| {
@@ -152,11 +152,8 @@ where
     let tendermint_channel_id = connection_details.tendermint_channel_id.as_ref().unwrap();
 
     for packet in packets {
-        let transaction = context
+        let mut chain_state = context
             .storage()
-            .transaction(&["get_chain_state", "update_chain_state"])?;
-
-        let mut chain_state = transaction
             .get_chain_state(&chain_state.id)
             .await?
             .ok_or_else(|| anyhow!("chain details for {} not found", chain_state.id))?;
@@ -192,8 +189,7 @@ where
             .broadcast_tx(&chain_state.config.rpc_addr, msg)
             .await?;
 
-        transaction.update_chain_state(&chain_state).await?;
-        transaction.done().await?;
+        context.storage().update_chain_state(&chain_state).await?;
 
         ensure_response_success(&response)?;
     }

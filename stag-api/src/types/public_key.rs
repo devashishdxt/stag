@@ -2,7 +2,9 @@ use std::{fmt, str::FromStr};
 
 use anyhow::{anyhow, Error, Result};
 use bech32::{ToBase32, Variant};
-use k256::{ecdsa::VerifyingKey, elliptic_curve::sec1::ToEncodedPoint};
+use k256::ecdsa::VerifyingKey;
+#[cfg(feature = "ethermint")]
+use k256::elliptic_curve::sec1::ToEncodedPoint;
 use prost::Message;
 use prost_types::Any;
 use ripemd160::Ripemd160;
@@ -21,7 +23,7 @@ use crate::types::{
 use super::cosmos::crypto::{from_verifying_key, into_verifying_key};
 
 /// Supported algorithms for address generation
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PublicKeyAlgo {
     /// Secp256k1 (tendermint)
     Secp256k1,
