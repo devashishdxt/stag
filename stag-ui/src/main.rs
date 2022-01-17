@@ -20,5 +20,7 @@ fn app() -> Html {
 }
 
 fn main() {
+    tracing_wasm::set_as_global_default();
+
     yew::start_app::<App>();
 }

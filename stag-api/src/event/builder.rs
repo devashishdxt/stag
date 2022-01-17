@@ -19,7 +19,7 @@ pub trait EventHandlerConfig: Base {
 
 #[cfg_attr(feature = "doc", doc(cfg(feature = "tracing-event-handler")))]
 #[cfg(feature = "tracing-event-handler")]
-#[derive(Clone)]
+#[derive(Clone, Copy, Default, PartialEq, Eq)]
 /// Event handler backend using tracing
 pub struct TracingEventHandler;
 

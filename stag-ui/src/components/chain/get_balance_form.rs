@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
 use bounce::use_atom;
 use stag_api::{
+    event::TracingEventHandler,
     signer::SignerConfig,
     stag::Stag,
     storage::IndexedDb,
@@ -22,7 +23,12 @@ struct GetBalanceState {
 }
 
 impl GetBalanceState {
-    async fn get_balance<S>(&self, signer: S, storage: IndexedDb) -> Result<String>
+    async fn get_balance<S>(
+        &self,
+        signer: S,
+        storage: IndexedDb,
+        event_handler: TracingEventHandler,
+    ) -> Result<String>
     where
         S: SignerConfig,
     {
@@ -33,6 +39,7 @@ impl GetBalanceState {
             .with_signer(signer)?
             .with_storage(storage)
             .await?
+            .with_event_handler(event_handler)
             .build();
 
         stag.get_balance(&chain_id, &denom)
@@ -78,7 +85,7 @@ pub fn get_balance_form() -> Html {
                     });
 
                     wasm_bindgen_futures::spawn_local(async move {
-                        match state.get_balance((*atom).signer.clone(), (*atom).storage.clone()).await {
+                        match state.get_balance((*atom).signer.clone(), (*atom).storage.clone(), atom.event_handler).await {
                             Ok(balance) => {
                                 notification.set(NotificationAtom {
                                     data: Some(NotificationData {

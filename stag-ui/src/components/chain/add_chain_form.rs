@@ -2,6 +2,7 @@ use anyhow::{ensure, Context, Result};
 use bounce::use_atom;
 use humantime::parse_duration;
 use stag_api::{
+    event::TracingEventHandler,
     signer::SignerConfig,
     stag::Stag,
     storage::IndexedDb,
@@ -90,6 +91,7 @@ impl AddChainState {
         signer: S,
         storage: IndexedDb,
         rpc_client: ReqwestClient,
+        event_handler: TracingEventHandler,
     ) -> Result<ChainId>
     where
         S: SignerConfig,
@@ -101,6 +103,7 @@ impl AddChainState {
             .with_rpc_client(rpc_client)
             .with_storage(storage)
             .await?
+            .with_event_handler(event_handler)
             .build();
 
         stag.add_chain(&chain_config).await
@@ -172,7 +175,7 @@ pub fn add_chain_form() -> Html {
                     });
 
                     wasm_bindgen_futures::spawn_local(async move {
-                        match state.add_chain((*atom).signer.clone(), (*atom).storage.clone(), atom.rpc_client).await {
+                        match state.add_chain((*atom).signer.clone(), (*atom).storage.clone(), atom.rpc_client, atom.event_handler).await {
                             Ok(chain_id) => {
                                 notification.set(NotificationAtom {
                                     data: Some(NotificationData {

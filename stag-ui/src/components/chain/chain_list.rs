@@ -1,8 +1,8 @@
 use anyhow::Result;
 use bounce::use_atom;
 use stag_api::{
-    signer::SignerConfig, stag::Stag, storage::IndexedDb, tendermint::ReqwestClient,
-    types::ics::core::ics24_host::identifier::ChainId,
+    event::TracingEventHandler, signer::SignerConfig, stag::Stag, storage::IndexedDb,
+    tendermint::ReqwestClient, types::ics::core::ics24_host::identifier::ChainId,
 };
 use yew::prelude::*;
 
@@ -21,6 +21,7 @@ pub fn chain_list() -> Html {
             (*atom).signer.clone(),
             (*atom).storage.clone(),
             atom.rpc_client,
+            atom.event_handler,
         )
         .await;
 
@@ -74,6 +75,7 @@ async fn get_chains<S>(
     signer: S,
     storage: IndexedDb,
     rpc_client: ReqwestClient,
+    event_handler: TracingEventHandler,
 ) -> Result<Vec<(ChainId, bool)>>
 where
     S: SignerConfig,
@@ -83,6 +85,7 @@ where
         .with_storage(storage)
         .await?
         .with_rpc_client(rpc_client)
+        .with_event_handler(event_handler)
         .build();
 
     let chains = stag.get_all_chains(None, None).await?;

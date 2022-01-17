@@ -1,6 +1,7 @@
 use anyhow::Result;
 use bounce::use_atom;
 use stag_api::{
+    event::TracingEventHandler,
     stag::Stag,
     storage::IndexedDb,
     types::{
@@ -33,7 +34,9 @@ pub fn history_list(props: &HistoryListProps) -> Html {
     let transaction_history_clone = transaction_history.clone();
 
     wasm_bindgen_futures::spawn_local(async move {
-        match get_transaction_history((*atom).storage.clone(), &props.chain_id).await {
+        match get_transaction_history((*atom).storage.clone(), atom.event_handler, &props.chain_id)
+            .await
+        {
             Ok(operations) => {
                 transaction_history_clone.set(operations);
             }
@@ -92,7 +95,15 @@ pub fn history_list(props: &HistoryListProps) -> Html {
     }
 }
 
-async fn get_transaction_history(storage: IndexedDb, chain_id: &ChainId) -> Result<Vec<Operation>> {
-    let stag = Stag::builder().with_storage(storage).await?.build();
+async fn get_transaction_history(
+    storage: IndexedDb,
+    event_handler: TracingEventHandler,
+    chain_id: &ChainId,
+) -> Result<Vec<Operation>> {
+    let stag = Stag::builder()
+        .with_storage(storage)
+        .await?
+        .with_event_handler(event_handler)
+        .build();
     stag.get_history(chain_id, None, None).await
 }

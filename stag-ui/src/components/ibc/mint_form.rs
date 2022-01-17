@@ -2,6 +2,7 @@ use anyhow::{Context, Result};
 use bounce::use_atom;
 use primitive_types::U256;
 use stag_api::{
+    event::TracingEventHandler,
     signer::SignerConfig,
     stag::Stag,
     storage::IndexedDb,
@@ -32,6 +33,7 @@ impl MintState {
         signer: S,
         storage: IndexedDb,
         rpc_client: ReqwestClient,
+        event_handler: TracingEventHandler,
     ) -> Result<String>
     where
         S: SignerConfig,
@@ -50,6 +52,7 @@ impl MintState {
             .with_rpc_client(rpc_client)
             .with_storage(storage)
             .await?
+            .with_event_handler(event_handler)
             .build();
 
         stag.mint(
@@ -107,11 +110,11 @@ pub fn mint_form() -> Html {
                     });
 
                     wasm_bindgen_futures::spawn_local(async move {
-                        match state.mint((*atom).signer.clone(), (*atom).storage.clone(), atom.rpc_client).await {
-                            Ok(transaction_hash) => {
+                        match state.mint((*atom).signer.clone(), (*atom).storage.clone(), atom.rpc_client, atom.event_handler).await {
+                            Ok(_) => {
                                 notification.set(NotificationAtom {
                                     data: Some(NotificationData {
-                                        message: format!("Successfully minted tokens on chain: {}", transaction_hash),
+                                        message: "Successfully minted tokens on chain".to_string(),
                                         icon: NotificationIcon::Success,
                                         dismissable: true,
                                     })

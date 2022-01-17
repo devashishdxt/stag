@@ -15,7 +15,7 @@ default = [
     # "keplr-signer",
     "mnemonic-signer",
     "reqwest-client",
-    # "tracing-event-handler",
+    "tracing-event-handler",
     "wasm",
     # "non-wasm",
 ]

@@ -1,8 +1,8 @@
 use anyhow::{Context, Result};
 use bounce::use_atom;
 use stag_api::{
-    signer::SignerConfig, stag::Stag, storage::IndexedDb, tendermint::ReqwestClient,
-    types::ics::core::ics24_host::identifier::ChainId,
+    event::TracingEventHandler, signer::SignerConfig, stag::Stag, storage::IndexedDb,
+    tendermint::ReqwestClient, types::ics::core::ics24_host::identifier::ChainId,
 };
 use yew::prelude::*;
 use yew_router::{history::History, hooks::use_history};
@@ -26,6 +26,7 @@ impl ConnectState {
         signer: S,
         storage: IndexedDb,
         rpc_client: ReqwestClient,
+        event_handler: TracingEventHandler,
     ) -> Result<()>
     where
         S: SignerConfig,
@@ -37,6 +38,7 @@ impl ConnectState {
             .with_rpc_client(rpc_client)
             .with_storage(storage)
             .await?
+            .with_event_handler(event_handler)
             .build();
 
         stag.connect(chain_id, None, (*self.memo).clone(), *self.force)
@@ -83,7 +85,7 @@ pub fn connect_form() -> Html {
                     });
 
                     wasm_bindgen_futures::spawn_local(async move {
-                        match state.connect((*atom).signer.clone(), (*atom).storage.clone(), atom.rpc_client).await {
+                        match state.connect((*atom).signer.clone(), (*atom).storage.clone(), atom.rpc_client, atom.event_handler).await {
                             Ok(()) => {
                                 notification.set(NotificationAtom {
                                     data: Some(NotificationData {
