@@ -164,8 +164,6 @@ impl Signer for MnemonicSigner {
 mod tests {
     use super::*;
 
-    use k256::ecdsa::signature::{digest::Digest, DigestSigner};
-
     #[test]
     fn test_mnemonic_signer() {
         let config = MnemonicSignerConfig::new("practice empty client sauce pistol work ticket casual romance appear army fault palace coyote fox super salute slim catch kite wrist three hedgehog sign", None, None, None).unwrap();
