@@ -7,7 +7,7 @@ use k256::ecdsa::VerifyingKey;
 use k256::elliptic_curve::sec1::ToEncodedPoint;
 use prost::Message;
 use prost_types::Any;
-use ripemd160::Ripemd160;
+use ripemd::Ripemd160;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use sha2::{Digest, Sha256};
 #[cfg(feature = "ethermint")]

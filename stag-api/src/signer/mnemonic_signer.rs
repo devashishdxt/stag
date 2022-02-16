@@ -3,8 +3,7 @@ use std::{collections::HashMap, str::FromStr};
 use anyhow::{anyhow, Context, Result};
 use async_trait::async_trait;
 use bip32::{DerivationPath, ExtendedPrivateKey, Language, Mnemonic};
-use k256::ecdsa::{signature::DigestSigner, Signature, SigningKey};
-use sha2::Digest;
+use k256::ecdsa::{Signature, SigningKey};
 
 use crate::types::{
     ics::core::ics24_host::identifier::ChainId,
@@ -147,11 +146,14 @@ impl Signer for MnemonicSigner {
         let signing_key = config.get_signing_key()?;
 
         let signature: Signature = match config.algo {
-            PublicKeyAlgo::Secp256k1 => signing_key.sign_digest(sha2::Sha256::new().chain(message)),
+            PublicKeyAlgo::Secp256k1 => <SigningKey as k256::ecdsa::signature::Signer<
+                k256::ecdsa::Signature,
+            >>::sign(&signing_key, message.as_ref()),
             #[cfg(feature = "ethermint")]
-            PublicKeyAlgo::EthSecp256k1 => {
-                signing_key.sign_digest(sha3::Keccak256::new().chain(message))
-            }
+            PublicKeyAlgo::EthSecp256k1 => <SigningKey as k256::ecdsa::signature::Signer<
+                k256::ecdsa::recoverable::Signature,
+            >>::sign(&signing_key, message.as_ref())
+            .into(),
         };
 
         Ok(signature.as_ref().to_vec())
@@ -169,11 +171,14 @@ mod tests {
         let signing_key = config.get_signing_key().unwrap();
 
         let signature: Signature = match config.algo {
-            PublicKeyAlgo::Secp256k1 => signing_key.sign_digest(sha2::Sha256::new().chain(&[1])),
+            PublicKeyAlgo::Secp256k1 => <SigningKey as k256::ecdsa::signature::Signer<
+                k256::ecdsa::Signature,
+            >>::sign(&signing_key, &[1]),
             #[cfg(feature = "ethermint")]
-            PublicKeyAlgo::EthSecp256k1 => {
-                signing_key.sign_digest(sha3::Keccak256::new().chain(&[1]))
-            }
+            PublicKeyAlgo::EthSecp256k1 => <SigningKey as k256::ecdsa::signature::Signer<
+                k256::ecdsa::recoverable::Signature,
+            >>::sign(&signing_key, &[1])
+            .into(),
         };
 
         assert_eq!(
