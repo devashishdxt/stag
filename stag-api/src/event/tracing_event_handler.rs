@@ -3,6 +3,7 @@ use async_trait::async_trait;
 
 use super::{Event, EventHandler};
 
+#[derive(Clone)]
 pub struct TracingEventHandler;
 
 #[cfg_attr(not(feature = "wasm"), async_trait)]

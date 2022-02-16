@@ -8,8 +8,8 @@ use crate::{
     event::{Event, EventHandler},
     service::ibc_service::connect::connection::establish_connection,
     signer::Signer,
-    stag::StagContext,
-    storage::Storage,
+    stag::{StagContext, WithTransaction},
+    storage::{Storage, Transaction, TransactionProvider},
     tendermint::TendermintClient,
     types::{
         chain_state::{ChainState, ConnectionDetails},
@@ -41,11 +41,13 @@ pub async fn connect<C>(
     force: bool,
 ) -> Result<()>
 where
-    C: StagContext,
+    C: StagContext + WithTransaction,
     C::Signer: Signer,
-    C::Storage: Storage,
+    C::Storage: TransactionProvider,
     C::RpcClient: TendermintClient,
 {
+    let context = context.with_transaction()?;
+
     let mut chain_state = context
         .storage()
         .get_chain_state(&chain_id)
@@ -56,14 +58,16 @@ where
 
     match connection_open_type {
         ConnectionOpenType::AlreadyOpen => {
+            let (_, transaction, _, _) = context.unwrap();
+            transaction.done().await?;
             bail!("connection is already established with given chain")
         }
         ConnectionOpenType::Full => {
             let (solo_machine_client_id, tendermint_client_id) =
-                create_client(context, &chain_state, request_id.as_deref(), memo.clone()).await?;
+                create_client(&context, &chain_state, request_id.as_deref(), memo.clone()).await?;
 
             let (solo_machine_connection_id, tendermint_connection_id) = establish_connection(
-                context,
+                &context,
                 &mut chain_state,
                 request_id.as_deref(),
                 memo.clone(),
@@ -73,7 +77,7 @@ where
             .await?;
 
             let (solo_machine_channel_id, tendermint_channel_id) = open_channel(
-                context,
+                &context,
                 &mut chain_state,
                 request_id.as_deref(),
                 memo,
@@ -95,7 +99,10 @@ where
 
             context.storage().update_chain_state(&chain_state).await?;
 
-            context
+            let (_, transaction, _, event_handler) = context.unwrap();
+            transaction.done().await?;
+
+            event_handler
                 .handle_event(Event::ConnectionEstablished {
                     chain_id,
                     connection_details: chain_state.connection_details.as_ref().unwrap().clone(),
@@ -107,7 +114,7 @@ where
             ref tendermint_connection_id,
         } => {
             let (solo_machine_channel_id, tendermint_channel_id) = open_channel(
-                context,
+                &context,
                 &mut chain_state,
                 request_id.as_deref(),
                 memo,
@@ -124,7 +131,10 @@ where
 
             context.storage().update_chain_state(&chain_state).await?;
 
-            context
+            let (_, transaction, _, event_handler) = context.unwrap();
+            transaction.done().await?;
+
+            event_handler
                 .handle_event(Event::ConnectionEstablished {
                     chain_id,
                     connection_details: chain_state.connection_details.as_ref().unwrap().clone(),

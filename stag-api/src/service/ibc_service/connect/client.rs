@@ -5,7 +5,7 @@ use crate::{
     service::ibc_service::common::{ensure_response_success, extract_attribute},
     signer::Signer,
     stag::StagContext,
-    storage::Storage,
+    storage::{Storage, Transaction},
     tendermint::{LightClient, TendermintClient},
     transaction_builder,
     types::{
@@ -23,7 +23,7 @@ pub async fn create_client<C>(
 where
     C: StagContext,
     C::Signer: Signer,
-    C::Storage: Storage,
+    C::Storage: Transaction,
     C::RpcClient: TendermintClient,
 {
     let solo_machine_client_id =
@@ -74,7 +74,7 @@ where
 async fn create_tendermint_client<C>(context: &C, chain_state: &ChainState) -> Result<ClientId>
 where
     C: StagContext,
-    C::Storage: Storage,
+    C::Storage: Transaction,
     C::RpcClient: TendermintClient,
 {
     let light_client = LightClient::new(

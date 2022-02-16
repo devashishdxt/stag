@@ -95,6 +95,7 @@ impl AddChainState {
     ) -> Result<ChainId>
     where
         S: SignerConfig,
+        S::Signer: Clone,
     {
         let chain_config = self.get_chain_config()?;
 

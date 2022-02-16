@@ -9,7 +9,7 @@ use crate::{
         get_ibc_denom, get_public_keys, mint_tokens, update_signer,
     },
     signer::{NoopSigner, Signer},
-    storage::{NoopStorage, Storage},
+    storage::{NoopStorage, Storage, TransactionProvider},
     tendermint::{JsonRpcClient, NoopRpcClient},
     types::{
         chain_state::{ChainConfig, ChainKey, ChainState},
@@ -19,7 +19,7 @@ use crate::{
     },
 };
 
-use super::{StagBuilder, StagContext};
+use super::{StagBuilder, StagContext, WithTransaction};
 
 /// Stag API
 pub struct Stag<C> {
@@ -101,10 +101,11 @@ where
 
 impl<C> Stag<C>
 where
-    C: StagContext,
-    C::Signer: Signer,
-    C::Storage: Storage,
-    C::RpcClient: JsonRpcClient,
+    C: StagContext + WithTransaction,
+    C::Signer: Signer + Clone,
+    C::Storage: TransactionProvider,
+    C::RpcClient: JsonRpcClient + Clone,
+    C::EventHandler: Clone,
 {
     /// Adds metadata of a given chain
     pub async fn add_chain(&self, chain_config: &ChainConfig) -> Result<ChainId> {
@@ -144,6 +145,25 @@ where
         .await
     }
 
+    /// Updates signer for future IBC transactions
+    pub async fn update_signer(
+        &self,
+        chain_id: ChainId,
+        request_id: Option<String>,
+        new_public_key: PublicKey,
+        memo: String,
+    ) -> Result<()> {
+        update_signer(&self.context, chain_id, request_id, new_public_key, memo).await
+    }
+}
+
+impl<C> Stag<C>
+where
+    C: StagContext,
+    C::Signer: Signer,
+    C::Storage: Storage,
+    C::RpcClient: JsonRpcClient,
+{
     /// Burns tokens on given chain
     pub async fn burn(
         &self,
@@ -154,17 +174,6 @@ where
         memo: String,
     ) -> Result<String> {
         burn_tokens(&self.context, chain_id, request_id, amount, denom, memo).await
-    }
-
-    /// Updates signer for future IBC transactions
-    pub async fn update_signer(
-        &self,
-        chain_id: ChainId,
-        request_id: Option<String>,
-        new_public_key: PublicKey,
-        memo: String,
-    ) -> Result<()> {
-        update_signer(&self.context, chain_id, request_id, new_public_key, memo).await
     }
 }
 

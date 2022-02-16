@@ -13,7 +13,7 @@ use crate::trait_util::Base;
 
 use super::JsonRpcClient;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct ReqwestClient {
     client: Client,
     id: Arc<AtomicU32>,

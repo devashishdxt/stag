@@ -30,6 +30,7 @@ impl ConnectState {
     ) -> Result<()>
     where
         S: SignerConfig,
+        S::Signer: Clone,
     {
         let chain_id: ChainId = self.chain_id.parse().context("Invalid chain ID")?;
 

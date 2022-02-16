@@ -1,5 +1,7 @@
 //! Context for the Stag API
-use crate::{event::EventHandler, trait_util::Base};
+use anyhow::Result;
+
+use crate::{event::EventHandler, storage::TransactionProvider, trait_util::Base};
 
 /// Context for the Stag API
 pub trait StagContext: Base {
@@ -33,4 +35,21 @@ pub trait StagContext: Base {
         Self::RpcClient,
         Option<Self::EventHandler>,
     );
+}
+
+/// Obtain a context with database transaction
+pub trait WithTransaction: StagContext
+where
+    Self::Storage: TransactionProvider,
+{
+    /// Type of context
+    type TransactionContext: StagContext<
+        Signer = Self::Signer,
+        Storage = <Self::Storage as TransactionProvider>::Transaction,
+        RpcClient = Self::RpcClient,
+        EventHandler = Self::EventHandler,
+    >;
+
+    /// Create a context with database transaction
+    fn with_transaction(&self) -> Result<Self::TransactionContext>;
 }

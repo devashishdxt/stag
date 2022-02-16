@@ -11,5 +11,6 @@ pub use self::{
     storage_traits::{Storage, Transaction, TransactionProvider},
 };
 
+#[derive(Clone)]
 /// A no-op storage backend
 pub struct NoopStorage;

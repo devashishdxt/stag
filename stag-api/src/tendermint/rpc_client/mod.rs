@@ -8,5 +8,6 @@ mod rpc_client_traits;
 pub use self::builder::ReqwestClient;
 pub use self::{builder::JsonRpcConfig, rpc_client_traits::JsonRpcClient};
 
+#[derive(Clone)]
 /// A no-op JSON RPC client
 pub struct NoopRpcClient;

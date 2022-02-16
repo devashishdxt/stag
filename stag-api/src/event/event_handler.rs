@@ -13,6 +13,7 @@ pub trait EventHandler: Base {
     async fn handle_event(&self, event: Event) -> Result<()>;
 }
 
+#[derive(Clone)]
 /// A no-op event handler
 pub struct NoopEventHandler;
 
@@ -33,6 +34,21 @@ where
     async fn handle_event(&self, event: Event) -> Result<()> {
         // TODO: send event via a channel to not block the current task (i.e. the caller)
         if let Some(event_handler) = self.event_handler() {
+            event_handler.handle_event(event).await?;
+        }
+
+        Ok(())
+    }
+}
+
+#[cfg_attr(not(feature = "wasm"), async_trait)]
+#[cfg_attr(feature = "wasm", async_trait(?Send))]
+impl<E> EventHandler for Option<E>
+where
+    E: EventHandler,
+{
+    async fn handle_event(&self, event: Event) -> Result<()> {
+        if let Some(event_handler) = self {
             event_handler.handle_event(event).await?;
         }
 

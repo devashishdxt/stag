@@ -12,7 +12,7 @@ use crate::{
     service::ibc_service::common::{ensure_response_success, extract_attribute},
     signer::Signer,
     stag::StagContext,
-    storage::Storage,
+    storage::{Storage, Transaction},
     tendermint::TendermintClient,
     transaction_builder,
     types::{
@@ -32,7 +32,7 @@ pub async fn establish_connection<C>(
 where
     C: StagContext,
     C::Signer: Signer,
-    C::Storage: Storage,
+    C::Storage: Transaction,
     C::RpcClient: TendermintClient,
 {
     let solo_machine_connection_id = connection_open_init(
@@ -180,7 +180,7 @@ async fn connection_open_ack<C>(
 where
     C: StagContext,
     C::Signer: Signer,
-    C::Storage: Storage,
+    C::Storage: Transaction,
     C::RpcClient: TendermintClient,
 {
     let msg = transaction_builder::msg_connection_open_ack(
@@ -207,7 +207,7 @@ where
 async fn connection_open_confirm<C>(context: &C, connection_id: &ConnectionId) -> Result<()>
 where
     C: StagContext,
-    C::Storage: Storage,
+    C::Storage: Transaction,
 {
     let mut connection = context
         .storage()

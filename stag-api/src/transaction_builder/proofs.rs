@@ -5,7 +5,7 @@ use prost_types::Any;
 use crate::{
     signer::Signer,
     stag::StagContext,
-    storage::Storage,
+    storage::{Storage, Transaction},
     types::{
         chain_state::ChainState,
         ics::core::{
@@ -255,7 +255,7 @@ pub async fn get_consensus_proof<C>(
 where
     C: StagContext,
     C::Signer: Signer,
-    C::Storage: Storage,
+    C::Storage: Transaction,
 {
     let client_state = context
         .storage()

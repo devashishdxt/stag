@@ -34,7 +34,7 @@ pub trait TransactionProvider: Storage {
     type Transaction: Transaction;
 
     /// Create a new transaction
-    fn transaction(&self, access_points: &[&str]) -> Result<Self::Transaction>;
+    fn transaction(&self) -> Result<Self::Transaction>;
 }
 
 /// Trait that must be implemented by all database storage types

@@ -8,7 +8,7 @@ use crate::{
     service::ibc_service::common::{ensure_response_success, extract_attribute},
     signer::Signer,
     stag::StagContext,
-    storage::Storage,
+    storage::{Storage, Transaction},
     tendermint::TendermintClient,
     transaction_builder,
     types::{
@@ -28,7 +28,7 @@ pub async fn open_channel<C>(
 where
     C: StagContext,
     C::Signer: Signer,
-    C::Storage: Storage,
+    C::Storage: Transaction,
     C::RpcClient: TendermintClient,
 {
     let solo_machine_channel_id = channel_open_init(
@@ -195,7 +195,7 @@ async fn channel_open_confirm<C>(
 ) -> Result<()>
 where
     C: StagContext,
-    C::Storage: Storage,
+    C::Storage: Transaction,
 {
     let mut channel = context
         .storage()

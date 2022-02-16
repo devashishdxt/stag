@@ -37,6 +37,7 @@ impl MintState {
     ) -> Result<String>
     where
         S: SignerConfig,
+        S::Signer: Clone,
     {
         let chain_id: ChainId = self.chain_id.parse().context("Invalid chain ID")?;
         let amount: U256 = U256::from_dec_str(&self.amount).context("Invalid amount")?;

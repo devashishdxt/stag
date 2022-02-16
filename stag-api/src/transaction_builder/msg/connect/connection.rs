@@ -14,7 +14,7 @@ use cosmos_sdk_proto::{
 use crate::{
     signer::{GetPublicKey, Signer},
     stag::StagContext,
-    storage::Storage,
+    storage::{Storage, Transaction},
     transaction_builder::{
         proofs::{get_client_proof, get_connection_proof, get_consensus_proof},
         tx::build,
@@ -74,7 +74,7 @@ pub async fn msg_connection_open_ack<C>(
 where
     C: StagContext,
     C::Signer: Signer,
-    C::Storage: Storage,
+    C::Storage: Transaction,
 {
     let tendermint_client_state = context
         .storage()

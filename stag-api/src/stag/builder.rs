@@ -3,12 +3,12 @@ use anyhow::Result;
 use crate::{
     event::{EventHandler, EventHandlerConfig, NoopEventHandler},
     signer::{NoopSigner, SignerConfig},
-    storage::{NoopStorage, StorageConfig},
+    storage::{NoopStorage, StorageConfig, TransactionProvider},
     tendermint::{JsonRpcConfig, NoopRpcClient},
     trait_util::Base,
 };
 
-use super::{Stag, StagContext};
+use super::{Stag, StagContext, WithTransaction};
 
 /// Builder for Stag API
 pub struct StagBuilder<S, T, C, E> {
@@ -143,5 +143,24 @@ where
             self.rpc_client,
             self.event_handler,
         )
+    }
+}
+
+impl<S, T, C, E> WithTransaction for StagBuilder<S, T, C, E>
+where
+    S: Base + Clone,
+    T: TransactionProvider,
+    C: Base + Clone,
+    E: EventHandler + Clone,
+{
+    type TransactionContext = StagBuilder<S, T::Transaction, C, E>;
+
+    fn with_transaction(&self) -> Result<Self::TransactionContext> {
+        Ok(StagBuilder {
+            signer: self.signer.clone(),
+            storage: self.storage.transaction()?,
+            rpc_client: self.rpc_client.clone(),
+            event_handler: self.event_handler.clone(),
+        })
     }
 }

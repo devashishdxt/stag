@@ -4,8 +4,8 @@ use primitive_types::U256;
 use crate::{
     event::{Event, EventHandler},
     signer::{GetPublicKey, Signer},
-    stag::StagContext,
-    storage::Storage,
+    stag::{StagContext, WithTransaction},
+    storage::{Storage, Transaction, TransactionProvider},
     tendermint::{JsonRpcClient, TendermintClient},
     transaction_builder,
     types::{
@@ -27,22 +27,24 @@ pub async fn mint_tokens<C>(
     memo: String,
 ) -> Result<String>
 where
-    C: StagContext,
+    C: StagContext + WithTransaction,
     C::Signer: Signer,
-    C::Storage: Storage,
+    C::Storage: TransactionProvider,
     C::RpcClient: JsonRpcClient,
 {
     let address = context.signer().to_account_address(&chain_id).await?;
     let receiver = receiver.unwrap_or_else(|| address.clone());
 
-    let mut chain_state = context
+    let transaction_context = context.with_transaction()?;
+
+    let mut chain_state = transaction_context
         .storage()
         .get_chain_state(&chain_id)
         .await?
         .ok_or_else(|| anyhow!("chain details for {} not found", chain_id))?;
 
     let msg = transaction_builder::msg_token_send(
-        context,
+        &transaction_context,
         &mut chain_state,
         amount,
         &denom,
@@ -52,14 +54,20 @@ where
     )
     .await?;
 
-    let response = context
+    let response = transaction_context
         .rpc_client()
         .broadcast_tx(&chain_state.config.rpc_addr, msg)
         .await?;
 
     let transaction_hash = ensure_response_success(&response)?;
 
-    context.storage().update_chain_state(&chain_state).await?;
+    transaction_context
+        .storage()
+        .update_chain_state(&chain_state)
+        .await?;
+
+    let (_, transaction, _, _) = transaction_context.unwrap();
+    transaction.done().await?;
 
     let success: bool = extract_attribute(
         &response.deliver_tx.events,

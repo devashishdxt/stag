@@ -17,5 +17,6 @@ pub use self::builder::MnemonicSigner;
 #[cfg(feature = "keplr-signer")]
 pub use self::builder::KeplrSigner;
 
+#[derive(Clone)]
 /// A no-op signer
 pub struct NoopSigner;

@@ -5,8 +5,8 @@ use tendermint::node::Id as NodeId;
 use crate::{
     event::{Event, EventHandler},
     signer::{GetPublicKey, Signer},
-    stag::StagContext,
-    storage::Storage,
+    stag::{StagContext, WithTransaction},
+    storage::{Storage, Transaction, TransactionProvider},
     tendermint::TendermintClient,
     types::{
         chain_state::{ChainConfig, ChainKey, ChainState},
@@ -18,9 +18,9 @@ use crate::{
 /// Add details of an IBC enabled chain
 pub async fn add_chain<C>(context: &C, config: &ChainConfig) -> Result<ChainId>
 where
-    C: StagContext,
+    C: StagContext + WithTransaction,
     C::Signer: Signer,
-    C::Storage: Storage,
+    C::Storage: TransactionProvider,
     C::RpcClient: TendermintClient,
 {
     let status = context.rpc_client().status(&config.rpc_addr).await?;
@@ -33,6 +33,8 @@ where
         .await?
         .to_string();
 
+    let context = context.with_transaction()?;
+
     context
         .storage()
         .add_chain_state(chain_id.clone(), node_id, config.clone())
@@ -42,7 +44,10 @@ where
         .add_chain_key(&chain_id, &public_key)
         .await?;
 
-    context
+    let (_, transaction, _, event_handler) = context.unwrap();
+    transaction.done().await?;
+
+    event_handler
         .handle_event(Event::ChainAdded {
             chain_id: chain_id.clone(),
         })
