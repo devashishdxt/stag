@@ -6,7 +6,7 @@ use url::Url;
 
 use crate::trait_util::Base;
 
-#[cfg_attr(not(feature = "wasm"), async_trait)]
+#[cfg_attr(feature = "non-wasm", async_trait)]
 #[cfg_attr(feature = "wasm", async_trait(?Send))]
 /// Trait that must be implemented by all the JSON RPC backends
 pub trait JsonRpcClient: Base {
@@ -49,7 +49,7 @@ pub trait JsonRpcClient: Base {
     }
 }
 
-#[cfg_attr(not(feature = "wasm"), async_trait)]
+#[cfg_attr(feature = "non-wasm", async_trait)]
 #[cfg_attr(feature = "wasm", async_trait(?Send))]
 impl<T> JsonRpcClient for &T
 where

@@ -9,7 +9,7 @@ use cosmos_sdk_proto::cosmos::{
 };
 #[cfg(feature = "wasm")]
 use grpc_web_client::Client;
-#[cfg(not(feature = "wasm"))]
+#[cfg(feature = "non-wasm")]
 use tonic::transport::Channel;
 use url::Url;
 
@@ -187,7 +187,7 @@ async fn get_auth_query_client(grpc_addr: Url) -> Result<AuthQueryClient<Client>
     Ok(AuthQueryClient::new(grpc_client))
 }
 
-#[cfg(not(feature = "wasm"))]
+#[cfg(all(not(feature = "wasm"), feature = "non-wasm"))]
 async fn get_auth_query_client(grpc_addr: Url) -> Result<AuthQueryClient<Channel>> {
     AuthQueryClient::connect(grpc_addr.to_string())
         .await

@@ -7,7 +7,7 @@ use crate::{
 };
 
 /// This trait must be implemented by all the public key providers (e.g. mnemonic, ledger, etc.)
-#[cfg_attr(not(feature = "wasm"), async_trait)]
+#[cfg_attr(feature = "non-wasm", async_trait)]
 #[cfg_attr(feature = "wasm", async_trait(?Send))]
 pub trait GetPublicKey: Base {
     /// Returns public key of signer
@@ -46,7 +46,7 @@ impl AsRef<[u8]> for Message<'_> {
 }
 
 /// This trait must be implemented by all the transaction signers (e.g. mnemonic, ledger, etc.)
-#[cfg_attr(not(feature = "wasm"), async_trait)]
+#[cfg_attr(feature = "non-wasm", async_trait)]
 #[cfg_attr(feature = "wasm", async_trait(?Send))]
 pub trait Signer: GetPublicKey {
     /// Signs the given message

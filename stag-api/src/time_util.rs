@@ -6,7 +6,7 @@ use anyhow::Result;
 use time::Month;
 use time::OffsetDateTime;
 
-#[cfg(not(feature = "wasm"))]
+#[cfg(feature = "non-wasm")]
 /// Returns current date time in UTC
 pub fn now_utc() -> Result<OffsetDateTime> {
     Ok(OffsetDateTime::now_utc())

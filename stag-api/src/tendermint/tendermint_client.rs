@@ -7,7 +7,7 @@ use url::Url;
 
 use crate::{tendermint::rpc_client::JsonRpcClient, types::proto_util::proto_encode};
 
-#[cfg_attr(not(feature = "wasm"), async_trait)]
+#[cfg_attr(feature = "non-wasm", async_trait)]
 #[cfg_attr(feature = "wasm", async_trait(?Send))]
 /// Helper trait to send a transaction to a tendermint node (auto-implemented for json rpc client)
 pub trait TendermintClient: JsonRpcClient {
@@ -109,6 +109,6 @@ pub trait TendermintClient: JsonRpcClient {
     }
 }
 
-#[cfg_attr(not(feature = "wasm"), async_trait)]
+#[cfg_attr(feature = "non-wasm", async_trait)]
 #[cfg_attr(feature = "wasm", async_trait(?Send))]
 impl<C> TendermintClient for C where C: JsonRpcClient {}

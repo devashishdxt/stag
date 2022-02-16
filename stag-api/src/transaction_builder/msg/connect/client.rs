@@ -13,7 +13,7 @@ use cosmos_sdk_proto::{
 use grpc_web_client::Client;
 use prost_types::Duration;
 use tendermint::block::Header;
-#[cfg(not(feature = "wasm"))]
+#[cfg(feature = "non-wasm")]
 use tonic::transport::Channel;
 use url::Url;
 
@@ -156,7 +156,7 @@ async fn get_staking_query_client(grpc_addr: Url) -> Result<StakingQueryClient<C
     Ok(StakingQueryClient::new(grpc_client))
 }
 
-#[cfg(not(feature = "wasm"))]
+#[cfg(all(not(feature = "wasm"), feature = "non-wasm"))]
 async fn get_staking_query_client(grpc_addr: Url) -> Result<StakingQueryClient<Channel>> {
     use anyhow::Context;
 

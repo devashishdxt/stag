@@ -12,21 +12,37 @@ default = [
     "console_error_panic_hook",
     "ethermint",
     "indexed-db-storage",
-    # "keplr-signer",
     "mnemonic-signer",
     "reqwest-client",
     "tracing-event-handler",
-    "wasm",
-    # "non-wasm",
 ]
+
+# Enables feature indicators in documentation
 doc = []
+
+# Enables support for ethermint
 ethermint = ["sha3"]
-indexed-db-storage = ["rexie", "wasm"]
+
+# Enables support for storage backend using Indexed DB on browser. Enables `wasm` feature automatically.
+indexed-db-storage = ["rexie", "serde-wasm-bindgen", "wasm", "wasm-bindgen"]
+
+# Enables support for transaction signing using Keplr wallet on browser (currently not working: https://github.com/chainapsis/keplr-wallet/issues/251)
+# Enables `wasm` feature automatically.
 keplr-signer = ["base64", "js-sys", "wasm", "web-sys"]
+
+# Enables support for transaction signing using mnemonic phrase
 mnemonic-signer = ["bip32"]
+
+# Enables all the required dependencies for non-wasm environments
 non-wasm = ["tonic/transport", "tonic-build/transport"]
+
+# Enables support for HTTP client using `reqwest` crate
 reqwest-client = ["reqwest"]
+
+# Enables support for event logging using `tracing` crate
 tracing-event-handler = ["tracing"]
+
+# Enables all the required dependencies for wasm environments
 wasm = ["getrandom", "grpc-web-client", "js-sys"]
 
 [dependencies]
@@ -56,7 +72,7 @@ ripemd = "0.1.0"
 rust_decimal = "1.21.0"
 sealed = "0.4.0"
 serde = { version = "1.0.136", features = ["derive"] }
-serde-wasm-bindgen = "0.4.2"
+serde-wasm-bindgen = { version = "0.4.2", optional = true }
 serde_json = "1.0.79"
 sha2 = "0.10.1"
 sha3 = { version = "0.10.0", optional = true }
@@ -72,8 +88,7 @@ tonic = { version = "0.6.2", default-features = false, features = [
 tracing = { version = "0.1.30", optional = true }
 url = { version = "2.2.2", features = ["serde"] }
 urlencoding = "2.1.0"
-wasm-bindgen = "0.2.79"
-wasm-bindgen-futures = "0.4.29"
+wasm-bindgen = { version = "0.2.79", optional = true }
 web-sys = { version = "0.3.56", optional = true, features = ["Window"] }
 wee_alloc = { version = "0.4.5", optional = true }
 

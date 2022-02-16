@@ -1,4 +1,11 @@
 #![cfg_attr(feature = "doc", feature(doc_cfg))]
+
+#[cfg(not(any(feature = "wasm", feature = "non-wasm",)))]
+compile_error!("one of the features ['wasm', 'non-wasm'] must be enabled");
+
+#[cfg(all(feature = "wasm", feature = "non-wasm",))]
+compile_error!("only one of the features ['wasm', 'non-wasm'] can be enabled");
+
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
 #[cfg(feature = "wee_alloc")]

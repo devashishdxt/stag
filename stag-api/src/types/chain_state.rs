@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-#[cfg(not(feature = "wasm"))]
+#[cfg(feature = "non-wasm")]
 use anyhow::Context;
 use anyhow::{ensure, Result};
 use cosmos_sdk_proto::cosmos::bank::v1beta1::QueryBalanceRequest;
@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use tendermint::node::Id as NodeId;
 use time::OffsetDateTime;
-#[cfg(not(feature = "wasm"))]
+#[cfg(feature = "non-wasm")]
 use tonic::transport::Channel;
 use url::Url;
 
@@ -208,7 +208,7 @@ async fn get_bank_query_client(grpc_addr: Url) -> Result<BankQueryClient<Client>
     Ok(BankQueryClient::new(grpc_client))
 }
 
-#[cfg(not(feature = "wasm"))]
+#[cfg(all(not(feature = "wasm"), feature = "non-wasm"))]
 async fn get_bank_query_client(grpc_addr: Url) -> Result<BankQueryClient<Channel>> {
     BankQueryClient::connect(grpc_addr.to_string())
         .await
