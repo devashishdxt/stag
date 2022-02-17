@@ -9,7 +9,7 @@ use cosmos_sdk_proto::cosmos::{
 };
 #[cfg(feature = "wasm")]
 use grpc_web_client::Client;
-#[cfg(feature = "non-wasm")]
+#[cfg(all(not(feature = "wasm"), feature = "non-wasm"))]
 use tonic::transport::Channel;
 use url::Url;
 

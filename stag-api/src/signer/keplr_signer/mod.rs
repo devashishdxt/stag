@@ -21,7 +21,7 @@ impl KeplrSigner {
     }
 }
 
-#[cfg_attr(feature = "non-wasm", async_trait)]
+#[cfg_attr(all(not(feature = "wasm"), feature = "non-wasm"), async_trait)]
 #[cfg_attr(feature = "wasm", async_trait(?Send))]
 impl GetPublicKey for KeplrSigner {
     async fn get_public_key(&self, chain_id: &ChainId) -> Result<PublicKey> {
@@ -33,7 +33,7 @@ impl GetPublicKey for KeplrSigner {
     }
 }
 
-#[cfg_attr(feature = "non-wasm", async_trait)]
+#[cfg_attr(all(not(feature = "wasm"), feature = "non-wasm"), async_trait)]
 #[cfg_attr(feature = "wasm", async_trait(?Send))]
 impl Signer for KeplrSigner {
     async fn sign(

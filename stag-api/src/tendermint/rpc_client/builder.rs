@@ -13,7 +13,7 @@ use super::JsonRpcClient;
 /// Json RPC backend using `reqwest`
 pub struct ReqwestClient;
 
-#[cfg_attr(feature = "non-wasm", async_trait)]
+#[cfg_attr(all(not(feature = "wasm"), feature = "non-wasm"), async_trait)]
 #[cfg_attr(feature = "wasm", async_trait(?Send))]
 #[sealed]
 /// Configuration for json rpc client
@@ -27,7 +27,7 @@ pub trait JsonRpcConfig: Base {
 
 #[cfg_attr(feature = "doc", doc(cfg(feature = "reqwest-client")))]
 #[cfg(feature = "reqwest-client")]
-#[cfg_attr(feature = "non-wasm", async_trait)]
+#[cfg_attr(all(not(feature = "wasm"), feature = "non-wasm"), async_trait)]
 #[cfg_attr(feature = "wasm", async_trait(?Send))]
 #[sealed]
 impl JsonRpcConfig for ReqwestClient {

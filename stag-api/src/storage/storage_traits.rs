@@ -20,7 +20,7 @@ use crate::{
     },
 };
 
-#[cfg_attr(feature = "non-wasm", async_trait)]
+#[cfg_attr(all(not(feature = "wasm"), feature = "non-wasm"), async_trait)]
 #[cfg_attr(feature = "wasm", async_trait(?Send))]
 /// Trait that must be implemented by all database transaction types
 pub trait Transaction: Storage {
@@ -38,7 +38,7 @@ pub trait TransactionProvider: Storage {
 }
 
 /// Trait that must be implemented by all database storage types
-#[cfg_attr(feature = "non-wasm", async_trait)]
+#[cfg_attr(all(not(feature = "wasm"), feature = "non-wasm"), async_trait)]
 #[cfg_attr(feature = "wasm", async_trait(?Send))]
 pub trait Storage: Base {
     /// Adds a new chain to the storage

@@ -19,7 +19,7 @@ pub struct ReqwestClient {
     id: Arc<AtomicU32>,
 }
 
-#[cfg_attr(feature = "non-wasm", async_trait)]
+#[cfg_attr(all(not(feature = "wasm"), feature = "non-wasm"), async_trait)]
 #[cfg_attr(feature = "wasm", async_trait(?Send))]
 impl JsonRpcClient for ReqwestClient {
     fn get_next_id(&self) -> u32 {

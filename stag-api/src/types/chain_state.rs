@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-#[cfg(feature = "non-wasm")]
+#[cfg(all(not(feature = "wasm"), feature = "non-wasm"))]
 use anyhow::Context;
 use anyhow::{ensure, Result};
 use cosmos_sdk_proto::cosmos::bank::v1beta1::QueryBalanceRequest;
@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use tendermint::node::Id as NodeId;
 use time::OffsetDateTime;
-#[cfg(feature = "non-wasm")]
+#[cfg(all(not(feature = "wasm"), feature = "non-wasm"))]
 use tonic::transport::Channel;
 use url::Url;
 

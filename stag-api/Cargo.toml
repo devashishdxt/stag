@@ -39,6 +39,9 @@ non-wasm = ["tonic/transport", "tonic-build/transport"]
 # Enables support for HTTP client using `reqwest` crate
 reqwest-client = ["reqwest"]
 
+# Enables support for storage backend using SQLite. Enables `non-wasm` feature automatically.
+sqlite-storage = ["non-wasm", "sqlx/sqlite"]
+
 # Enables support for event logging using `tracing` crate
 tracing-event-handler = ["tracing"]
 
@@ -76,6 +79,9 @@ serde-wasm-bindgen = { version = "0.4.2", optional = true }
 serde_json = "1.0.79"
 sha2 = "0.10.1"
 sha3 = { version = "0.10.0", optional = true }
+sqlx = { version = "0.5.10", features = [
+    "runtime-tokio-rustls",
+], optional = true }
 tendermint = "0.23.3"
 tendermint-light-client = { version = "0.23.3", default-features = false }
 tendermint-rpc = "0.23.3"

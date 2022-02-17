@@ -13,7 +13,7 @@ use cosmos_sdk_proto::{
 use grpc_web_client::Client;
 use prost_types::Duration;
 use tendermint::block::Header;
-#[cfg(feature = "non-wasm")]
+#[cfg(all(not(feature = "wasm"), feature = "non-wasm"))]
 use tonic::transport::Channel;
 use url::Url;
 

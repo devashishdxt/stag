@@ -30,7 +30,7 @@ impl IndexedDb {
     }
 }
 
-#[cfg_attr(feature = "non-wasm", async_trait)]
+#[cfg_attr(all(not(feature = "wasm"), feature = "non-wasm"), async_trait)]
 #[cfg_attr(feature = "wasm", async_trait(?Send))]
 #[sealed]
 /// Configuration for storage backend
@@ -44,7 +44,7 @@ pub trait StorageConfig: Base {
 
 #[cfg_attr(feature = "doc", doc(cfg(feature = "indexed-db-storage")))]
 #[cfg(feature = "indexed-db-storage")]
-#[cfg_attr(feature = "non-wasm", async_trait)]
+#[cfg_attr(all(not(feature = "wasm"), feature = "non-wasm"), async_trait)]
 #[cfg_attr(feature = "wasm", async_trait(?Send))]
 #[sealed]
 impl StorageConfig for IndexedDb {

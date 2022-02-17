@@ -186,7 +186,7 @@ impl IndexedDbTransaction {
     }
 }
 
-#[cfg_attr(feature = "non-wasm", async_trait)]
+#[cfg_attr(all(not(feature = "wasm"), feature = "non-wasm"), async_trait)]
 #[cfg_attr(feature = "wasm", async_trait(?Send))]
 impl Transaction for IndexedDbTransaction {
     async fn done(self) -> Result<()> {
@@ -197,7 +197,7 @@ impl Transaction for IndexedDbTransaction {
     }
 }
 
-#[cfg_attr(feature = "non-wasm", async_trait)]
+#[cfg_attr(all(not(feature = "wasm"), feature = "non-wasm"), async_trait)]
 #[cfg_attr(feature = "wasm", async_trait(?Send))]
 impl Storage for IndexedDbTransaction {
     async fn add_chain_state(
@@ -629,7 +629,7 @@ impl TransactionProvider for IndexedDbStorage {
     }
 }
 
-#[cfg_attr(feature = "non-wasm", async_trait)]
+#[cfg_attr(all(not(feature = "wasm"), feature = "non-wasm"), async_trait)]
 #[cfg_attr(feature = "wasm", async_trait(?Send))]
 impl Transaction for IndexedDbStorage {
     async fn done(self) -> Result<()> {
@@ -637,7 +637,7 @@ impl Transaction for IndexedDbStorage {
     }
 }
 
-#[cfg_attr(feature = "non-wasm", async_trait)]
+#[cfg_attr(all(not(feature = "wasm"), feature = "non-wasm"), async_trait)]
 #[cfg_attr(feature = "wasm", async_trait(?Send))]
 impl Storage for IndexedDbStorage {
     async fn add_chain_state(

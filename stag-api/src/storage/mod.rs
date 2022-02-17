@@ -2,6 +2,8 @@
 mod builder;
 #[cfg(feature = "indexed-db-storage")]
 mod indexed_db_storage;
+#[cfg(feature = "sqlite-storage")]
+mod sql_db_storage;
 mod storage_traits;
 
 #[cfg(feature = "indexed-db-storage")]
