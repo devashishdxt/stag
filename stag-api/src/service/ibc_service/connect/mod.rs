@@ -46,7 +46,7 @@ where
     C::Storage: TransactionProvider,
     C::RpcClient: TendermintClient,
 {
-    let context = context.with_transaction()?;
+    let context = context.with_transaction().await?;
 
     let mut chain_state = context
         .storage()

@@ -3,6 +3,7 @@ use std::time::Duration;
 #[cfg(all(not(feature = "wasm"), feature = "non-wasm"))]
 use anyhow::Context;
 use anyhow::{ensure, Result};
+use chrono::{DateTime, Utc};
 use cosmos_sdk_proto::cosmos::bank::v1beta1::QueryBalanceRequest;
 #[cfg(feature = "wasm")]
 use grpc_web_client::Client;
@@ -11,7 +12,6 @@ use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use tendermint::node::Id as NodeId;
-use time::OffsetDateTime;
 #[cfg(all(not(feature = "wasm"), feature = "non-wasm"))]
 use tonic::transport::Channel;
 use url::Url;
@@ -38,7 +38,7 @@ pub struct ChainState {
     /// Configuration for chain
     pub config: ChainConfig,
     /// Consensus timestamp of solo machine (used when creating transactions on chain)
-    pub consensus_timestamp: OffsetDateTime,
+    pub consensus_timestamp: DateTime<Utc>,
     /// Sequence of solo machine (used when creating transactions on chain)
     pub sequence: u32,
     /// Packet sequence of solo machine (used when creating transactions on chain)
@@ -46,9 +46,9 @@ pub struct ChainState {
     /// IBC connection details
     pub connection_details: Option<ConnectionDetails>,
     /// Creation time of chain
-    pub created_at: OffsetDateTime,
+    pub created_at: DateTime<Utc>,
     /// Last updation time of chain
-    pub updated_at: OffsetDateTime,
+    pub updated_at: DateTime<Utc>,
 }
 
 /// IBC connection details
@@ -122,18 +122,7 @@ pub struct ChainKey {
     /// Public key of signer
     pub public_key: String,
     /// Creation time of chain key entry
-    pub created_at: OffsetDateTime,
-}
-
-/// Signer's public key entry for an IBC enabled chain
-#[derive(Debug, Serialize)]
-pub struct ChainKeyRequest<'a> {
-    /// Chain ID
-    pub chain_id: &'a ChainId,
-    /// Public key of signer
-    pub public_key: &'a str,
-    /// Creation time of chain key entry
-    pub created_at: OffsetDateTime,
+    pub created_at: DateTime<Utc>,
 }
 
 impl ChainState {

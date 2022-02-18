@@ -388,6 +388,11 @@ fn next_validators_match(light_block: &LightBlock) -> Result<()> {
 
 /// Returns current time
 fn now() -> Result<Time> {
-    let offset_date_time = now_utc()?;
-    offset_date_time.try_into().context("invalid time")
+    let offset_date_time = now_utc();
+
+    Time::from_unix_timestamp(
+        offset_date_time.timestamp(),
+        offset_date_time.timestamp_subsec_nanos(),
+    )
+    .map_err(|_| anyhow!("time overflow"))
 }

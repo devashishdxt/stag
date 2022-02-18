@@ -1,4 +1,5 @@
 use anyhow::Result;
+use async_trait::async_trait;
 
 use crate::{
     event::{EventHandler, EventHandlerConfig, NoopEventHandler},
@@ -146,6 +147,8 @@ where
     }
 }
 
+#[cfg_attr(all(not(feature = "wasm"), feature = "non-wasm"), async_trait)]
+#[cfg_attr(feature = "wasm", async_trait(?Send))]
 impl<S, T, C, E> WithTransaction for StagBuilder<S, T, C, E>
 where
     S: Base + Clone,
@@ -155,10 +158,10 @@ where
 {
     type TransactionContext = StagBuilder<S, T::Transaction, C, E>;
 
-    fn with_transaction(&self) -> Result<Self::TransactionContext> {
+    async fn with_transaction(&self) -> Result<Self::TransactionContext> {
         Ok(StagBuilder {
             signer: self.signer.clone(),
-            storage: self.storage.transaction()?,
+            storage: self.storage.transaction().await?,
             rpc_client: self.rpc_client.clone(),
             event_handler: self.event_handler.clone(),
         })

@@ -1,9 +1,9 @@
 use anyhow::{Context, Result};
-use time::OffsetDateTime;
+use chrono::{DateTime, Utc};
 
-pub fn to_u64_timestamp(timestamp: OffsetDateTime) -> Result<u64> {
+pub fn to_u64_timestamp(timestamp: DateTime<Utc>) -> Result<u64> {
     timestamp
-        .unix_timestamp()
+        .timestamp()
         .try_into()
         .context("unable to convert unix timestamp to u64")
 }

@@ -28,13 +28,15 @@ pub trait Transaction: Storage {
     async fn done(self) -> Result<()>;
 }
 
+#[cfg_attr(all(not(feature = "wasm"), feature = "non-wasm"), async_trait)]
+#[cfg_attr(feature = "wasm", async_trait(?Send))]
 /// Trait that must be implemented by all database storage types
 pub trait TransactionProvider: Storage {
     /// Type of transaction for current storage type
     type Transaction: Transaction;
 
     /// Create a new transaction
-    fn transaction(&self) -> Result<Self::Transaction>;
+    async fn transaction(&self) -> Result<Self::Transaction>;
 }
 
 /// Trait that must be implemented by all database storage types

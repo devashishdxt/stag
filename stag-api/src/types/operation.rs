@@ -1,6 +1,10 @@
+use core::fmt;
+use std::str::FromStr;
+
+use anyhow::{anyhow, Error};
+use chrono::{DateTime, Utc};
 use primitive_types::U256;
 use serde::{Deserialize, Serialize};
-use time::OffsetDateTime;
 
 use crate::types::ics::core::ics24_host::identifier::{ChainId, Identifier};
 
@@ -25,7 +29,7 @@ pub struct Operation {
     /// On-chain transaction hash (in hex)
     pub transaction_hash: String,
     /// Time at which this operation was created
-    pub created_at: OffsetDateTime,
+    pub created_at: DateTime<Utc>,
 }
 
 /// Different types of possible operations on an account
@@ -37,23 +41,23 @@ pub enum OperationType {
     Burn,
 }
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct OperationRequest<'a> {
-    /// Request ID for tracking purposes
-    pub request_id: Option<&'a str>,
-    /// Chain ID of the operation
-    pub chain_id: &'a ChainId,
-    /// Address of the account
-    pub address: &'a str,
-    /// Denom of tokens
-    pub denom: &'a Identifier,
-    /// Amount of tokens
-    pub amount: &'a U256,
-    /// Type of operation
-    pub operation_type: OperationType,
-    /// On-chain transaction hash (in hex)
-    pub transaction_hash: &'a str,
-    /// Time at which this operation was created
-    pub created_at: OffsetDateTime,
+impl fmt::Display for OperationType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            OperationType::Mint => write!(f, "mint"),
+            OperationType::Burn => write!(f, "burn"),
+        }
+    }
+}
+
+impl FromStr for OperationType {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "mint" => Ok(OperationType::Mint),
+            "burn" => Ok(OperationType::Burn),
+            _ => Err(anyhow!("invalid operation type: {}", s)),
+        }
+    }
 }

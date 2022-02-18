@@ -1,5 +1,6 @@
 //! Context for the Stag API
 use anyhow::Result;
+use async_trait::async_trait;
 
 use crate::{event::EventHandler, storage::TransactionProvider, trait_util::Base};
 
@@ -37,6 +38,8 @@ pub trait StagContext: Base {
     );
 }
 
+#[cfg_attr(all(not(feature = "wasm"), feature = "non-wasm"), async_trait)]
+#[cfg_attr(feature = "wasm", async_trait(?Send))]
 /// Obtain a context with database transaction
 pub trait WithTransaction: StagContext
 where
@@ -51,5 +54,5 @@ where
     >;
 
     /// Create a context with database transaction
-    fn with_transaction(&self) -> Result<Self::TransactionContext>;
+    async fn with_transaction(&self) -> Result<Self::TransactionContext>;
 }

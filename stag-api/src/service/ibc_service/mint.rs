@@ -35,7 +35,7 @@ where
     let address = context.signer().to_account_address(&chain_id).await?;
     let receiver = receiver.unwrap_or_else(|| address.clone());
 
-    let transaction_context = context.with_transaction()?;
+    let transaction_context = context.with_transaction().await?;
 
     let mut chain_state = transaction_context
         .storage()

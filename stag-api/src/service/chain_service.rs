@@ -33,7 +33,7 @@ where
         .await?
         .to_string();
 
-    let context = context.with_transaction()?;
+    let context = context.with_transaction().await?;
 
     context
         .storage()

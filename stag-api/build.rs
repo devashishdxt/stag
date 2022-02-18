@@ -5,6 +5,8 @@ use std::{
 };
 
 fn main() -> Result<(), Box<dyn Error>> {
+    println!("cargo:rerun-if-changed=migrations");
+
     let mut files = Vec::new();
 
     let paths = read_dir("./proto")?;

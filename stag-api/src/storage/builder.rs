@@ -6,6 +6,8 @@ use crate::trait_util::Base;
 
 #[cfg(feature = "indexed-db-storage")]
 use super::indexed_db_storage::IndexedDbStorage;
+#[cfg(feature = "sqlite-storage")]
+use super::sql_db_storage::SqlDbStorage;
 use super::TransactionProvider;
 
 #[cfg_attr(feature = "doc", doc(cfg(feature = "indexed-db-storage")))]
@@ -30,6 +32,27 @@ impl IndexedDb {
     }
 }
 
+#[cfg_attr(feature = "doc", doc(cfg(feature = "sqlite-storage")))]
+#[cfg(feature = "sqlite-storage")]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Sqlite {
+    uri: String,
+}
+
+#[cfg(feature = "sqlite-storage")]
+impl Sqlite {
+    /// Creates a new instance of Sqlite
+    pub fn new(uri: &str) -> Self {
+        Self {
+            uri: uri.to_string(),
+        }
+    }
+
+    async fn get_sqlite_storage(self) -> Result<SqlDbStorage> {
+        SqlDbStorage::new(self.uri).await
+    }
+}
+
 #[cfg_attr(all(not(feature = "wasm"), feature = "non-wasm"), async_trait)]
 #[cfg_attr(feature = "wasm", async_trait(?Send))]
 #[sealed]
@@ -44,13 +67,24 @@ pub trait StorageConfig: Base {
 
 #[cfg_attr(feature = "doc", doc(cfg(feature = "indexed-db-storage")))]
 #[cfg(feature = "indexed-db-storage")]
-#[cfg_attr(all(not(feature = "wasm"), feature = "non-wasm"), async_trait)]
-#[cfg_attr(feature = "wasm", async_trait(?Send))]
+#[async_trait(?Send)]
 #[sealed]
 impl StorageConfig for IndexedDb {
     type Storage = IndexedDbStorage;
 
     async fn into_storage(self) -> Result<Self::Storage> {
         self.get_indexed_db_storage().await
+    }
+}
+
+#[cfg_attr(feature = "doc", doc(cfg(feature = "sqlite-storage")))]
+#[cfg(feature = "sqlite-storage")]
+#[async_trait]
+#[sealed]
+impl StorageConfig for Sqlite {
+    type Storage = SqlDbStorage;
+
+    async fn into_storage(self) -> Result<Self::Storage> {
+        self.get_sqlite_storage().await
     }
 }
