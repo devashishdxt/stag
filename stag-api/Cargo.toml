@@ -49,7 +49,7 @@ tracing-event-handler = ["tracing"]
 wasm = ["getrandom", "grpc-web-client", "js-sys"]
 
 [dependencies]
-anyhow = "1.0.53"
+anyhow = "1.0.55"
 async-trait = "0.1.52"
 base64 = { version = "0.13.0", optional = true }
 bech32 = "0.8.1"
@@ -57,7 +57,7 @@ bip32 = { version = "0.3.0", features = ["bip39"], optional = true }
 chrono = { version = "0.4.19", features = ["serde"] }
 console_error_panic_hook = { version = "0.1.7", optional = true }
 cosmos-sdk-proto = { version = "0.9.0", default-features = false }
-getrandom = { version = "0.2.4", default-features = false, features = [
+getrandom = { version = "0.2.5", default-features = false, features = [
     "js",
 ], optional = true }
 grpc-web-client = { git = "https://github.com/titanous/grpc-web-client", optional = true }
@@ -71,28 +71,28 @@ prost-types = "0.9.0"
 rand = "0.8.5"
 regex = "1.5.4"
 reqwest = { version = "0.11.9", optional = true }
-rexie = { version = "0.2.1", default-features = false, optional = true }
-ripemd = "0.1.0"
-rust_decimal = "1.21.0"
+rexie = { version = "0.3.0", default-features = false, optional = true }
+ripemd = "0.1.1"
+rust_decimal = "1.22.0"
 sealed = "0.4.0"
 serde = { version = "1.0.136", features = ["derive"] }
 serde-wasm-bindgen = { version = "0.4.2", optional = true }
 serde_json = "1.0.79"
-sha2 = "0.10.1"
-sha3 = { version = "0.10.0", optional = true }
-sqlx = { version = "0.5.10", features = [
+sha2 = "0.10.2"
+sha3 = { version = "0.10.1", optional = true }
+sqlx = { version = "0.5.11", features = [
     "runtime-tokio-rustls",
     "chrono",
 ], optional = true }
 tendermint = "0.23.3"
 tendermint-light-client = { version = "0.23.3", default-features = false }
 tendermint-rpc = "0.23.3"
-tokio = { version = "1.16.1", features = ["sync"] }
+tokio = { version = "1.17.0", features = ["sync"] }
 tonic = { version = "0.6.2", default-features = false, features = [
     "codegen",
     "prost",
 ] }
-tracing = { version = "0.1.30", optional = true }
+tracing = { version = "0.1.31", optional = true }
 url = { version = "2.2.2", features = ["serde"] }
 urlencoding = "2.1.0"
 wasm-bindgen = { version = "0.2.79", optional = true }

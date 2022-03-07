@@ -102,7 +102,7 @@ impl IndexedDbTransaction {
 impl Transaction for IndexedDbTransaction {
     async fn done(self) -> Result<()> {
         self.transaction
-            .commit()
+            .done()
             .await
             .map_err(|err| anyhow!("error when committing indexed db transaction: {}", err))
     }
