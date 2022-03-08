@@ -107,3 +107,5 @@ jobs:
         with:
           command: make
           args: browser-test
+        env:
+          WASM_BINDGEN_TEST_TIMEOUT: 300
