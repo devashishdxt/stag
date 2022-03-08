@@ -5,19 +5,26 @@ use stag_api::storage::IndexedDb;
 use stag_api::storage::Sqlite;
 use stag_api::{
     event::{EventHandlerConfig, TracingEventHandler},
-    signer::{MnemonicSigner, SignerConfig},
+    signer::{GetPublicKey, MnemonicSigner, SignerConfig},
     stag::{Stag, StagBuilder},
     storage::StorageConfig,
     tendermint::{JsonRpcConfig, ReqwestClient, TendermintClient},
-    types::chain_state::{ChainConfig, Fee},
+    types::{
+        chain_state::{ChainConfig, Fee},
+        ics::core::ics24_host::identifier::ChainId,
+        public_key::PublicKey,
+    },
 };
 use url::Url;
 
 pub const CHAIN_ID: &str = "mars-1";
-const MNEMONIC: &str = "practice empty client sauce pistol work ticket casual romance appear army fault palace coyote fox super salute slim catch kite wrist three hedgehog sign";
+pub const MNEMONIC_1: &str = "practice empty client sauce pistol work ticket casual romance appear army fault palace coyote fox super salute slim catch kite wrist three hedgehog sign";
+pub const MNEMONIC_2: &str = "setup chicken slogan define emerge original sugar bitter suggest bicycle increase eager rather end predict relief moment burden lonely ginger umbrella secret toy trash";
 
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn setup() -> Stag<
+pub async fn setup(
+    mnemonic: &str,
+) -> Stag<
     StagBuilder<
         <MnemonicSigner as SignerConfig>::Signer,
         <Sqlite as StorageConfig>::Storage,
@@ -29,7 +36,7 @@ pub async fn setup() -> Stag<
         .with_storage(Sqlite::new("sqlite::memory:"))
         .await
         .unwrap()
-        .with_signer(get_mnemonic_signer())
+        .with_signer(get_mnemonic_signer(mnemonic))
         .unwrap()
         .with_rpc_client(ReqwestClient)
         .with_event_handler(TracingEventHandler);
@@ -77,9 +84,9 @@ pub async fn get_chain_config() -> Result<ChainConfig> {
     })
 }
 
-fn get_mnemonic_signer() -> MnemonicSigner {
+fn get_mnemonic_signer(mnemonic: &str) -> MnemonicSigner {
     MnemonicSigner::new()
-        .add_chain_config(CHAIN_ID.parse().unwrap(), MNEMONIC, None, None, None)
+        .add_chain_config(CHAIN_ID.parse().unwrap(), mnemonic, None, None, None)
         .unwrap()
 }
 
@@ -106,4 +113,13 @@ async fn get_trusted_hash() -> Result<[u8; 32]> {
     trusted_hash.copy_from_slice(&header_hash);
 
     Ok(trusted_hash)
+}
+
+pub async fn get_public_key(chain_id: &ChainId, mnemonic: &str) -> PublicKey {
+    get_mnemonic_signer(mnemonic)
+        .into_signer()
+        .unwrap()
+        .get_public_key(chain_id)
+        .await
+        .unwrap()
 }

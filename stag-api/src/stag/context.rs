@@ -18,6 +18,9 @@ pub trait StagContext: Base {
     /// Returns the signer used by the Stag API
     fn signer(&self) -> &Self::Signer;
 
+    /// Sets given signer to the context
+    fn set_signer(&mut self, signer: Self::Signer);
+
     /// Returns the storage used by the Stag API
     fn storage(&self) -> &Self::Storage;
 

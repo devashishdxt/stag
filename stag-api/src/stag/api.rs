@@ -8,7 +8,7 @@ use crate::{
         add_chain, burn_tokens, connect, get_all_chains, get_balance, get_chain, get_history,
         get_ibc_denom, get_public_keys, mint_tokens, update_signer,
     },
-    signer::{NoopSigner, Signer},
+    signer::{NoopSigner, Signer, SignerConfig},
     storage::{NoopStorage, Storage, TransactionProvider},
     tendermint::{JsonRpcClient, NoopRpcClient},
     types::{
@@ -39,6 +39,21 @@ impl Stag<StagBuilder<NoopSigner, NoopStorage, NoopRpcClient, NoopEventHandler>>
     /// Creates a builder for Stag API
     pub fn builder() -> StagBuilder<NoopSigner, NoopStorage, NoopRpcClient, NoopEventHandler> {
         StagBuilder::default()
+    }
+}
+
+impl<C> Stag<C>
+where
+    C: StagContext,
+{
+    /// Update signer configuration
+    pub fn set_signer<T>(&mut self, signer: T) -> Result<()>
+    where
+        T: SignerConfig,
+        C::Signer: From<T::Signer>,
+    {
+        self.context.set_signer(signer.into_signer()?.into());
+        Ok(())
     }
 }
 

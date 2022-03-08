@@ -94,6 +94,9 @@ mod tests {
         }
 
         #[cfg_attr(coverage, no_coverage)]
+        fn set_signer(&mut self, _signer: ()) {}
+
+        #[cfg_attr(coverage, no_coverage)]
         fn storage(&self) -> &Self::Storage {
             &()
         }

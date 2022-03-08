@@ -8,3 +8,5 @@ wasm-pack.log
 .cargo-ok
 .cargo
 .config
+mars
+**/lcov.info

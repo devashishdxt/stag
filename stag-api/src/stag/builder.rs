@@ -118,6 +118,10 @@ where
         &self.signer
     }
 
+    fn set_signer(&mut self, signer: S) {
+        self.signer = signer;
+    }
+
     fn storage(&self) -> &Self::Storage {
         &self.storage
     }
