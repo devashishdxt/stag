@@ -6,3 +6,4 @@ Cargo.lock
 **/pkg/
 wasm-pack.log
 .cargo-ok
+.cargo

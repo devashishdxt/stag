@@ -57,3 +57,26 @@ pub trait Signer: GetPublicKey {
         message: Message<'_>,
     ) -> Result<Vec<u8>>;
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_message_type() {
+        let message = Message::SignBytes(b"test");
+        assert_eq!(message.message_type(), "sign-bytes");
+
+        let message = Message::SignDoc(b"test");
+        assert_eq!(message.message_type(), "sign-doc");
+    }
+
+    #[tokio::test]
+    async fn test_message_as_ref() {
+        let message = Message::SignBytes(b"test");
+        assert_eq!(message.as_ref(), b"test");
+
+        let message = Message::SignDoc(b"test");
+        assert_eq!(message.as_ref(), b"test");
+    }
+}

@@ -88,3 +88,14 @@ impl StorageConfig for Sqlite {
         self.get_sqlite_storage().await
     }
 }
+
+#[cfg(all(test, feature = "non-wasm"))]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_sqlite_storage() {
+        let config = Sqlite::new("sqlite::memory:");
+        assert!(config.into_storage().await.is_ok());
+    }
+}

@@ -73,6 +73,7 @@ impl MnemonicSigner {
         Ok(self)
     }
 
+    /// Returns a list of chain IDs and their corresponding account addresses
     pub fn get_signers(&self) -> Result<Vec<(ChainId, String)>> {
         self.config_map
             .iter()
@@ -91,5 +92,64 @@ impl SignerConfig for MnemonicSigner {
 
     fn into_signer(self) -> Result<Self::Signer> {
         Ok(MnemonicSignerImpl::new(self.config_map))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::signer::GetPublicKey;
+
+    use super::*;
+
+    const MNEMONIC: &str = "practice empty client sauce pistol work ticket casual romance appear army fault palace coyote fox super salute slim catch kite wrist three hedgehog sign";
+    const ACCOUNT_ADDRESS: &str = "cosmos1j2qpprh2xke7qjqzehfqgjdkfgddf9dm06dugw";
+
+    #[test]
+    fn test_signer_config() {
+        let config = MnemonicSigner::new();
+        let signer = config.into_signer().unwrap();
+        assert_eq!(signer, MnemonicSignerImpl::new(HashMap::new()));
+    }
+
+    #[tokio::test]
+    async fn test_add_chain_config() {
+        let chain_id: ChainId = "test-1".parse().unwrap();
+
+        let config = MnemonicSigner::new();
+        let config = config.add_chain_config(chain_id.clone(), MNEMONIC, None, None, None);
+        assert!(config.is_ok());
+        let config = config.unwrap();
+
+        let signer = config.into_signer();
+        assert!(signer.is_ok());
+        let signer = signer.unwrap();
+
+        let account_address = signer.to_account_address(&chain_id).await;
+        assert!(account_address.is_ok());
+        let account_address = account_address.unwrap();
+
+        assert_eq!(account_address, ACCOUNT_ADDRESS);
+    }
+
+    #[tokio::test]
+    async fn test_add_invalid_chain_config() {
+        let chain_id: ChainId = "test-1".parse().unwrap();
+
+        let config = MnemonicSigner::new();
+        let config = config.add_chain_config(chain_id, "invalid mnemonic", None, None, None);
+        assert!(config.is_err());
+    }
+
+    #[test]
+    fn test_get_signers() {
+        let config = MnemonicSigner::new();
+        let config = config.add_chain_config("test-1".parse().unwrap(), MNEMONIC, None, None, None);
+        assert!(config.is_ok());
+        let config = config.unwrap();
+
+        let signers = config.get_signers().unwrap();
+        assert_eq!(signers.len(), 1);
+        assert_eq!(signers[0].0, "test-1".parse().unwrap());
+        assert_eq!(signers[0].1, ACCOUNT_ADDRESS);
     }
 }

@@ -70,7 +70,7 @@ impl TryFrom<DbRow> for ChainState {
             consensus_timestamp,
             sequence,
             packet_sequence,
-            connection_details: connection_details.map(|x| x.0),
+            connection_details: connection_details.map(|json| json.0),
             created_at,
             updated_at,
         })

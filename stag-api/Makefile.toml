@@ -1,0 +1,26 @@
+[tasks.build]
+clear = true
+dependencies = ["build-sqlite", "build-wasm"]
+
+[tasks.build-sqlite]
+command = "cargo"
+args = ["build", "--no-default-features", "--features", "ethermint,mnemonic-signer,reqwest-client,sqlite-storage,tracing-event-handler"]
+
+[tasks.build-wasm]
+dependencies = ["install-wasm-pack"]
+command = "wasm-pack"
+args = ["build", "--no-default-features", "--features", "ethermint,indexed-db-storage,mnemonic-signer,reqwest-client,tracing-event-handler"]
+
+[tasks.coverage]
+alias = "llvm-cov"
+
+[tasks.llvm-cov]
+clear = true
+command = "cargo"
+args = [
+    "llvm-cov",
+    "--html",
+    "--no-default-features",
+    "--features",
+    "ethermint,sqlite-storage,mnemonic-signer,reqwest-client,tracing-event-handler",
+]

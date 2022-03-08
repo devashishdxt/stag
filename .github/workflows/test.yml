@@ -1,0 +1,14 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  install:
+    name: Install dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+      - run: go version

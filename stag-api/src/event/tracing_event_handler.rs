@@ -3,6 +3,7 @@ use async_trait::async_trait;
 
 use super::{Event, EventHandler};
 
+#[cfg_attr(test, derive(Debug, PartialEq))]
 #[derive(Clone)]
 pub struct TracingEventHandler;
 
@@ -12,5 +13,16 @@ impl EventHandler for TracingEventHandler {
     async fn handle_event(&self, event: Event) -> Result<()> {
         tracing::info!("{}", serde_json::to_string(&event)?);
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_tracing_event_handler() {
+        let event_handler = TracingEventHandler;
+        assert!(event_handler.handle_event(Event::Test).await.is_ok());
     }
 }

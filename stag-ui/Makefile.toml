@@ -1,0 +1,7 @@
+[tasks.build]
+clear = true
+command = "trunk"
+args = ["build"]
+
+[tasks.coverage]
+clear = true

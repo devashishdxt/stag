@@ -1,29 +1,18 @@
-//! Test suite for the Web and headless browsers.
-
-#![cfg(target_arch = "wasm32")]
-
-extern crate wasm_bindgen_test;
+use primitive_types::U256;
 
 mod common;
 
-use std::{assert, assert_eq};
-
-use primitive_types::U256;
-use wasm_bindgen_test::*;
-
-wasm_bindgen_test_configure!(run_in_browser);
-
-#[wasm_bindgen_test]
+#[tokio::test]
 async fn test_stag_flow() {
     // Build stag (IBC solo machine)
     let stag = common::setup().await;
 
     // Add chain details
     let chain_id = stag.add_chain(&common::get_chain_config()).await.unwrap();
-    assert_eq!(chain_id.to_string(), "mars-1");
+    assert_eq!(chain_id.to_string(), common::CHAIN_ID);
 
     let chain_state = stag.get_chain(&chain_id).await.unwrap().unwrap();
-    assert_eq!(chain_state.id.to_string(), "mars-1");
+    assert_eq!(chain_state.id.to_string(), common::CHAIN_ID);
     assert!(chain_state.connection_details.is_none());
 
     // Establish IBC connection
@@ -32,7 +21,7 @@ async fn test_stag_flow() {
         .unwrap();
 
     let chain_state = stag.get_chain(&chain_id).await.unwrap().unwrap();
-    assert_eq!(chain_state.id.to_string(), "mars-1");
+    assert_eq!(chain_state.id.to_string(), common::CHAIN_ID);
     assert!(chain_state.connection_details.is_some());
 
     // Check balance

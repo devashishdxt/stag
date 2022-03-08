@@ -4,6 +4,7 @@ use chrono::{DateTime, Utc};
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 
 #[cfg(all(not(feature = "wasm"), feature = "non-wasm"))]
+#[cfg_attr(coverage, no_coverage)]
 /// Returns current date time in UTC
 pub fn now_utc() -> DateTime<Utc> {
     Utc::now()

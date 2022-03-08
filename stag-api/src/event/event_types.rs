@@ -132,4 +132,9 @@ pub enum Event {
         /// Warning message
         message: String,
     },
+
+    // ----- Test event ----- //
+    /// Test event
+    #[cfg(test)]
+    Test,
 }

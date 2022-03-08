@@ -33,3 +33,15 @@ impl EventHandlerConfig for TracingEventHandler {
         TracingEventHandlerImpl {}
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_event_handler_config() {
+        let config = TracingEventHandler::default();
+        let event_handler = config.into_event_handler();
+        assert_eq!(event_handler, TracingEventHandlerImpl {});
+    }
+}

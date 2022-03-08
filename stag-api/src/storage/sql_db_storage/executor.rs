@@ -1,4 +1,4 @@
-use anyhow::{ensure, Context, Result};
+use anyhow::{bail, ensure, Context, Result};
 use chrono::Utc;
 use cosmos_sdk_proto::ibc::{
     core::{channel::v1::Channel, client::v1::Height, connection::v1::ConnectionEnd},
@@ -72,7 +72,7 @@ pub async fn update_chain_state<'e>(
             .bind(&chain_state.consensus_timestamp)
             .bind(&chain_state.sequence)
             .bind(&chain_state.packet_sequence)
-            .bind(Json(&chain_state.connection_details))
+            .bind(chain_state.connection_details.as_ref().map(Json))
             .bind(Utc::now())
             .bind(chain_state.id.to_string())
             .execute(executor)
@@ -95,13 +95,7 @@ pub async fn get_all_chain_states<'e>(
 ) -> Result<Vec<ChainState>> {
     let mut query = "SELECT * FROM chain_states".to_owned();
 
-    if let Some(limit) = limit {
-        query.push_str(&format!(" LIMIT {}", limit));
-    }
-
-    if let Some(offset) = offset {
-        query.push_str(&format!(" OFFSET {}", offset));
-    }
+    push_limit_offset(&mut query, limit, offset)?;
 
     let raw: Vec<DbRow> = sqlx::query(&query)
         .fetch_all(executor)
@@ -141,13 +135,7 @@ pub async fn get_chain_keys<'e>(
 ) -> Result<Vec<ChainKey>> {
     let mut query = "SELECT * FROM chain_keys WHERE chain_id = $1 ORDER BY id DESC".to_owned();
 
-    if let Some(limit) = limit {
-        query.push_str(&format!(" LIMIT {}", limit));
-    }
-
-    if let Some(offset) = offset {
-        query.push_str(&format!(" OFFSET {}", offset));
-    }
+    push_limit_offset(&mut query, limit, offset)?;
 
     let raw: Vec<DbRow> = sqlx::query(&query)
         .bind(chain_id.to_string())
@@ -166,13 +154,7 @@ pub async fn get_operations<'e>(
 ) -> Result<Vec<Operation>> {
     let mut query = "SELECT * FROM operations WHERE chain_id = $1 ORDER BY id DESC".to_owned();
 
-    if let Some(limit) = limit {
-        query.push_str(&format!(" LIMIT {}", limit));
-    }
-
-    if let Some(offset) = offset {
-        query.push_str(&format!(" OFFSET {}", offset));
-    }
+    push_limit_offset(&mut query, limit, offset)?;
 
     let raw: Vec<DbRow> = sqlx::query(&query)
         .bind(chain_id)
@@ -382,4 +364,20 @@ where
         M::decode(ibc_data.data.as_ref()).context("unable to decode protobuf bytes for ibc data")
     })
     .transpose()
+}
+
+fn push_limit_offset(query: &mut String, limit: Option<u32>, offset: Option<u32>) -> Result<()> {
+    if let Some(limit) = limit {
+        query.push_str(&format!(" LIMIT {}", limit));
+    }
+
+    if let Some(offset) = offset {
+        if limit.is_none() {
+            bail!("offset cannot be set without limit");
+        }
+
+        query.push_str(&format!(" OFFSET {}", offset));
+    }
+
+    Ok(())
 }

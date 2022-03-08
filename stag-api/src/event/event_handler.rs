@@ -55,3 +55,84 @@ where
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_noop_event_handler() {
+        let event_handler = NoopEventHandler;
+        assert!(event_handler.handle_event(Event::Test).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_none_event_handler() {
+        let event_handler: Option<NoopEventHandler> = None;
+        assert!(event_handler.handle_event(Event::Test).await.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_some_event_handler() {
+        let event_handler: Option<NoopEventHandler> = Some(NoopEventHandler);
+        assert!(event_handler.handle_event(Event::Test).await.is_err());
+    }
+
+    struct DummyContext {
+        event_handler: Option<NoopEventHandler>,
+    }
+
+    impl StagContext for DummyContext {
+        type Signer = ();
+        type Storage = ();
+        type RpcClient = ();
+        type EventHandler = NoopEventHandler;
+
+        #[cfg_attr(coverage, no_coverage)]
+        fn signer(&self) -> &Self::Signer {
+            &()
+        }
+
+        #[cfg_attr(coverage, no_coverage)]
+        fn storage(&self) -> &Self::Storage {
+            &()
+        }
+
+        #[cfg_attr(coverage, no_coverage)]
+        fn rpc_client(&self) -> &Self::RpcClient {
+            &()
+        }
+
+        fn event_handler(&self) -> Option<&Self::EventHandler> {
+            self.event_handler.as_ref()
+        }
+
+        #[cfg_attr(coverage, no_coverage)]
+        fn unwrap(
+            self,
+        ) -> (
+            Self::Signer,
+            Self::Storage,
+            Self::RpcClient,
+            Option<Self::EventHandler>,
+        ) {
+            ((), (), (), self.event_handler)
+        }
+    }
+
+    #[tokio::test]
+    async fn test_dummy_context_some_event_handler() {
+        let context = DummyContext {
+            event_handler: Some(NoopEventHandler),
+        };
+        assert!(context.handle_event(Event::Test).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_dummy_context_none_event_handler() {
+        let context = DummyContext {
+            event_handler: None,
+        };
+        assert!(context.handle_event(Event::Test).await.is_ok());
+    }
+}

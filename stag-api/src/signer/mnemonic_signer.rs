@@ -16,6 +16,7 @@ const DEFAULT_HD_PATH: &str = "m/44'/118'/0'/0/0";
 const DEFAULT_ACCOUNT_PREFIX: &str = "cosmos";
 const DEFAULT_ADDRESS_ALGO: &str = "secp256k1";
 
+#[cfg_attr(test, derive(Debug, PartialEq))]
 #[derive(Clone)]
 /// Signer implementation using mnemonic
 pub struct MnemonicSigner {
@@ -162,40 +163,113 @@ impl Signer for MnemonicSigner {
 
 #[cfg(test)]
 mod tests {
+    use std::fmt;
+
     use super::*;
 
+    const MNEMONIC: &str = "practice empty client sauce pistol work ticket casual romance appear army fault palace coyote fox super salute slim catch kite wrist three hedgehog sign";
+    const ACCOUNT_ADDRESS: &str = "cosmos1j2qpprh2xke7qjqzehfqgjdkfgddf9dm06dugw";
+
+    impl fmt::Debug for MnemonicSignerConfig {
+        #[cfg_attr(coverage, no_coverage)]
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            f.debug_struct("MnemonicSignerConfig")
+                .field("mnemonic", &self.mnemonic.phrase())
+                .field("hd_path", &self.hd_path)
+                .field("account_prefix", &self.account_prefix)
+                .field("algo", &self.algo)
+                .finish()
+        }
+    }
+
     #[test]
-    fn test_mnemonic_signer() {
-        let config = MnemonicSignerConfig::new("practice empty client sauce pistol work ticket casual romance appear army fault palace coyote fox super salute slim catch kite wrist three hedgehog sign", None, None, None).unwrap();
-
-        let signing_key = config.get_signing_key().unwrap();
-
-        let signature: Signature = match config.algo {
-            PublicKeyAlgo::Secp256k1 => <SigningKey as k256::ecdsa::signature::Signer<
-                k256::ecdsa::Signature,
-            >>::sign(&signing_key, &[1]),
-            #[cfg(feature = "ethermint")]
-            PublicKeyAlgo::EthSecp256k1 => <SigningKey as k256::ecdsa::signature::Signer<
-                k256::ecdsa::recoverable::Signature,
-            >>::sign(&signing_key, &[1])
-            .into(),
-        };
+    fn test_mnemonic_signer_config() {
+        let config = MnemonicSignerConfig::new(MNEMONIC, None, None, None);
+        assert!(config.is_ok());
+        let config = config.unwrap();
 
         assert_eq!(
-            signature.as_ref().to_vec(),
+            config,
+            MnemonicSignerConfig::new(
+                MNEMONIC,
+                Some(DEFAULT_HD_PATH),
+                Some(DEFAULT_ACCOUNT_PREFIX),
+                Some(PublicKeyAlgo::Secp256k1),
+            )
+            .unwrap()
+        );
+    }
+
+    #[tokio::test]
+    async fn test_mnemonic_signer() {
+        // Chain id
+        let chain_id: ChainId = "test-1".parse().unwrap();
+
+        // Prepare signer
+        let config = MnemonicSignerConfig::new(MNEMONIC, None, None, None);
+        assert!(config.is_ok());
+        let config = config.unwrap();
+
+        let mut config_map = HashMap::with_capacity(1);
+        config_map.insert(chain_id.clone(), config);
+
+        let signer = MnemonicSigner::new(config_map);
+
+        // Signer should not return public key with invalid chain id
+        assert!(signer
+            .get_public_key(&"test-2".parse().unwrap())
+            .await
+            .is_err());
+
+        // Signer should return public key with valid chain id
+        let public_key = signer.get_public_key(&chain_id).await;
+        assert!(public_key.is_ok());
+        let public_key = public_key.unwrap();
+
+        let account_address = public_key.account_address("cosmos");
+        assert!(account_address.is_ok());
+        let account_address = account_address.unwrap();
+
+        assert_eq!(account_address, ACCOUNT_ADDRESS);
+
+        // Signer should not return account address with invalid chain id
+        assert!(signer
+            .to_account_address(&"test-2".parse().unwrap())
+            .await
+            .is_err());
+
+        // Signer should return account address with valid chain id
+        let account_address = signer.to_account_address(&chain_id).await;
+        assert!(account_address.is_ok());
+        let account_address = account_address.unwrap();
+
+        assert_eq!(account_address, ACCOUNT_ADDRESS);
+
+        // Signer should not sign message with invalid chain id
+        assert!(signer
+            .sign(
+                None,
+                &"test-2".parse().unwrap(),
+                Message::SignBytes(b"test-message"),
+            )
+            .await
+            .is_err());
+
+        // Signer should sign message with valid chain id
+        let signature = signer
+            .sign(None, &chain_id, Message::SignBytes(b"test-message"))
+            .await;
+        assert!(signature.is_ok());
+        let signature = signature.unwrap();
+
+        assert_eq!(
+            signature,
             vec![
-                111, 153, 170, 175, 174, 45, 141, 109, 219, 33, 166, 96, 118, 24, 252, 73, 189,
-                237, 250, 246, 13, 174, 51, 44, 29, 164, 211, 55, 110, 155, 240, 84, 111, 147, 217,
-                163, 5, 147, 155, 232, 251, 73, 25, 56, 119, 163, 76, 246, 77, 11, 100, 79, 174,
-                230, 255, 51, 47, 231, 46, 133, 125, 247, 214, 202
+                71, 82, 197, 57, 152, 49, 47, 42, 6, 226, 37, 53, 124, 193, 12, 157, 148, 219, 145,
+                144, 226, 209, 97, 85, 136, 234, 249, 4, 41, 130, 141, 216, 40, 235, 22, 51, 7,
+                195, 153, 188, 51, 147, 146, 159, 167, 147, 131, 74, 51, 216, 65, 152, 71, 130,
+                239, 221, 110, 246, 155, 68, 159, 21, 168, 138
             ]
         );
-
-        // assert_eq!(
-        //     account_address,
-        //     "cosmos1qx0cppqkpwyyjvcl8p4s5eehrftfp00wdtkuyz"
-        // );
-
-        // let signature = "b5mqr64tjW3bIaZgdhj8Sb3t+vYNrjMsHaTTN26b8FRvk9mjBZOb6PtJGTh3o0z2TQtkT67m/zMv5y6FfffWyg==";
     }
 }

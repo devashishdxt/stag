@@ -1,4 +1,5 @@
 #![cfg_attr(feature = "doc", feature(doc_cfg))]
+#![cfg_attr(coverage, feature(no_coverage))]
 
 #[cfg(not(any(feature = "wasm", feature = "non-wasm",)))]
 compile_error!("one of the features ['wasm', 'non-wasm'] must be enabled");
@@ -22,4 +23,3 @@ pub mod time_util;
 pub mod trait_util;
 pub mod transaction_builder;
 pub mod types;
-pub mod utils;
