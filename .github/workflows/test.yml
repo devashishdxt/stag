@@ -23,14 +23,11 @@ jobs:
         run: starport version
       - name: Scaffold test blockchain
         run: starport scaffold chain github.com/devashish/mars --no-module
-      - name: Initialize and start test blockchain
+      - name: Start test blockchain
         run: |
           cd mars
-          starport chain init
           starport chain serve &
-      - name: Wait for chain to start
+      - name: Wait for test blockchain to start
         uses: ifaxity/wait-on-action@v1
         with:
-          resource: tcp://localhost:26657
-      - name: Verify chain
-        run: curl http://localhost:26657/status
+          resource: http://0.0.0.0:26657/status
