@@ -54,3 +54,45 @@ jobs:
         with:
           files: ./stag-api/lcov.info
           fail_ci_if_error: true
+  browser-test:
+    name: Headless browser tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+      - name: Install go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.17.8'
+      - name: Test go installation
+        run: go version
+      - name: Install Rust
+        run: rustup toolchain install nightly --component llvm-tools-preview,rustfmt
+      - name: Install cargo-make
+        uses: davidB/rust-cargo-make@v1
+        with:
+          version: latest
+      - name: Install starport
+        run: curl https://get.starport.network/starport! | bash
+      - name: Test starport installation
+        run: starport version
+      - name: Scaffold test blockchain
+        run: starport scaffold chain github.com/devashish/mars --no-module
+      - name: Apply custom configuration
+        run: cp mars-config.yml ./mars/config.yml
+      - name: Start test blockchain
+        run: |
+          cd mars
+          starport chain serve &
+          cd ..
+      - name: Wait for test blockchain to start
+        uses: ifaxity/wait-on-action@v1
+        with:
+          resource: http://0.0.0.0:26657/status
+      - name: Verify test blockchain
+        run: curl http://0.0.0.0:26657/status
+      - name: Run tests
+        uses: actions-rs/cargo@v1
+        with:
+          command: make
+          args: browser-test

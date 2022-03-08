@@ -3,5 +3,10 @@ clear = true
 command = "trunk"
 args = ["build"]
 
+[tasks.test]
+clear = true
+
+[tasks.browser-test]
+
 [tasks.coverage]
 clear = true
