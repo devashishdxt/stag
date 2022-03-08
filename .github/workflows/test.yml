@@ -22,10 +22,9 @@ jobs:
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
       - name: Install cargo-make
-        uses: actions-rs/cargo@v1
+        uses: davidB/rust-cargo-make@v1
         with:
-          command: install
-          args: --debug cargo-make
+          version: latest
       - name: Install starport
         run: curl https://get.starport.network/starport! | bash
       - name: Test starport installation
@@ -51,7 +50,7 @@ jobs:
           command: make
           args: coverage
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v2
         with:
           files: ./stag-api/lcov.info
           fail_ci_if_error: true
