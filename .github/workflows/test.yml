@@ -34,7 +34,7 @@ jobs:
           starport chain init
           starport chain serve &
       - name: Wait for chain to start
-        uses: ifaxity/wait-on-action
+        uses: ifaxity/wait-on-action@v1
         with:
           tcp: localhost:26657
       - name: Verify chain
