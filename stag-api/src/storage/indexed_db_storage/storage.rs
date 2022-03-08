@@ -49,8 +49,7 @@ impl IndexedDbStorage {
                 ObjectStore::new(OPERATIONS_STORE_NAME)
                     .key_path("id")
                     .auto_increment(true)
-                    .add_index(Index::new("chain_id", "chainId"))
-                    .add_index(Index::new("address", "address")),
+                    .add_index(Index::new("chain_id", "chainId")),
             )
             .build()
             .await

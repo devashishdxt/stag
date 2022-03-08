@@ -1,3 +1,7 @@
+//! Integration test suite
+
+#![cfg(not(target_arch = "wasm32"))]
+
 use primitive_types::U256;
 use stag_api::{signer::MnemonicSigner, types::operation::OperationType};
 

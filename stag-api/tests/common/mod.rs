@@ -44,7 +44,9 @@ pub async fn setup(
 }
 
 #[cfg(target_arch = "wasm32")]
-pub async fn setup() -> Stag<
+pub async fn setup(
+    mnemonic: &str,
+) -> Stag<
     StagBuilder<
         <MnemonicSigner as SignerConfig>::Signer,
         <IndexedDb as StorageConfig>::Storage,
@@ -52,14 +54,17 @@ pub async fn setup() -> Stag<
         <TracingEventHandler as EventHandlerConfig>::EventHandler,
     >,
 > {
+    rexie::Rexie::delete("test").await.unwrap();
+
     let builder = Stag::builder()
         .with_storage(IndexedDb::new("test"))
         .await
         .unwrap()
-        .with_signer(get_mnemonic_signer())
+        .with_signer(get_mnemonic_signer(mnemonic))
         .unwrap()
         .with_rpc_client(ReqwestClient)
         .with_event_handler(TracingEventHandler);
+
     builder.build()
 }
 

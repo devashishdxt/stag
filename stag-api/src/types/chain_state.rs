@@ -114,6 +114,7 @@ pub struct Fee {
 
 /// Signer's public key entry for an IBC enabled chain
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ChainKey {
     /// ID of key
     pub id: i64,

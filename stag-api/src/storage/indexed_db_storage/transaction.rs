@@ -264,10 +264,17 @@ impl Storage for IndexedDbTransaction {
             .store(CHAIN_KEY_STORE_NAME)
             .map_err(|err| anyhow!("error when getting chain_key object store: {}", err))?;
 
+        let index = store.index("chain_id").map_err(|err| {
+            anyhow!(
+                "error when getting index from chain_key object store: {}",
+                err
+            )
+        })?;
+
         let js_chain_id = serde_wasm_bindgen::to_value(&chain_id)
             .map_err(|err| anyhow!("error when serializing chain_id: {}", err))?;
 
-        store
+        index
             .get_all(
                 Some(
                     &KeyRange::only(&js_chain_id)
