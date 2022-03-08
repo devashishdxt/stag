@@ -7,8 +7,13 @@ async fn test_stag_flow() {
     // Build stag (IBC solo machine)
     let stag = common::setup().await;
 
+    // Get chain config
+    let chain_config = common::get_chain_config().await;
+    assert!(chain_config.is_ok());
+    let chain_config = chain_config.unwrap();
+
     // Add chain details
-    let chain_id = stag.add_chain(&common::get_chain_config()).await.unwrap();
+    let chain_id = stag.add_chain(&chain_config).await.unwrap();
     assert_eq!(chain_id.to_string(), common::CHAIN_ID);
 
     let chain_state = stag.get_chain(&chain_id).await.unwrap().unwrap();

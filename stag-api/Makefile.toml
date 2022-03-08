@@ -12,15 +12,14 @@ command = "wasm-pack"
 args = ["build", "--no-default-features", "--features", "ethermint,indexed-db-storage,mnemonic-signer,reqwest-client,tracing-event-handler"]
 
 [tasks.coverage]
-alias = "llvm-cov"
-
-[tasks.llvm-cov]
 clear = true
 command = "cargo"
 args = [
     "llvm-cov",
-    "--html",
+    "--lcov",
     "--no-default-features",
     "--features",
     "ethermint,sqlite-storage,mnemonic-signer,reqwest-client,tracing-event-handler",
+    "--output-path",
+    "lcov.info",
 ]

@@ -7,3 +7,4 @@ Cargo.lock
 wasm-pack.log
 .cargo-ok
 .cargo
+.config

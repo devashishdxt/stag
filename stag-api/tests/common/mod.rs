@@ -1,4 +1,4 @@
-use anyhow::{ensure, Context, Result};
+use anyhow::{ensure, Result};
 #[cfg(target_arch = "wasm32")]
 use stag_api::storage::IndexedDb;
 #[cfg(not(target_arch = "wasm32"))]
@@ -8,7 +8,7 @@ use stag_api::{
     signer::{MnemonicSigner, SignerConfig},
     stag::{Stag, StagBuilder},
     storage::StorageConfig,
-    tendermint::{JsonRpcConfig, ReqwestClient},
+    tendermint::{JsonRpcConfig, ReqwestClient, TendermintClient},
     types::chain_state::{ChainConfig, Fee},
 };
 use url::Url;
@@ -56,8 +56,8 @@ pub async fn setup() -> Stag<
     builder.build()
 }
 
-pub fn get_chain_config() -> ChainConfig {
-    ChainConfig {
+pub async fn get_chain_config() -> Result<ChainConfig> {
+    Ok(ChainConfig {
         grpc_addr: Url::parse(get_grpc_addr()).unwrap(),
         rpc_addr: Url::parse("http://localhost:26657").unwrap(),
         fee: Fee {
@@ -72,30 +72,15 @@ pub fn get_chain_config() -> ChainConfig {
         diversifier: "stag".to_string(),
         port_id: "transfer".parse().unwrap(),
         trusted_height: 1,
-        trusted_hash: parse_trusted_hash(
-            "FD417978FD4BF169E3A7468B229901FDAF935C09D8C612EABAAD87FA909B08C5",
-        )
-        .unwrap(),
+        trusted_hash: get_trusted_hash().await?,
         packet_timeout_height_offset: 10,
-    }
+    })
 }
 
 fn get_mnemonic_signer() -> MnemonicSigner {
     MnemonicSigner::new()
         .add_chain_config(CHAIN_ID.parse().unwrap(), MNEMONIC, None, None, None)
         .unwrap()
-}
-
-fn parse_trusted_hash(hash: &str) -> Result<[u8; 32]> {
-    ensure!(!hash.is_empty(), "empty trusted hash");
-
-    let bytes = hex::decode(hash).context("invalid trusted hash hex bytes")?;
-    ensure!(bytes.len() == 32, "trusted hash length should be 32");
-
-    let mut trusted_hash = [0; 32];
-    trusted_hash.clone_from_slice(&bytes);
-
-    Ok(trusted_hash)
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -106,4 +91,19 @@ fn get_grpc_addr() -> &'static str {
 #[cfg(not(target_arch = "wasm32"))]
 fn get_grpc_addr() -> &'static str {
     "http://localhost:9090"
+}
+
+async fn get_trusted_hash() -> Result<[u8; 32]> {
+    let rpc_client = ReqwestClient.into_client();
+    let light_block = rpc_client
+        .light_block(&"http://localhost:26657/".parse().unwrap(), Some(1))
+        .await?;
+    let header_hash = light_block.signed_header.header.hash().as_bytes().to_vec();
+
+    let mut trusted_hash = [0; 32];
+
+    ensure!(header_hash.len() == 32);
+    trusted_hash.copy_from_slice(&header_hash);
+
+    Ok(trusted_hash)
 }
