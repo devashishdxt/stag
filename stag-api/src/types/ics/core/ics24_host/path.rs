@@ -1,12 +1,11 @@
 use std::{
-    convert::{TryFrom, TryInto},
     fmt,
     ops::{Deref, DerefMut},
     str::FromStr,
 };
 
 use anyhow::{ensure, Error};
-use cosmos_sdk_proto::ibc::core::{client::v1::Height, commitment::v1::MerklePath};
+use cosmos_sdk_proto::ibc::core::client::v1::Height;
 
 use crate::types::ics::core::ics02_client::height::IHeight;
 
@@ -59,21 +58,6 @@ impl FromStr for Path {
     }
 }
 
-fn compute_path(identifiers: &[Identifier]) -> Result<String, Error> {
-    ensure!(
-        identifiers.len() > 1,
-        "path contains less than or equal to one identifier"
-    );
-
-    let mut path = String::new();
-
-    for id in identifiers.iter() {
-        path.push_str(&format!("/{}", id));
-    }
-
-    Ok(path)
-}
-
 impl AsRef<[u8]> for Path {
     fn as_ref(&self) -> &[u8] {
         self.0.as_bytes()
@@ -83,37 +67,6 @@ impl AsRef<[u8]> for Path {
 impl fmt::Display for Path {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.0)
-    }
-}
-
-impl From<Path> for MerklePath {
-    fn from(value: Path) -> Self {
-        MerklePath {
-            key_path: vec![value.0],
-        }
-    }
-}
-
-impl TryFrom<&[Identifier]> for Path {
-    type Error = Error;
-
-    fn try_from(identifiers: &[Identifier]) -> Result<Self, Self::Error> {
-        let path = compute_path(identifiers)?;
-        Ok(Self(path))
-    }
-}
-
-impl TryFrom<&MerklePath> for Path {
-    type Error = Error;
-
-    fn try_from(value: &MerklePath) -> Result<Self, Self::Error> {
-        let identifiers = value
-            .key_path
-            .iter()
-            .map(|id| id.parse())
-            .collect::<Result<Vec<Identifier>, _>>()?;
-
-        identifiers.as_slice().try_into()
     }
 }
 
@@ -140,12 +93,6 @@ macro_rules! impl_path {
             }
         }
 
-        impl AsRef<[u8]> for $name {
-            fn as_ref(&self) -> &[u8] {
-                self.0.as_ref()
-            }
-        }
-
         impl Deref for $name {
             type Target = Path;
 
@@ -166,15 +113,6 @@ macro_rules! impl_path {
             }
         }
     };
-}
-
-impl_path!("Path for storing client type", ClientTypePath);
-
-impl ClientTypePath {
-    /// Creates a new client type path from client id
-    pub fn new(client_id: ClientId) -> Self {
-        Self(format!("clients/{}/clientType", client_id).parse().unwrap())
-    }
 }
 
 impl_path!("Path for storing client state", ClientStatePath);

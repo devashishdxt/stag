@@ -1,8 +1,6 @@
-use core::fmt;
-use std::{convert::TryFrom, ops::Deref, str::FromStr};
+use std::{fmt, ops::Deref, str::FromStr};
 
 use anyhow::{ensure, Error};
-use cosmos_sdk_proto::ibc::core::commitment::v1::MerklePrefix;
 use rand::{distributions::Alphanumeric, Rng};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -30,29 +28,9 @@ macro_rules! impl_id {
             }
         }
 
-        impl From<$name> for String {
-            fn from(value: $name) -> Self {
-                value.0.into()
-            }
-        }
-
-        impl AsRef<[u8]> for $name {
-            fn as_ref(&self) -> &[u8] {
-                self.0.as_ref()
-            }
-        }
-
         impl fmt::Display for $name {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write!(f, "{}", self.0)
-            }
-        }
-
-        impl Deref for $name {
-            type Target = Identifier;
-
-            fn deref(&self) -> &Self::Target {
-                &self.0
             }
         }
     };
@@ -139,21 +117,9 @@ impl FromStr for ChainId {
     }
 }
 
-impl AsRef<[u8]> for ChainId {
-    fn as_ref(&self) -> &[u8] {
-        self.id.as_ref()
-    }
-}
-
 impl fmt::Display for ChainId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.id)
-    }
-}
-
-impl From<ChainId> for String {
-    fn from(value: ChainId) -> Self {
-        value.id.into()
     }
 }
 
@@ -202,12 +168,6 @@ impl Identifier {
     }
 }
 
-impl AsRef<[u8]> for Identifier {
-    fn as_ref(&self) -> &[u8] {
-        self.as_bytes()
-    }
-}
-
 impl FromStr for Identifier {
     type Err = Error;
 
@@ -237,32 +197,10 @@ impl fmt::Display for Identifier {
     }
 }
 
-impl From<Identifier> for String {
-    fn from(id: Identifier) -> Self {
-        id.0
-    }
-}
-
 impl Deref for Identifier {
     type Target = str;
 
     fn deref(&self) -> &Self::Target {
         &self.0
-    }
-}
-
-impl From<Identifier> for MerklePrefix {
-    fn from(id: Identifier) -> Self {
-        MerklePrefix {
-            key_prefix: id.0.into_bytes(),
-        }
-    }
-}
-
-impl TryFrom<&MerklePrefix> for Identifier {
-    type Error = Error;
-
-    fn try_from(value: &MerklePrefix) -> Result<Self, Self::Error> {
-        std::str::from_utf8(&value.key_prefix)?.parse()
     }
 }
