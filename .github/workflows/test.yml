@@ -21,3 +21,22 @@ jobs:
         run: curl https://get.starport.network/starport! | bash
       - name: Test starport installation
         run: starport version
+  start-chain:
+    name: Start test blockchain
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - name: Scaffold test blockchain
+        run: starport scaffold chain github.com/devashish/mars --no-module
+      - name: Initialize and start test blockchain
+        run: |
+          cd mars
+          starport chain init
+          starport chain serve &
+      - name: Wait for chain to start
+        uses: ifaxity/wait-on-action
+        with:
+          tcp: localhost:26657
+      - name: Verify chain
+        run: curl http://localhost:26657/status
+      
