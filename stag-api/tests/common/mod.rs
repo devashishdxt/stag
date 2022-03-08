@@ -71,7 +71,7 @@ pub async fn setup(
 pub async fn get_chain_config() -> Result<ChainConfig> {
     Ok(ChainConfig {
         grpc_addr: Url::parse(get_grpc_addr()).unwrap(),
-        rpc_addr: Url::parse("http://localhost:26657").unwrap(),
+        rpc_addr: Url::parse("http://127.0.0.1:26657").unwrap(),
         fee: Fee {
             amount: "1000".parse().unwrap(),
             denom: "stake".parse().unwrap(),
@@ -97,18 +97,18 @@ fn get_mnemonic_signer(mnemonic: &str) -> MnemonicSigner {
 
 #[cfg(target_arch = "wasm32")]
 fn get_grpc_addr() -> &'static str {
-    "http://localhost:9091"
+    "http://127.0.0.1:9091"
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 fn get_grpc_addr() -> &'static str {
-    "http://localhost:9090"
+    "http://127.0.0.1:9090"
 }
 
 async fn get_trusted_hash() -> Result<[u8; 32]> {
     let rpc_client = ReqwestClient.into_client();
     let light_block = rpc_client
-        .light_block(&"http://localhost:26657/".parse().unwrap(), Some(1))
+        .light_block(&"http://127.0.0.1:26657/".parse().unwrap(), Some(1))
         .await?;
     let header_hash = light_block.signed_header.header.hash().as_bytes().to_vec();
 
