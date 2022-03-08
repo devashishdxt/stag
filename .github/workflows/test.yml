@@ -18,7 +18,7 @@ jobs:
       - name: Test go installation
         run: go version
       - name: Install Rust
-        run: rustup toolchain install nightly --component llvm-tools-preview
+        run: rustup toolchain install nightly --component llvm-tools-preview,rustfmt
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
       - name: Install cargo-make
