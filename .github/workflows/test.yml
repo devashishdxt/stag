@@ -5,8 +5,8 @@ on:
     branches: [ main ]
 
 jobs:
-  install:
-    name: Install dependencies
+  integration-test:
+    name: Integration tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
@@ -21,11 +21,6 @@ jobs:
         run: curl https://get.starport.network/starport! | bash
       - name: Test starport installation
         run: starport version
-  start-chain:
-    name: Start test blockchain
-    needs: install
-    runs-on: ubuntu-latest
-    steps:
       - name: Scaffold test blockchain
         run: starport scaffold chain github.com/devashish/mars --no-module
       - name: Initialize and start test blockchain
@@ -39,4 +34,3 @@ jobs:
           tcp: localhost:26657
       - name: Verify chain
         run: curl http://localhost:26657/status
-      
