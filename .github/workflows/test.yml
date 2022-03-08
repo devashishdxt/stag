@@ -31,6 +31,6 @@ jobs:
       - name: Wait for chain to start
         uses: ifaxity/wait-on-action@v1
         with:
-          tcp: localhost:26657
+          resource: tcp://localhost:26657
       - name: Verify chain
         run: curl http://localhost:26657/status
