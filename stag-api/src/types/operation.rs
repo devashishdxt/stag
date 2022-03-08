@@ -33,7 +33,7 @@ pub struct Operation {
 }
 
 /// Different types of possible operations on an account
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum OperationType {
     /// Mint some tokens on IBC enabled chain
     Mint,
