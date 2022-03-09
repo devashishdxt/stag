@@ -10,3 +10,5 @@ clear = true
 
 [tasks.coverage]
 clear = true
+
+[tasks.coverage-html]

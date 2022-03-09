@@ -38,3 +38,14 @@ args = [
     "--output-path",
     "lcov.info",
 ]
+
+[tasks.coverage-html]
+clear = true
+command = "cargo"
+args = [
+    "llvm-cov",
+    "--html",
+    "--no-default-features",
+    "--features",
+    "ethermint,sqlite-storage,mnemonic-signer,reqwest-client,tracing-event-handler",
+]
