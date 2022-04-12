@@ -304,7 +304,7 @@ where
 pub async fn get_header_proof<C>(
     context: &C,
     chain_state: &ChainState,
-    new_public_key: Option<Any>,
+    new_public_key: Any,
     new_diversifier: String,
     request_id: Option<&str>,
 ) -> Result<Vec<u8>>
@@ -313,7 +313,7 @@ where
     C::Signer: Signer,
 {
     let header_data = HeaderData {
-        new_pub_key: new_public_key,
+        new_pub_key: Some(new_public_key),
         new_diversifier,
     };
 

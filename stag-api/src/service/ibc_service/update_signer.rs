@@ -41,7 +41,7 @@ where
     let msg = transaction_builder::msg_update_solo_machine_client(
         &context,
         &mut chain_state,
-        Some(&new_public_key),
+        &new_public_key,
         memo,
         request_id.as_deref(),
     )
