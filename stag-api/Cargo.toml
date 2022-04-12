@@ -70,7 +70,7 @@ prost-types = "0.9.0"
 rand = "0.8.5"
 regex = "1.5.5"
 reqwest = { version = "0.11.10", optional = true }
-rexie = { version = "0.4.0", default-features = false, optional = true }
+rexie = { version = "0.4.1", default-features = false, optional = true }
 ripemd = "0.1.1"
 rust_decimal = "1.23.1"
 sealed = "0.4.0"

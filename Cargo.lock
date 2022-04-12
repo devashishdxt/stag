@@ -1865,9 +1865,9 @@ dependencies = [
 
 [[package]]
 name = "rexie"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "16ee4192d23efbdb6a19bc73dbd101b0a97fbd34c1e2eb862474dd5df586f1fa"
+checksum = "18791efeab24f59e9d05df476d68d7c8939ba7e7ed66fb91644b2f3286c93a27"
 dependencies = [
  "js-sys",
  "num-traits",
