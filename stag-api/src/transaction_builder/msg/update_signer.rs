@@ -15,7 +15,7 @@ use crate::{
 pub async fn msg_update_solo_machine_client<C>(
     context: &C,
     chain_state: &mut ChainState,
-    new_public_key: Option<&PublicKey>,
+    new_public_key: &PublicKey,
     memo: String,
     request_id: Option<&str>,
 ) -> Result<TxRaw>
@@ -31,20 +31,12 @@ where
     }
 
     let sequence = chain_state.sequence.into();
-
-    let any_public_key = match new_public_key {
-        Some(new_public_key) => new_public_key.to_any()?,
-        None => context
-            .signer()
-            .get_public_key(&chain_state.id)
-            .await?
-            .to_any()?,
-    };
+    let any_public_key = new_public_key.to_any()?;
 
     let signature = get_header_proof(
         context,
         chain_state,
-        Some(any_public_key.clone()),
+        any_public_key.clone(),
         chain_state.config.diversifier.clone(),
         request_id,
     )
