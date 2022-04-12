@@ -270,6 +270,16 @@ async fn test_force_reconnection() {
     assert!(ibc_denom.is_ok());
     let ibc_denom = ibc_denom.unwrap();
 
+    // Update signer in stag
+    let mut stag = stag;
+    assert!(stag
+        .set_signer(
+            MnemonicSigner::new()
+                .add_chain_config(chain_id.clone(), common::MNEMONIC_2, None, None, None)
+                .unwrap(),
+        )
+        .is_ok());
+
     // Establish new IBC connection
     stag.connect(chain_id.clone(), None, "stag".to_string(), true)
         .await
