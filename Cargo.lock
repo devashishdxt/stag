@@ -2871,12 +2871,15 @@ dependencies = [
 [[package]]
 name = "tonic-web-wasm-client"
 version = "0.1.0"
-source = "git+https://github.com/devashishdxt/tonic-web-wasm-client#acf2fd300766e153d6b99fb8433e6671fa3dd73a"
+source = "git+https://github.com/devashishdxt/tonic-web-wasm-client#879023d5b7a63b922d36fcd286100ba076c35ce3"
 dependencies = [
+ "base64",
  "bytes",
  "console_error_panic_hook",
+ "futures-core",
  "http",
  "http-body",
+ "httparse",
  "reqwest",
  "thiserror",
  "tonic",

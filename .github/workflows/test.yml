@@ -31,18 +31,18 @@ jobs:
         uses: davidB/rust-cargo-make@v1
         with:
           version: latest
-      - name: Install starport
-        run: curl https://get.starport.network/starport! | bash
-      - name: Test starport installation
-        run: starport version
+      - name: Install ignite
+        run: curl https://get.ignite.com/cli! | bash
+      - name: Test ignite installation
+        run: ignite version
       - name: Scaffold test blockchain
-        run: starport scaffold chain github.com/devashish/mars --no-module
+        run: ignite scaffold chain github.com/devashish/mars --no-module
       - name: Apply custom configuration
         run: cp mars-config.yml ./mars/config.yml
       - name: Start test blockchain
         run: |
           cd mars
-          starport chain serve &
+          ignite chain serve &
           cd ..
       - name: Wait for test blockchain to start
         uses: ifaxity/wait-on-action@v1
@@ -85,18 +85,18 @@ jobs:
         uses: davidB/rust-cargo-make@v1
         with:
           version: latest
-      - name: Install starport
-        run: curl https://get.starport.network/starport! | bash
-      - name: Test starport installation
-        run: starport version
+      - name: Install ignite
+        run: curl https://get.ignite.com/cli! | bash
+      - name: Test ignite installation
+        run: ignite version
       - name: Scaffold test blockchain
-        run: starport scaffold chain github.com/devashish/mars --no-module
+        run: ignite scaffold chain github.com/devashish/mars --no-module
       - name: Apply custom configuration
         run: cp mars-config.yml ./mars/config.yml
       - name: Start test blockchain
         run: |
           cd mars
-          starport chain serve &
+          ignite chain serve &
           cd ..
       - name: Wait for test blockchain to start
         uses: ifaxity/wait-on-action@v1
