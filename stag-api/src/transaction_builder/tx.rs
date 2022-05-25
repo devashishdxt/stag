@@ -7,10 +7,10 @@ use cosmos_sdk_proto::cosmos::{
         AuthInfo, Fee, ModeInfo, SignDoc, SignerInfo, TxBody, TxRaw,
     },
 };
-#[cfg(feature = "wasm")]
-use grpc_web_client::Client;
 #[cfg(all(not(feature = "wasm"), feature = "non-wasm"))]
 use tonic::transport::Channel;
+#[cfg(feature = "wasm")]
+use tonic_web_wasm_client::Client;
 use url::Url;
 
 use crate::{

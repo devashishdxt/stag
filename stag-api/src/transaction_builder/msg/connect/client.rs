@@ -10,7 +10,7 @@ use cosmos_sdk_proto::{
     },
 };
 #[cfg(feature = "wasm")]
-use grpc_web_client::Client;
+use tonic_web_wasm_client::Client;
 use prost_types::Duration;
 use tendermint::block::Header;
 #[cfg(all(not(feature = "wasm"), feature = "non-wasm"))]
