@@ -1,4 +1,4 @@
-use crate::types::proto::ibc::lightclients::solomachine::v2::Header;
+use cosmos_sdk_proto::ibc::lightclients::solomachine::v2::Header;
 
 const TYPE_URL: &str = "/ibc.lightclients.solomachine.v2.Header";
 
