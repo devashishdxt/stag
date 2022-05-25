@@ -2871,7 +2871,7 @@ dependencies = [
 [[package]]
 name = "tonic-web-wasm-client"
 version = "0.1.0"
-source = "git+https://github.com/devashishdxt/tonic-web-wasm-client#878c74e6684c29b420c4b0e977b5d94e5d9fba22"
+source = "git+https://github.com/devashishdxt/tonic-web-wasm-client#acf2fd300766e153d6b99fb8433e6671fa3dd73a"
 dependencies = [
  "bytes",
  "console_error_panic_hook",
