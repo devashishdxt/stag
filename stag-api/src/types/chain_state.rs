@@ -5,8 +5,6 @@ use anyhow::Context;
 use anyhow::{ensure, Result};
 use chrono::{DateTime, Utc};
 use cosmos_sdk_proto::cosmos::bank::v1beta1::QueryBalanceRequest;
-#[cfg(feature = "wasm")]
-use grpc_web_client::Client;
 use num_rational::Ratio;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
@@ -14,6 +12,8 @@ use sha2::{Digest, Sha256};
 use tendermint::node::Id as NodeId;
 #[cfg(all(not(feature = "wasm"), feature = "non-wasm"))]
 use tonic::transport::Channel;
+#[cfg(feature = "wasm")]
+use tonic_web_wasm_client::Client;
 use url::Url;
 
 use crate::{

@@ -46,53 +46,53 @@ sqlite-storage = ["non-wasm", "sqlx/sqlite"]
 tracing-event-handler = ["tracing"]
 
 # Enables all the required dependencies for wasm environments
-wasm = ["getrandom", "grpc-web-client", "js-sys"]
+wasm = ["getrandom", "tonic-web-wasm-client", "js-sys"]
 
 [dependencies]
-anyhow = "1.0.56"
+anyhow = "1.0.57"
 async-trait = "0.1.53"
 base64 = { version = "0.13.0", optional = true }
-bech32 = "0.8.1"
-bip32 = { version = "0.3.0", features = ["bip39"], optional = true }
+bech32 = "0.9.0"
+bip32 = { version = "0.4.0", features = ["bip39"], optional = true }
 chrono = { version = "0.4.19", features = ["serde"] }
-cosmos-sdk-proto = { version = "0.10.0", default-features = false }
+cosmos-sdk-proto = { version = "0.12.2", default-features = false }
 getrandom = { version = "0.2.6", default-features = false, features = [
     "js",
 ], optional = true }
-grpc-web-client = { git = "https://github.com/titanous/grpc-web-client", optional = true }
 hex = { version = "0.4.3", features = ["serde"] }
 js-sys = { version = "0.3.57", optional = true }
-k256 = { version = "0.10.4", features = ["keccak256"] }
+k256 = { version = "0.11.2", features = ["keccak256"] }
 num-rational = { version = "0.4.0", features = ["serde"] }
 primitive-types = { version = "0.11.1", features = ["serde"] }
-prost = "0.9.0"
-prost-types = "0.9.0"
+prost = "0.10.4"
+prost-types = "0.10.1"
 rand = "0.8.5"
-regex = "1.5.5"
+regex = "1.5.6"
 reqwest = { version = "0.11.10", optional = true }
 rexie = { version = "0.4.1", default-features = false, optional = true }
 ripemd = "0.1.1"
 rust_decimal = "1.23.1"
 sealed = "0.4.0"
-serde = { version = "1.0.136", features = ["derive"] }
-serde-wasm-bindgen = { version = "0.4.2", optional = true }
-serde_json = "1.0.79"
+serde = { version = "1.0.137", features = ["derive"] }
+serde-wasm-bindgen = { version = "0.4.3", optional = true }
+serde_json = "1.0.81"
 sha2 = "0.10.2"
 sha3 = { version = "0.10.1", optional = true }
-sqlx = { version = "0.5.11", features = [
+sqlx = { version = "0.5.13", features = [
     "chrono",
     "json",
     "runtime-tokio-rustls",
 ], optional = true }
-tendermint = "0.23.5"
-tendermint-light-client = { version = "0.23.5", default-features = false }
-tendermint-rpc = "0.23.5"
-tokio = { version = "1.17.0", features = ["sync"] }
-tonic = { version = "0.6.2", default-features = false, features = [
+tendermint = "0.23.7"
+tendermint-light-client = { version = "0.23.7", default-features = false }
+tendermint-rpc = "0.23.7"
+tokio = { version = "1.18.2", features = ["sync"] }
+tonic = { version = "0.7.2", default-features = false, features = [
     "codegen",
     "prost",
 ] }
-tracing = { version = "0.1.33", optional = true }
+tonic-web-wasm-client = { git = "https://github.com/devashishdxt/tonic-web-wasm-client", optional = true }
+tracing = { version = "0.1.34", optional = true }
 url = { version = "2.2.2", features = ["serde"] }
 urlencoding = "2.1.0"
 wasm-bindgen = { version = "0.2.80", optional = true }
@@ -101,11 +101,10 @@ wee_alloc = { version = "0.4.5", optional = true }
 
 [dev-dependencies]
 humantime = "2.1.0"
-tokio = { version = "1.17.0", features = ["rt", "macros"] }
+tokio = { version = "1.18.2", features = ["rt", "macros"] }
 wasm-bindgen-test = "0.3.30"
 
 [build-dependencies]
-tonic-build = { version = "0.6.2", default-features = false, features = [
-    "rustfmt",
+tonic-build = { version = "0.7.2", default-features = false, features = [
     "prost",
 ] }
