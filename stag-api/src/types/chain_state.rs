@@ -4,7 +4,9 @@ use std::time::Duration;
 use anyhow::Context;
 use anyhow::{ensure, Result};
 use chrono::{DateTime, Utc};
-use cosmos_sdk_proto::cosmos::bank::v1beta1::QueryBalanceRequest;
+use cosmos_sdk_proto::cosmos::bank::v1beta1::{
+    query_client::QueryClient as BankQueryClient, QueryBalanceRequest,
+};
 use num_rational::Ratio;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
@@ -18,12 +20,9 @@ use url::Url;
 
 use crate::{
     signer::GetPublicKey,
-    types::{
-        ics::core::ics24_host::{
-            identifier::{ChainId, ChannelId, ClientId, ConnectionId, Identifier, PortId},
-            path::DenomTrace,
-        },
-        proto::cosmos::bank::v1beta1::query_client::QueryClient as BankQueryClient,
+    types::ics::core::ics24_host::{
+        identifier::{ChainId, ChannelId, ClientId, ConnectionId, Identifier, PortId},
+        path::DenomTrace,
     },
 };
 

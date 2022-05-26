@@ -1,20 +1,28 @@
 use anyhow::{anyhow, Result};
 use cosmos_sdk_proto::{
-    cosmos::{staking::v1beta1::QueryParamsRequest, tx::v1beta1::TxRaw},
+    cosmos::{
+        staking::v1beta1::{query_client::QueryClient as StakingQueryClient, QueryParamsRequest},
+        tx::v1beta1::TxRaw,
+    },
     ibc::{
         core::client::v1::{Height, MsgCreateClient},
-        lightclients::tendermint::v1::{
-            ClientState as TendermintClientState, ConsensusState as TendermintConsensusState,
-            Fraction,
+        lightclients::{
+            solomachine::v2::{
+                ClientState as SoloMachineClientState, ConsensusState as SoloMachineConsensusState,
+            },
+            tendermint::v1::{
+                ClientState as TendermintClientState, ConsensusState as TendermintConsensusState,
+                Fraction,
+            },
         },
     },
 };
-#[cfg(feature = "wasm")]
-use tonic_web_wasm_client::Client;
 use prost_types::Duration;
 use tendermint::block::Header;
 #[cfg(all(not(feature = "wasm"), feature = "non-wasm"))]
 use tonic::transport::Channel;
+#[cfg(feature = "wasm")]
+use tonic_web_wasm_client::Client;
 use url::Url;
 
 use crate::{
@@ -27,12 +35,6 @@ use crate::{
         ics::{
             core::{ics02_client::height::IHeight, ics23_vector_commitments::proof_specs},
             lightclients::tendermint::consensus_state::IConsensusState,
-        },
-        proto::{
-            cosmos::staking::v1beta1::query_client::QueryClient as StakingQueryClient,
-            ibc::lightclients::solomachine::v2::{
-                ClientState as SoloMachineClientState, ConsensusState as SoloMachineConsensusState,
-            },
         },
         proto_util::AnyConvert,
     },

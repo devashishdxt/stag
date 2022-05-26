@@ -1,15 +1,17 @@
 use anyhow::{anyhow, bail, Result};
-use cosmos_sdk_proto::{cosmos::tx::v1beta1::TxRaw, ibc::core::client::v1::MsgUpdateClient};
+use cosmos_sdk_proto::{
+    cosmos::tx::v1beta1::TxRaw,
+    ibc::{
+        core::client::v1::MsgUpdateClient,
+        lightclients::solomachine::v2::Header as SoloMachineHeader,
+    },
+};
 
 use crate::{
     signer::{GetPublicKey, Signer},
     stag::StagContext,
     transaction_builder::{common::to_u64_timestamp, proofs::get_header_proof, tx::build},
-    types::{
-        chain_state::ChainState,
-        proto::ibc::lightclients::solomachine::v2::Header as SoloMachineHeader,
-        proto_util::AnyConvert, public_key::PublicKey,
-    },
+    types::{chain_state::ChainState, proto_util::AnyConvert, public_key::PublicKey},
 };
 
 pub async fn msg_update_solo_machine_client<C>(

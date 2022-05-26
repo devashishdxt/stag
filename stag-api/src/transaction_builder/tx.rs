@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Context, Result};
 use cosmos_sdk_proto::cosmos::{
-    auth::v1beta1::QueryAccountRequest,
+    auth::v1beta1::{query_client::QueryClient as AuthQueryClient, QueryAccountRequest},
     base::v1beta1::Coin,
     tx::v1beta1::{
         mode_info::{Single, Sum},
@@ -20,7 +20,6 @@ use crate::{
         chain_state::ChainState,
         cosmos::account::Account,
         ics::core::ics24_host::identifier::ChainId,
-        proto::cosmos::auth::v1beta1::query_client::QueryClient as AuthQueryClient,
         proto_util::{proto_encode, AnyConvert},
     },
 };

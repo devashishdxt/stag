@@ -1,5 +1,11 @@
 use anyhow::{anyhow, ensure, Result};
-use cosmos_sdk_proto::ibc::core::channel::v1::Packet;
+use cosmos_sdk_proto::ibc::{
+    core::channel::v1::Packet,
+    lightclients::solomachine::v2::{
+        ChannelStateData, ClientStateData, ConnectionStateData, ConsensusStateData, DataType,
+        HeaderData, PacketAcknowledgementData, PacketCommitmentData, SignBytes,
+    },
+};
 use prost_types::Any;
 
 use crate::{
@@ -18,10 +24,6 @@ use crate::{
                     PacketAcknowledgementPath, PacketCommitmentPath,
                 },
             },
-        },
-        proto::ibc::lightclients::solomachine::v2::{
-            ChannelStateData, ClientStateData, ConnectionStateData, ConsensusStateData, DataType,
-            HeaderData, PacketAcknowledgementData, PacketCommitmentData, SignBytes,
         },
         proto_util::{proto_encode, AnyConvert},
     },

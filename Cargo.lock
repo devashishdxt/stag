@@ -367,6 +367,7 @@ dependencies = [
  "prost",
  "prost-types",
  "tendermint-proto",
+ "tonic",
 ]
 
 [[package]]
@@ -2870,8 +2871,9 @@ dependencies = [
 
 [[package]]
 name = "tonic-web-wasm-client"
-version = "0.1.0"
-source = "git+https://github.com/devashishdxt/tonic-web-wasm-client#879023d5b7a63b922d36fcd286100ba076c35ce3"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6280c14ac8c6fadf55057b74a56a360781b95e2bc4941b85077c2d896968791e"
 dependencies = [
  "base64",
  "bytes",

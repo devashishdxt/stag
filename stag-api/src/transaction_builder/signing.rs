@@ -1,19 +1,20 @@
 use anyhow::Result;
-use cosmos_sdk_proto::cosmos::tx::signing::v1beta1::{
-    signature_descriptor::{
-        data::{Single as SingleSignatureData, Sum as SignatureDataInner},
-        Data as SignatureData,
+use cosmos_sdk_proto::{
+    cosmos::tx::signing::v1beta1::{
+        signature_descriptor::{
+            data::{Single as SingleSignatureData, Sum as SignatureDataInner},
+            Data as SignatureData,
+        },
+        SignMode,
     },
-    SignMode,
+    ibc::lightclients::solomachine::v2::{SignBytes, TimestampedSignatureData},
 };
 
 use crate::{
     signer::{Message, Signer},
     stag::StagContext,
     types::{
-        chain_state::ChainState,
-        ics::core::ics24_host::identifier::ChainId,
-        proto::ibc::lightclients::solomachine::v2::{SignBytes, TimestampedSignatureData},
+        chain_state::ChainState, ics::core::ics24_host::identifier::ChainId,
         proto_util::proto_encode,
     },
 };
