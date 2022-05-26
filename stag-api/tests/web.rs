@@ -46,20 +46,6 @@ async fn test_stag_flow() {
     assert_eq!(chain_state.id.to_string(), common::CHAIN_ID);
     assert!(chain_state.connection_details.is_some());
 
-    // Get ibc denom should return success after connection
-    let ibc_denom = stag
-        .get_ibc_denom(&chain_id, &port_id, &"gld".parse().unwrap())
-        .await;
-    assert!(ibc_denom.is_ok());
-    let ibc_denom = ibc_denom.unwrap();
-
-    // Check balance
-    let gld_balance = stag
-        .get_ibc_balance(&chain_id, &port_id, &"gld".parse().unwrap())
-        .await
-        .unwrap();
-    assert!(gld_balance.is_zero());
-
     // Update signer to use new mnemonic
     let new_public_key = common::get_public_key(&chain_id, common::MNEMONIC_2).await;
 
@@ -77,13 +63,6 @@ async fn test_stag_flow() {
                 .unwrap(),
         )
         .is_ok());
-
-    // New ibc denom should be same as old
-    let new_ibc_denom = stag
-        .get_ibc_denom(&chain_id, &port_id, &"gld".parse().unwrap())
-        .await;
-    assert!(new_ibc_denom.is_ok());
-    assert_eq!(new_ibc_denom.unwrap(), ibc_denom);
 
     // Get public keys should return two
     let public_keys = stag.get_public_keys(&chain_id, None, None).await;
