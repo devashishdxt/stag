@@ -3,16 +3,20 @@ use anyhow::{anyhow, ensure, Result};
 use cosmos_sdk_proto::{
     cosmos::tx::v1beta1::TxRaw,
     ibc::core::{
-        channel::v1::{MsgRecvPacket, Packet},
+        channel::v1::{MsgAcknowledgement, MsgRecvPacket, Packet},
         client::v1::Height,
     },
 };
+use serde_json::json;
 
 use crate::{
     signer::{GetPublicKey, Signer},
     stag::StagContext,
     tendermint::TendermintClient,
-    transaction_builder::{proofs::get_packet_commitment_proof, tx::build},
+    transaction_builder::{
+        proofs::{get_packet_acknowledgement_proof, get_packet_commitment_proof},
+        tx::build,
+    },
     types::{
         chain_state::ChainState,
         ics::core::{
@@ -83,6 +87,44 @@ where
     let message = MsgRecvPacket {
         packet: Some(packet),
         proof_commitment,
+        proof_height: Some(proof_height),
+        signer: context.signer().to_account_address(&chain_state.id).await?,
+    };
+
+    build(context, chain_state, &[message], memo, request_id).await
+}
+
+pub async fn msg_acknowledgement<C>(
+    context: &C,
+    chain_state: &mut ChainState,
+    port_id: &PortId,
+    packet: Packet,
+    memo: String,
+    request_id: Option<&str>,
+) -> Result<TxRaw>
+where
+    C: StagContext,
+    C::Signer: Signer,
+{
+    let proof_height = Height::new(0, chain_state.sequence.into());
+    let acknowledgement = serde_json::to_vec(&json!({ "result": [1u8] }))?;
+
+    let proof_acked = get_packet_acknowledgement_proof(
+        context,
+        chain_state,
+        port_id,
+        acknowledgement.clone(),
+        packet.sequence,
+        request_id,
+    )
+    .await?;
+
+    chain_state.sequence += 1;
+
+    let message = MsgAcknowledgement {
+        packet: Some(packet),
+        acknowledgement,
+        proof_acked,
         proof_height: Some(proof_height),
         signer: context.signer().to_account_address(&chain_state.id).await?,
     };

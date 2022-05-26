@@ -195,6 +195,26 @@ where
 impl<C> Stag<C>
 where
     C: StagContext,
+    C::Signer: Signer,
+    C::Storage: Storage,
+    C::RpcClient: JsonRpcClient,
+{
+    /// Burns tokens on given chain
+    pub async fn burn(
+        &self,
+        chain_id: ChainId,
+        request_id: Option<String>,
+        amount: U256,
+        denom: Identifier,
+        memo: String,
+    ) -> Result<String> {
+        transfer::burn_tokens(&self.context, chain_id, request_id, amount, denom, memo).await
+    }
+}
+
+impl<C> Stag<C>
+where
+    C: StagContext,
     C::Storage: Storage,
 {
     /// Clears and deletes the storage (should only be used for testing)

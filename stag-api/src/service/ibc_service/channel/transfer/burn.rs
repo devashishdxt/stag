@@ -3,14 +3,17 @@ use primitive_types::U256;
 
 use crate::{
     event::{Event, EventHandler},
-    service::ibc_service::common::{ensure_response_success, extract_packets, process_packets},
+    service::ibc_service::{
+        common::ensure_response_success,
+        packet::{extract_packets, process_packets},
+    },
     signer::{GetPublicKey, Signer},
     stag::StagContext,
     storage::Storage,
     tendermint::TendermintClient,
     transaction_builder,
     types::{
-        ics::core::ics24_host::identifier::{ChainId, Identifier},
+        ics::core::ics24_host::identifier::{ChainId, Identifier, PortId},
         operation::OperationType,
     },
 };
@@ -37,7 +40,7 @@ where
         .await?
         .ok_or_else(|| anyhow!("chain details for {} not found", chain_id))?;
 
-    let msg = transaction_builder::msg_token_receive(
+    let msg = transaction_builder::transfer::msg_transfer(
         context,
         &chain_state,
         amount,
@@ -55,15 +58,19 @@ where
 
     let transaction_hash = ensure_response_success(&response)?;
 
+    let port_id = PortId::transfer();
+
     context
         .storage()
         .add_operation(
             request_id.as_deref(),
             &chain_state.id,
-            &address,
-            &denom,
-            &amount,
-            OperationType::Burn,
+            &port_id,
+            &OperationType::Burn {
+                from: address.clone(),
+                denom: denom.clone(),
+                amount,
+            },
             &transaction_hash,
         )
         .await?;
@@ -82,6 +89,7 @@ where
     if let Err(e) = process_packets(
         context,
         &chain_state,
+        &port_id,
         extract_packets(&response)?,
         memo,
         request_id,

@@ -3,7 +3,7 @@ use cosmos_sdk_proto::ibc::{
     core::channel::v1::Packet,
     lightclients::solomachine::v2::{
         ChannelStateData, ClientStateData, ConnectionStateData, ConsensusStateData, DataType,
-        HeaderData, PacketCommitmentData, SignBytes,
+        HeaderData, PacketAcknowledgementData, PacketCommitmentData, SignBytes,
     },
 };
 use prost_types::Any;
@@ -21,7 +21,7 @@ use crate::{
                 identifier::{ChannelId, ClientId, ConnectionId, PortId},
                 path::{
                     ChannelPath, ClientStatePath, ConnectionPath, ConsensusStatePath,
-                    PacketCommitmentPath,
+                    PacketAcknowledgementPath, PacketCommitmentPath,
                 },
             },
         },
@@ -33,6 +33,55 @@ use super::{
     common::to_u64_timestamp,
     signing::{sign, timestamped_sign},
 };
+
+pub async fn get_packet_acknowledgement_proof<C>(
+    context: &C,
+    chain_state: &ChainState,
+    port_id: &PortId,
+    acknowledgement: Vec<u8>,
+    packet_sequence: u64,
+    request_id: Option<&str>,
+) -> Result<Vec<u8>>
+where
+    C: StagContext,
+    C::Signer: Signer,
+{
+    let connection_details = chain_state.connection_details.as_ref().ok_or_else(|| {
+        anyhow!(
+            "connection details for chain with id {} not found",
+            chain_state.id
+        )
+    })?;
+
+    let channel_details = connection_details
+        .channels
+        .get(port_id)
+        .ok_or_else(|| anyhow!("channel details for port {} not found", port_id))?;
+
+    let mut acknowledgement_path = PacketAcknowledgementPath::new(
+        port_id,
+        &channel_details.solo_machine_channel_id,
+        packet_sequence,
+    );
+    acknowledgement_path.apply_prefix(&"ibc".parse().unwrap());
+
+    let acknowledgement_data = PacketAcknowledgementData {
+        path: acknowledgement_path.into_bytes(),
+        acknowledgement,
+    };
+
+    let acknowledgement_data_bytes = proto_encode(&acknowledgement_data)?;
+
+    let sign_bytes = SignBytes {
+        sequence: chain_state.sequence.into(),
+        timestamp: to_u64_timestamp(chain_state.consensus_timestamp)?,
+        diversifier: chain_state.config.diversifier.to_owned(),
+        data_type: DataType::PacketAcknowledgement.into(),
+        data: acknowledgement_data_bytes,
+    };
+
+    timestamped_sign(context, chain_state, sign_bytes, request_id).await
+}
 
 pub async fn get_packet_commitment_proof<C>(
     context: &C,

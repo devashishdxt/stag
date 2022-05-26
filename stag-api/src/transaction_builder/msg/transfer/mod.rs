@@ -1,3 +1,4 @@
+mod burn;
 mod mint;
 
-pub use self::mint::msg_token_send;
+pub use self::{burn::msg_transfer, mint::msg_token_send};

@@ -3,6 +3,7 @@ mod client;
 mod common;
 mod connection;
 mod handshake;
+mod packet;
 mod update_signer;
 
 pub use self::{
