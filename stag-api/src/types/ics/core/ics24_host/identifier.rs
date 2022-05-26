@@ -14,7 +14,7 @@ const VALID_ID_PATTERN: &str = r"^[a-zA-Z0-9\._\+\-\#\[\]<>]+$";
 macro_rules! impl_id {
     ($doc: expr, $name: ident, $min_len: expr) => {
         #[doc = $doc]
-        #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+        #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
         pub struct $name(Identifier);
 
         impl FromStr for $name {
@@ -58,6 +58,12 @@ impl ConnectionId {
 impl ChannelId {
     pub fn generate() -> ChannelId {
         Self(Identifier::generate("channel", 4).unwrap())
+    }
+}
+
+impl PortId {
+    pub fn transfer() -> PortId {
+        "transfer".parse().unwrap()
     }
 }
 

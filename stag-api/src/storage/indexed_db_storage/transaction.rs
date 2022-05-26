@@ -124,7 +124,6 @@ impl Storage for IndexedDbTransaction {
             config: chain_config,
             consensus_timestamp: current_time,
             sequence: 1,
-            packet_sequence: 1,
             connection_details: None,
             created_at: current_time,
             updated_at: current_time,

@@ -1,5 +1,4 @@
-mod channel;
 mod client;
 mod connection;
 
-pub use self::{channel::*, client::*, connection::*};
+pub use self::{client::*, connection::*};

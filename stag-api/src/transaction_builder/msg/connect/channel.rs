@@ -4,7 +4,7 @@ use cosmos_sdk_proto::{
     ibc::core::{
         channel::v1::{
             Channel, Counterparty as ChannelCounterparty, MsgChannelOpenAck, MsgChannelOpenInit,
-            Order as ChannelOrder, State as ChannelState,
+            MsgChannelOpenTry, Order as ChannelOrder, State as ChannelState,
         },
         client::v1::Height,
     },
@@ -19,7 +19,7 @@ use crate::{
         chain_state::ChainState,
         ics::core::{
             ics02_client::height::IHeight,
-            ics24_host::identifier::{ChannelId, ConnectionId},
+            ics24_host::identifier::{ChannelId, ConnectionId, PortId},
         },
     },
 };
@@ -28,6 +28,10 @@ pub async fn msg_channel_open_init<C>(
     context: &C,
     chain_state: &ChainState,
     solo_machine_connection_id: &ConnectionId,
+    port_id: &PortId,
+    counterparty_port_id: &PortId,
+    ordering: ChannelOrder,
+    version: String,
     memo: String,
     request_id: Option<&str>,
 ) -> Result<TxRaw>
@@ -36,17 +40,47 @@ where
     C::Signer: Signer,
 {
     let message = MsgChannelOpenInit {
-        port_id: chain_state.config.port_id.to_string(),
+        port_id: port_id.to_string(),
         channel: Some(Channel {
             state: ChannelState::Init.into(),
-            ordering: ChannelOrder::Unordered.into(),
+            ordering: ordering.into(),
             counterparty: Some(ChannelCounterparty {
-                port_id: chain_state.config.port_id.to_string(),
+                port_id: counterparty_port_id.to_string(),
                 channel_id: "".to_string(),
             }),
             connection_hops: vec![solo_machine_connection_id.to_string()],
-            version: "ics20-1".to_string(),
+            version,
         }),
+        signer: context.signer().to_account_address(&chain_state.id).await?,
+    };
+
+    build(context, chain_state, &[message], memo, request_id).await
+}
+
+pub async fn msg_channel_open_try<C>(
+    context: &C,
+    chain_state: &ChainState,
+    port_id: &PortId,
+    ordering: ChannelOrder,
+    counterparty_version: String,
+    memo: String,
+    request_id: Option<&str>,
+) -> Result<TxRaw>
+where
+    C: StagContext,
+    C::Signer: Signer,
+{
+    let message = MsgChannelOpenTry {
+        port_id: port_id.to_string(),
+        previous_channel_id: "".to_string(),
+        channel: Some(Channel {
+            state: ChannelState::Init.into(),
+            ordering: ordering.into(),
+            counterparty: todo!(),
+            connection_hops: todo!(),
+            version: todo!(),
+        }),
+        counterparty_version,
         signer: context.signer().to_account_address(&chain_state.id).await?,
     };
 
@@ -58,6 +92,7 @@ pub async fn msg_channel_open_ack<C>(
     chain_state: &mut ChainState,
     solo_machine_channel_id: &ChannelId,
     tendermint_channel_id: &ChannelId,
+    port_id: &PortId,
     memo: String,
     request_id: Option<&str>,
 ) -> Result<TxRaw>
@@ -74,7 +109,7 @@ where
     chain_state.sequence += 1;
 
     let message = MsgChannelOpenAck {
-        port_id: chain_state.config.port_id.to_string(),
+        port_id: port_id.to_string(),
         channel_id: solo_machine_channel_id.to_string(),
         counterparty_channel_id: tendermint_channel_id.to_string(),
         counterparty_version: "ics20-1".to_string(),

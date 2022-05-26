@@ -10,7 +10,7 @@ use crate::{
     tendermint::TendermintClient,
     types::{
         chain_state::{ChainConfig, ChainKey, ChainState},
-        ics::core::ics24_host::identifier::{ChainId, Identifier},
+        ics::core::ics24_host::identifier::{ChainId, Identifier, PortId},
         operation::Operation,
     },
 };
@@ -79,7 +79,12 @@ where
 }
 
 /// Returns the final denom of a token on solo machine after sending it on given chain
-pub async fn get_ibc_denom<C>(context: &C, chain_id: &ChainId, denom: &Identifier) -> Result<String>
+pub async fn get_ibc_denom<C>(
+    context: &C,
+    chain_id: &ChainId,
+    port_id: &PortId,
+    denom: &Identifier,
+) -> Result<String>
 where
     C: StagContext,
     C::Storage: Storage,
@@ -87,7 +92,7 @@ where
     let chain = get_chain(context, chain_id)
         .await?
         .ok_or_else(|| anyhow!("chain details not found when computing ibc denom"))?;
-    chain.get_ibc_denom(denom)
+    chain.get_ibc_denom(port_id, denom)
 }
 
 /// Fetches all the public keys associated with solo machine client on given chain
@@ -107,8 +112,13 @@ where
         .await
 }
 
-/// Fetches the balance of a token on solo machine client on given chain
-pub async fn get_balance<C>(context: &C, chain_id: &ChainId, denom: &Identifier) -> Result<Decimal>
+/// Fetches the balance of an IBC  token on solo machine client on given chain
+pub async fn get_ibc_balance<C>(
+    context: &C,
+    chain_id: &ChainId,
+    port_id: &PortId,
+    denom: &Identifier,
+) -> Result<Decimal>
 where
     C: StagContext,
     C::Signer: Signer,
@@ -117,7 +127,9 @@ where
     let chain_state = get_chain(context, chain_id)
         .await?
         .ok_or_else(|| anyhow!("chain details not found when computing balance"))?;
-    chain_state.get_balance(context.signer(), denom).await
+    chain_state
+        .get_ibc_balance(context.signer(), port_id, denom)
+        .await
 }
 
 /// Fetches transaction history of given chain

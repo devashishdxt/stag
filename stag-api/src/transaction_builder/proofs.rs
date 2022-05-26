@@ -1,10 +1,6 @@
-use anyhow::{anyhow, ensure, Result};
-use cosmos_sdk_proto::ibc::{
-    core::channel::v1::Packet,
-    lightclients::solomachine::v2::{
-        ChannelStateData, ClientStateData, ConnectionStateData, ConsensusStateData, DataType,
-        HeaderData, PacketAcknowledgementData, PacketCommitmentData, SignBytes,
-    },
+use anyhow::{anyhow, Result};
+use cosmos_sdk_proto::ibc::lightclients::solomachine::v2::{
+    ClientStateData, ConnectionStateData, ConsensusStateData, DataType, HeaderData, SignBytes,
 };
 use prost_types::Any;
 
@@ -16,13 +12,9 @@ use crate::{
         chain_state::ChainState,
         ics::core::{
             ics02_client::height::IHeight,
-            ics04_channel::packet::IPacket,
             ics24_host::{
-                identifier::{ChannelId, ClientId, ConnectionId},
-                path::{
-                    ChannelPath, ClientStatePath, ConnectionPath, ConsensusStatePath,
-                    PacketAcknowledgementPath, PacketCommitmentPath,
-                },
+                identifier::{ClientId, ConnectionId},
+                path::{ClientStatePath, ConnectionPath, ConsensusStatePath},
             },
         },
         proto_util::{proto_encode, AnyConvert},
@@ -33,143 +25,6 @@ use super::{
     common::to_u64_timestamp,
     signing::{sign, timestamped_sign},
 };
-
-pub async fn get_packet_acknowledgement_proof<C>(
-    context: &C,
-    chain_state: &ChainState,
-    acknowledgement: Vec<u8>,
-    packet_sequence: u64,
-    request_id: Option<&str>,
-) -> Result<Vec<u8>>
-where
-    C: StagContext,
-    C::Signer: Signer,
-{
-    let connection_details = chain_state.connection_details.as_ref().ok_or_else(|| {
-        anyhow!(
-            "connection details for chain with id {} not found",
-            chain_state.id
-        )
-    })?;
-    ensure!(
-        connection_details.tendermint_channel_id.is_some(),
-        "can't find tendermint channel, channel is already closed"
-    );
-    let mut acknowledgement_path = PacketAcknowledgementPath::new(
-        &chain_state.config.port_id,
-        connection_details.tendermint_channel_id.as_ref().unwrap(),
-        packet_sequence,
-    );
-    acknowledgement_path.apply_prefix(&"ibc".parse().unwrap());
-
-    let acknowledgement_data = PacketAcknowledgementData {
-        path: acknowledgement_path.into_bytes(),
-        acknowledgement,
-    };
-
-    let acknowledgement_data_bytes = proto_encode(&acknowledgement_data)?;
-
-    let sign_bytes = SignBytes {
-        sequence: chain_state.sequence.into(),
-        timestamp: to_u64_timestamp(chain_state.consensus_timestamp)?,
-        diversifier: chain_state.config.diversifier.to_owned(),
-        data_type: DataType::PacketAcknowledgement.into(),
-        data: acknowledgement_data_bytes,
-    };
-
-    timestamped_sign(context, chain_state, sign_bytes, request_id).await
-}
-
-pub async fn get_packet_commitment_proof<C>(
-    context: &C,
-    chain_state: &ChainState,
-    packet: &Packet,
-    request_id: Option<&str>,
-) -> Result<Vec<u8>>
-where
-    C: StagContext,
-    C::Signer: Signer,
-{
-    let commitment_bytes = packet.commitment_bytes()?;
-
-    let connection_details = chain_state.connection_details.as_ref().ok_or_else(|| {
-        anyhow!(
-            "connection details for chain with id {} not found",
-            chain_state.id
-        )
-    })?;
-    ensure!(
-        connection_details.tendermint_channel_id.is_some(),
-        "can't find tendermint channel id, channel is already closed"
-    );
-    let mut commitment_path = PacketCommitmentPath::new(
-        &chain_state.config.port_id,
-        connection_details.tendermint_channel_id.as_ref().unwrap(),
-        chain_state.packet_sequence.into(),
-    );
-    commitment_path.apply_prefix(&"ibc".parse().unwrap());
-
-    let packet_commitment_data = PacketCommitmentData {
-        path: commitment_path.into_bytes(),
-        commitment: commitment_bytes,
-    };
-
-    let packet_commitment_data_bytes = proto_encode(&packet_commitment_data)?;
-
-    let sign_bytes = SignBytes {
-        sequence: chain_state.sequence.into(),
-        timestamp: to_u64_timestamp(chain_state.consensus_timestamp)?,
-        diversifier: chain_state.config.diversifier.to_owned(),
-        data_type: DataType::PacketCommitment.into(),
-        data: packet_commitment_data_bytes,
-    };
-
-    timestamped_sign(context, chain_state, sign_bytes, request_id).await
-}
-
-pub async fn get_channel_proof<C>(
-    context: &C,
-    chain_state: &ChainState,
-    channel_id: &ChannelId,
-    request_id: Option<&str>,
-) -> Result<Vec<u8>>
-where
-    C: StagContext,
-    C::Signer: Signer,
-    C::Storage: Storage,
-{
-    let channel = context
-        .storage()
-        .get_channel(&chain_state.config.port_id, channel_id)
-        .await?
-        .ok_or_else(|| {
-            anyhow!(
-                "channel with port id {} and channel id {} not found",
-                chain_state.config.port_id,
-                channel_id
-            )
-        })?;
-
-    let mut channel_path = ChannelPath::new(&chain_state.config.port_id, channel_id);
-    channel_path.apply_prefix(&"ibc".parse().unwrap());
-
-    let channel_state_data = ChannelStateData {
-        path: channel_path.into_bytes(),
-        channel: Some(channel),
-    };
-
-    let channel_state_data_bytes = proto_encode(&channel_state_data)?;
-
-    let sign_bytes = SignBytes {
-        sequence: chain_state.sequence.into(),
-        timestamp: to_u64_timestamp(chain_state.consensus_timestamp)?,
-        diversifier: chain_state.config.diversifier.to_owned(),
-        data_type: DataType::ChannelState.into(),
-        data: channel_state_data_bytes,
-    };
-
-    timestamped_sign(context, chain_state, sign_bytes, request_id).await
-}
 
 pub async fn get_connection_proof<C>(
     context: &C,

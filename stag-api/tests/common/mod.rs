@@ -82,7 +82,6 @@ pub async fn get_chain_config() -> Result<ChainConfig> {
         max_clock_drift: humantime::parse_duration("3 sec").unwrap(),
         rpc_timeout: humantime::parse_duration("60 sec").unwrap(),
         diversifier: "stag".to_string(),
-        port_id: "transfer".parse().unwrap(),
         trusted_height: 1,
         trusted_hash: get_trusted_hash().await?,
         packet_timeout_height_offset: 10,
