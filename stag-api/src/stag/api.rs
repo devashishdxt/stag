@@ -4,8 +4,8 @@ use rust_decimal::Decimal;
 use crate::{
     event::NoopEventHandler,
     service::{
-        add_chain, connect, get_all_chains, get_chain, get_history, get_ibc_balance, get_ibc_denom,
-        get_public_keys, update_signer,
+        add_chain, connect, create_transfer_channel, get_all_chains, get_chain, get_history,
+        get_ibc_balance, get_ibc_denom, get_public_keys, update_signer,
     },
     signer::{NoopSigner, Signer, SignerConfig},
     storage::{NoopStorage, Storage, TransactionProvider},
@@ -145,6 +145,16 @@ where
         force: bool,
     ) -> Result<()> {
         connect(&self.context, chain_id, request_id, memo, force).await
+    }
+
+    /// Creates a new transfer channel
+    pub async fn create_transfer_channel(
+        &self,
+        chain_id: ChainId,
+        request_id: Option<String>,
+        memo: String,
+    ) -> Result<()> {
+        create_transfer_channel(&self.context, chain_id, request_id, memo).await
     }
 
     /// Updates signer for future IBC transactions

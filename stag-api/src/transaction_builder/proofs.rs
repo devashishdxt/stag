@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Result};
 use cosmos_sdk_proto::ibc::lightclients::solomachine::v2::{
-    ClientStateData, ConnectionStateData, ConsensusStateData, DataType, HeaderData, SignBytes,
+    ChannelStateData, ClientStateData, ConnectionStateData, ConsensusStateData, DataType,
+    HeaderData, SignBytes,
 };
 use prost_types::Any;
 
@@ -13,8 +14,8 @@ use crate::{
         ics::core::{
             ics02_client::height::IHeight,
             ics24_host::{
-                identifier::{ClientId, ConnectionId},
-                path::{ClientStatePath, ConnectionPath, ConsensusStatePath},
+                identifier::{ChannelId, ClientId, ConnectionId, PortId},
+                path::{ChannelPath, ClientStatePath, ConnectionPath, ConsensusStatePath},
             },
         },
         proto_util::{proto_encode, AnyConvert},
@@ -25,6 +26,51 @@ use super::{
     common::to_u64_timestamp,
     signing::{sign, timestamped_sign},
 };
+
+pub async fn get_channel_proof<C>(
+    context: &C,
+    chain_state: &ChainState,
+    channel_id: &ChannelId,
+    port_id: &PortId,
+    request_id: Option<&str>,
+) -> Result<Vec<u8>>
+where
+    C: StagContext,
+    C::Signer: Signer,
+    C::Storage: Storage,
+{
+    let channel = context
+        .storage()
+        .get_channel(port_id, channel_id)
+        .await?
+        .ok_or_else(|| {
+            anyhow!(
+                "channel with port id {} and channel id {} not found",
+                port_id,
+                channel_id
+            )
+        })?;
+
+    let mut channel_path = ChannelPath::new(port_id, channel_id);
+    channel_path.apply_prefix(&"ibc".parse().unwrap());
+
+    let channel_state_data = ChannelStateData {
+        path: channel_path.into_bytes(),
+        channel: Some(channel),
+    };
+
+    let channel_state_data_bytes = proto_encode(&channel_state_data)?;
+
+    let sign_bytes = SignBytes {
+        sequence: chain_state.sequence.into(),
+        timestamp: to_u64_timestamp(chain_state.consensus_timestamp)?,
+        diversifier: chain_state.config.diversifier.to_owned(),
+        data_type: DataType::ChannelState.into(),
+        data: channel_state_data_bytes,
+    };
+
+    timestamped_sign(context, chain_state, sign_bytes, request_id).await
+}
 
 pub async fn get_connection_proof<C>(
     context: &C,

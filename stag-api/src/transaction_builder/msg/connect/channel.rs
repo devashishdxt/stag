@@ -4,7 +4,7 @@ use cosmos_sdk_proto::{
     ibc::core::{
         channel::v1::{
             Channel, Counterparty as ChannelCounterparty, MsgChannelOpenAck, MsgChannelOpenInit,
-            MsgChannelOpenTry, Order as ChannelOrder, State as ChannelState,
+            Order as ChannelOrder, State as ChannelState,
         },
         client::v1::Height,
     },
@@ -24,6 +24,7 @@ use crate::{
     },
 };
 
+#[allow(clippy::too_many_arguments)]
 pub async fn msg_channel_open_init<C>(
     context: &C,
     chain_state: &ChainState,
@@ -57,36 +58,6 @@ where
     build(context, chain_state, &[message], memo, request_id).await
 }
 
-pub async fn msg_channel_open_try<C>(
-    context: &C,
-    chain_state: &ChainState,
-    port_id: &PortId,
-    ordering: ChannelOrder,
-    counterparty_version: String,
-    memo: String,
-    request_id: Option<&str>,
-) -> Result<TxRaw>
-where
-    C: StagContext,
-    C::Signer: Signer,
-{
-    let message = MsgChannelOpenTry {
-        port_id: port_id.to_string(),
-        previous_channel_id: "".to_string(),
-        channel: Some(Channel {
-            state: ChannelState::Init.into(),
-            ordering: ordering.into(),
-            counterparty: todo!(),
-            connection_hops: todo!(),
-            version: todo!(),
-        }),
-        counterparty_version,
-        signer: context.signer().to_account_address(&chain_state.id).await?,
-    };
-
-    build(context, chain_state, &[message], memo, request_id).await
-}
-
 pub async fn msg_channel_open_ack<C>(
     context: &C,
     chain_state: &mut ChainState,
@@ -103,8 +74,14 @@ where
 {
     let proof_height = Height::new(0, chain_state.sequence.into());
 
-    let proof_try =
-        get_channel_proof(context, chain_state, tendermint_channel_id, request_id).await?;
+    let proof_try = get_channel_proof(
+        context,
+        chain_state,
+        tendermint_channel_id,
+        port_id,
+        request_id,
+    )
+    .await?;
 
     chain_state.sequence += 1;
 

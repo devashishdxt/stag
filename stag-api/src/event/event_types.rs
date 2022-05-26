@@ -2,8 +2,10 @@ use primitive_types::U256;
 use serde::{Deserialize, Serialize};
 
 use crate::types::{
-    chain_state::ConnectionDetails,
-    ics::core::ics24_host::identifier::{ChainId, ChannelId, ClientId, ConnectionId, Identifier},
+    chain_state::{ChannelDetails, ConnectionDetails},
+    ics::core::ics24_host::identifier::{
+        ChainId, ChannelId, ClientId, ConnectionId, Identifier, PortId,
+    },
     public_key::PublicKey,
 };
 
@@ -88,6 +90,8 @@ pub enum Event {
     InitializedChannelOnTendermint {
         /// Channel ID of solo machine client on IBC enabled chain
         channel_id: ChannelId,
+        /// Port ID of channel
+        port_id: PortId,
     },
     /// Close channel on IBC enabled chain
     CloseChannelInitOnSoloMachine {
@@ -100,16 +104,22 @@ pub enum Event {
     InitializedChannelOnSoloMachine {
         /// Channel ID of IBC enabled chain on solo machine
         channel_id: ChannelId,
+        /// Port ID of channel
+        port_id: PortId,
     },
     /// Confirmed channel on IBC enabled chain
     ConfirmedChannelOnTendermint {
         /// Channel ID of solo machine client on IBC enabled chain
         channel_id: ChannelId,
+        /// Port ID of channel
+        port_id: PortId,
     },
     /// Confirmed channel on solo machine
     ConfirmedChannelOnSoloMachine {
         /// Channel ID of IBC enabled chain on solo machine
         channel_id: ChannelId,
+        /// Port ID of channel
+        port_id: PortId,
     },
     /// Connection successfully established
     ConnectionEstablished {
@@ -117,6 +127,12 @@ pub enum Event {
         chain_id: ChainId,
         /// Connection details
         connection_details: ConnectionDetails,
+    },
+    ChannelCreated {
+        /// Chain ID of IBC enabled chain
+        chain_id: ChainId,
+        /// Channel details
+        channel_details: ChannelDetails,
     },
 
     // ----- Chain events ----- //

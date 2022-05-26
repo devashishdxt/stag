@@ -12,7 +12,7 @@ use crate::{
     tendermint::TendermintClient,
     transaction_builder,
     types::{
-        chain_state::ChainState,
+        chain_state::{ChainState, ChannelDetails},
         ics::core::ics24_host::identifier::{ChannelId, ConnectionId, PortId},
     },
 };
@@ -24,17 +24,20 @@ pub async fn open_channel<C>(
     memo: String,
     solo_machine_connection_id: &ConnectionId,
     tendermint_connection_id: &ConnectionId,
-) -> Result<(ChannelId, ChannelId)>
+) -> Result<ChannelDetails>
 where
     C: StagContext,
     C::Signer: Signer,
     C::Storage: Transaction,
     C::RpcClient: TendermintClient,
 {
+    let port_id = PortId::transfer();
+
     let solo_machine_channel_id = channel_open_init(
         context,
         chain_state,
         solo_machine_connection_id,
+        &port_id,
         memo.clone(),
         request_id,
     )
@@ -43,12 +46,13 @@ where
     context
         .handle_event(Event::InitializedChannelOnTendermint {
             channel_id: solo_machine_channel_id.clone(),
+            port_id: port_id.clone(),
         })
         .await?;
 
     let tendermint_channel_id = channel_open_try(
         context,
-        &chain_state.config.port_id,
+        &port_id,
         &solo_machine_channel_id,
         tendermint_connection_id,
     )
@@ -57,6 +61,7 @@ where
     context
         .handle_event(Event::InitializedChannelOnSoloMachine {
             channel_id: tendermint_channel_id.clone(),
+            port_id: port_id.clone(),
         })
         .await?;
 
@@ -65,6 +70,7 @@ where
         chain_state,
         &solo_machine_channel_id,
         &tendermint_channel_id,
+        &port_id,
         memo,
         request_id,
     )
@@ -73,24 +79,32 @@ where
     context
         .handle_event(Event::ConfirmedChannelOnTendermint {
             channel_id: solo_machine_channel_id.clone(),
+            port_id: port_id.clone(),
         })
         .await?;
 
-    channel_open_confirm(context, &chain_state.config.port_id, &tendermint_channel_id).await?;
+    channel_open_confirm(context, &port_id, &tendermint_channel_id).await?;
 
     context
         .handle_event(Event::ConfirmedChannelOnSoloMachine {
             channel_id: tendermint_channel_id.clone(),
+            port_id: port_id.clone(),
         })
         .await?;
 
-    Ok((solo_machine_channel_id, tendermint_channel_id))
+    Ok(ChannelDetails {
+        packet_sequence: 1,
+        port_id,
+        solo_machine_channel_id,
+        tendermint_channel_id,
+    })
 }
 
 async fn channel_open_init<C>(
     context: &C,
     chain_state: &ChainState,
     solo_machine_connection_id: &ConnectionId,
+    port_id: &PortId,
     memo: String,
     request_id: Option<&str>,
 ) -> Result<ChannelId>
@@ -103,6 +117,10 @@ where
         context,
         chain_state,
         solo_machine_connection_id,
+        port_id,
+        port_id,
+        ChannelOrder::Unordered,
+        "ica20-1".to_string(),
         memo,
         request_id,
     )
@@ -159,6 +177,7 @@ async fn channel_open_ack<C>(
     chain_state: &mut ChainState,
     solo_machine_channel_id: &ChannelId,
     tendermint_channel_id: &ChannelId,
+    port_id: &PortId,
     memo: String,
     request_id: Option<&str>,
 ) -> Result<()>
@@ -173,6 +192,7 @@ where
         chain_state,
         solo_machine_channel_id,
         tendermint_channel_id,
+        port_id,
         memo,
         request_id,
     )
