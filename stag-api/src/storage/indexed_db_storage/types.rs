@@ -1,9 +1,8 @@
 use chrono::{DateTime, Utc};
-use primitive_types::U256;
 use serde::Serialize;
 
 use crate::types::{
-    ics::core::ics24_host::identifier::{ChainId, Identifier},
+    ics::core::ics24_host::identifier::{ChainId, PortId},
     operation::OperationType,
 };
 
@@ -26,14 +25,10 @@ pub struct OperationRequest<'a> {
     pub request_id: Option<&'a str>,
     /// Chain ID of the operation
     pub chain_id: &'a ChainId,
-    /// Address of the account
-    pub address: &'a str,
-    /// Denom of tokens
-    pub denom: &'a Identifier,
-    /// Amount of tokens
-    pub amount: &'a U256,
+    /// Port ID of the channel
+    pub port_id: &'a PortId,
     /// Type of operation
-    pub operation_type: OperationType,
+    pub operation_type: &'a OperationType,
     /// On-chain transaction hash (in hex)
     pub transaction_hash: &'a str,
     /// Time at which this operation was created

@@ -33,7 +33,7 @@ where
 {
     let port_id = PortId::transfer();
 
-    let solo_machine_channel_id = channel_open_init(
+    let tendermint_channel_id = channel_open_init(
         context,
         chain_state,
         solo_machine_connection_id,
@@ -45,15 +45,15 @@ where
 
     context
         .handle_event(Event::InitializedChannelOnTendermint {
-            channel_id: solo_machine_channel_id.clone(),
+            channel_id: tendermint_channel_id.clone(),
             port_id: port_id.clone(),
         })
         .await?;
 
-    let tendermint_channel_id = channel_open_try(
+    let solo_machine_channel_id = channel_open_try(
         context,
         &port_id,
-        &solo_machine_channel_id,
+        &tendermint_channel_id,
         tendermint_connection_id,
     )
     .await?;
@@ -94,7 +94,8 @@ where
 
     Ok(ChannelDetails {
         packet_sequence: 1,
-        port_id,
+        solo_machine_port_id: port_id.clone(),
+        tendermint_port_id: port_id,
         solo_machine_channel_id,
         tendermint_channel_id,
     })
@@ -144,7 +145,7 @@ where
 async fn channel_open_try<C>(
     context: &C,
     port_id: &PortId,
-    solo_machine_channel_id: &ChannelId,
+    tendermint_channel_id: &ChannelId,
     tendermint_connection_id: &ConnectionId,
 ) -> Result<ChannelId>
 where
@@ -158,7 +159,7 @@ where
         ordering: ChannelOrder::Unordered.into(),
         counterparty: Some(ChannelCounterparty {
             port_id: port_id.to_string(),
-            channel_id: solo_machine_channel_id.to_string(),
+            channel_id: tendermint_channel_id.to_string(),
         }),
         connection_hops: vec![tendermint_connection_id.to_string()],
         version: "ics20-1".to_string(),

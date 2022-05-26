@@ -3,18 +3,17 @@ use primitive_types::U256;
 
 use crate::{
     event::{Event, EventHandler},
+    service::ibc_service::common::{ensure_response_success, extract_attribute},
     signer::{GetPublicKey, Signer},
     stag::{StagContext, WithTransaction},
     storage::{Storage, Transaction, TransactionProvider},
     tendermint::{JsonRpcClient, TendermintClient},
     transaction_builder,
     types::{
-        ics::core::ics24_host::identifier::{ChainId, Identifier},
+        ics::core::ics24_host::identifier::{ChainId, Identifier, PortId},
         operation::OperationType,
     },
 };
-
-use super::common::{ensure_response_success, extract_attribute};
 
 /// Mints tokens on given chain
 pub async fn mint_tokens<C>(
@@ -43,7 +42,7 @@ where
         .await?
         .ok_or_else(|| anyhow!("chain details for {} not found", chain_id))?;
 
-    let msg = transaction_builder::msg_token_send(
+    let msg = transaction_builder::transfer::msg_token_send(
         &transaction_context,
         &mut chain_state,
         amount,
@@ -82,10 +81,12 @@ where
             .add_operation(
                 request_id.as_deref(),
                 &chain_state.id,
-                &address,
-                &denom,
-                &amount,
-                OperationType::Mint,
+                &PortId::transfer(),
+                &OperationType::Mint {
+                    to: address,
+                    denom: denom.clone(),
+                    amount,
+                },
                 &transaction_hash,
             )
             .await?;

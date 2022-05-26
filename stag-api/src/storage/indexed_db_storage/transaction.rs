@@ -6,7 +6,6 @@ use cosmos_sdk_proto::ibc::{
         ClientState as TendermintClientState, ConsensusState as TendermintConsensusState,
     },
 };
-use primitive_types::U256;
 use prost::Message;
 use rexie::{Direction, KeyRange, Transaction as RexieTransaction};
 use tendermint::node::Id as NodeId;
@@ -18,7 +17,7 @@ use crate::{
         chain_state::{ChainConfig, ChainKey, ChainState},
         ibc_data::IbcData,
         ics::core::ics24_host::{
-            identifier::{ChainId, ChannelId, ClientId, ConnectionId, Identifier, PortId},
+            identifier::{ChainId, ChannelId, ClientId, ConnectionId, PortId},
             path::{ChannelPath, ClientStatePath, ConnectionPath, ConsensusStatePath},
         },
         operation::{Operation, OperationType},
@@ -304,18 +303,14 @@ impl Storage for IndexedDbTransaction {
         &self,
         request_id: Option<&str>,
         chain_id: &ChainId,
-        address: &str,
-        denom: &Identifier,
-        amount: &U256,
-        operation_type: OperationType,
+        port_id: &PortId,
+        operation_type: &OperationType,
         transaction_hash: &str,
     ) -> Result<()> {
         let operation = OperationRequest {
             request_id,
             chain_id,
-            address,
-            denom,
-            amount,
+            port_id,
             operation_type,
             transaction_hash,
             created_at: now_utc(),

@@ -28,6 +28,7 @@ pub struct Operation {
 
 /// Different types of possible operations on an account
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "camelCase")]
 pub enum OperationType {
     /// Mint some tokens on IBC enabled chain
     Mint {

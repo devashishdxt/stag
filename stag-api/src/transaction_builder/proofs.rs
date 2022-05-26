@@ -1,7 +1,10 @@
 use anyhow::{anyhow, Result};
-use cosmos_sdk_proto::ibc::lightclients::solomachine::v2::{
-    ChannelStateData, ClientStateData, ConnectionStateData, ConsensusStateData, DataType,
-    HeaderData, SignBytes,
+use cosmos_sdk_proto::ibc::{
+    core::channel::v1::Packet,
+    lightclients::solomachine::v2::{
+        ChannelStateData, ClientStateData, ConnectionStateData, ConsensusStateData, DataType,
+        HeaderData, PacketCommitmentData, SignBytes,
+    },
 };
 use prost_types::Any;
 
@@ -13,9 +16,13 @@ use crate::{
         chain_state::ChainState,
         ics::core::{
             ics02_client::height::IHeight,
+            ics04_channel::packet::IPacket,
             ics24_host::{
                 identifier::{ChannelId, ClientId, ConnectionId, PortId},
-                path::{ChannelPath, ClientStatePath, ConnectionPath, ConsensusStatePath},
+                path::{
+                    ChannelPath, ClientStatePath, ConnectionPath, ConsensusStatePath,
+                    PacketCommitmentPath,
+                },
             },
         },
         proto_util::{proto_encode, AnyConvert},
@@ -26,6 +33,56 @@ use super::{
     common::to_u64_timestamp,
     signing::{sign, timestamped_sign},
 };
+
+pub async fn get_packet_commitment_proof<C>(
+    context: &C,
+    chain_state: &ChainState,
+    port_id: &PortId,
+    packet: &Packet,
+    request_id: Option<&str>,
+) -> Result<Vec<u8>>
+where
+    C: StagContext,
+    C::Signer: Signer,
+{
+    let commitment_bytes = packet.commitment_bytes()?;
+
+    let connection_details = chain_state.connection_details.as_ref().ok_or_else(|| {
+        anyhow!(
+            "connection details for chain with id {} not found",
+            chain_state.id
+        )
+    })?;
+
+    let channel_details = connection_details
+        .channels
+        .get(port_id)
+        .ok_or_else(|| anyhow!("channel details for port {} not found", port_id))?;
+
+    let mut commitment_path = PacketCommitmentPath::new(
+        port_id,
+        &channel_details.solo_machine_channel_id,
+        channel_details.packet_sequence.into(),
+    );
+    commitment_path.apply_prefix(&"ibc".parse().unwrap());
+
+    let packet_commitment_data = PacketCommitmentData {
+        path: commitment_path.into_bytes(),
+        commitment: commitment_bytes,
+    };
+
+    let packet_commitment_data_bytes = proto_encode(&packet_commitment_data)?;
+
+    let sign_bytes = SignBytes {
+        sequence: chain_state.sequence.into(),
+        timestamp: to_u64_timestamp(chain_state.consensus_timestamp)?,
+        diversifier: chain_state.config.diversifier.to_owned(),
+        data_type: DataType::PacketCommitment.into(),
+        data: packet_commitment_data_bytes,
+    };
+
+    timestamped_sign(context, chain_state, sign_bytes, request_id).await
+}
 
 pub async fn get_channel_proof<C>(
     context: &C,

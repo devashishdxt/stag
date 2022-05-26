@@ -1,11 +1,12 @@
 use anyhow::Result;
+use primitive_types::U256;
 use rust_decimal::Decimal;
 
 use crate::{
     event::NoopEventHandler,
     service::{
         add_chain, connect, create_transfer_channel, get_all_chains, get_chain, get_history,
-        get_ibc_balance, get_ibc_denom, get_public_keys, update_signer,
+        get_ibc_balance, get_ibc_denom, get_public_keys, transfer, update_signer,
     },
     signer::{NoopSigner, Signer, SignerConfig},
     storage::{NoopStorage, Storage, TransactionProvider},
@@ -166,6 +167,28 @@ where
         memo: String,
     ) -> Result<()> {
         update_signer(&self.context, chain_id, request_id, new_public_key, memo).await
+    }
+
+    /// Mints tokens on given chain
+    pub async fn mint(
+        &self,
+        chain_id: ChainId,
+        request_id: Option<String>,
+        amount: U256,
+        denom: Identifier,
+        receiver: Option<String>,
+        memo: String,
+    ) -> Result<String> {
+        transfer::mint_tokens(
+            &self.context,
+            chain_id,
+            request_id,
+            amount,
+            denom,
+            receiver,
+            memo,
+        )
+        .await
     }
 }
 

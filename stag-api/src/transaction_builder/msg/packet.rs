@@ -1,4 +1,5 @@
 use anyhow::{anyhow, ensure, Result};
+
 use cosmos_sdk_proto::{
     cosmos::tx::v1beta1::TxRaw,
     ibc::core::{
@@ -6,8 +7,6 @@ use cosmos_sdk_proto::{
         client::v1::Height,
     },
 };
-use primitive_types::U256;
-use serde::Serialize;
 
 use crate::{
     signer::{GetPublicKey, Signer},
@@ -18,28 +17,16 @@ use crate::{
         chain_state::ChainState,
         ics::core::{
             ics02_client::height::IHeight,
-            ics24_host::identifier::{ChainId, Identifier},
+            ics24_host::identifier::{ChainId, PortId},
         },
     },
 };
 
-#[derive(Debug, Serialize)]
-struct TokenTransferPacketData {
-    pub denom: String,
-    // Ideally `amount` should be `U256` but `ibc-go` uses `protojson` which encodes `uint256` into `string`. So, using
-    // `String` here to keep consistent wire format.
-    pub amount: String,
-    pub sender: String,
-    pub receiver: String,
-}
-
-/// Creates and signs a `MsgRecvPacket` transaction.
-pub async fn msg_token_send<C>(
+pub async fn msg_receive_packet<C>(
     context: &C,
     chain_state: &mut ChainState,
-    amount: U256,
-    denom: &Identifier,
-    receiver: String,
+    port_id: &PortId,
+    packet_data: Vec<u8>,
     memo: String,
     request_id: Option<&str>,
 ) -> Result<TxRaw>
@@ -48,45 +35,23 @@ where
     C::Signer: Signer,
     C::RpcClient: TendermintClient,
 {
-    let connection_details = chain_state.connection_details.as_ref().ok_or_else(|| {
-        anyhow!(
-            "connection details not found for chain with id {}",
-            chain_state.id
-        )
-    })?;
-    ensure!(
-        connection_details.solo_machine_channel_id.is_some(),
-        "can't find solo machine channel, channel is already closed"
-    );
-    ensure!(
-        connection_details.tendermint_channel_id.is_some(),
-        "can't find tendermint channel, channel is already closed"
-    );
+    let connection_details = chain_state
+        .connection_details
+        .as_ref()
+        .ok_or_else(|| anyhow!("connection details for chain {} not found", chain_state.id))?;
 
-    let sender = context.signer().to_account_address(&chain_state.id).await?;
-
-    let packet_data = TokenTransferPacketData {
-        denom: denom.to_string(),
-        amount: amount.to_string(),
-        sender: sender.clone(),
-        receiver,
-    };
+    let channel_details = connection_details
+        .channels
+        .get(port_id)
+        .ok_or_else(|| anyhow!("channel details for port {} not found", port_id))?;
 
     let packet = Packet {
-        sequence: chain_state.packet_sequence.into(),
-        source_port: chain_state.config.port_id.to_string(),
-        source_channel: connection_details
-            .tendermint_channel_id
-            .as_ref()
-            .unwrap()
-            .to_string(),
-        destination_port: chain_state.config.port_id.to_string(),
-        destination_channel: connection_details
-            .solo_machine_channel_id
-            .as_ref()
-            .unwrap()
-            .to_string(),
-        data: serde_json::to_vec(&packet_data)?,
+        sequence: channel_details.packet_sequence.into(),
+        source_port: port_id.to_string(),
+        source_channel: channel_details.solo_machine_channel_id.to_string(),
+        destination_port: channel_details.tendermint_port_id.to_string(),
+        destination_channel: channel_details.tendermint_channel_id.to_string(),
+        data: packet_data,
         timeout_height: Some(
             get_latest_height(context, chain_state)
                 .await?
@@ -97,18 +62,29 @@ where
     };
 
     let proof_commitment =
-        get_packet_commitment_proof(context, chain_state, &packet, request_id).await?;
+        get_packet_commitment_proof(context, chain_state, port_id, &packet, request_id).await?;
 
     let proof_height = Height::new(0, chain_state.sequence.into());
 
     chain_state.sequence += 1;
-    chain_state.packet_sequence += 1;
+
+    let connection_details = chain_state
+        .connection_details
+        .as_mut()
+        .ok_or_else(|| anyhow!("connection details for chain {} not found", chain_state.id))?;
+
+    let channel_details = connection_details
+        .channels
+        .get_mut(port_id)
+        .ok_or_else(|| anyhow!("channel details for port {} not found", port_id))?;
+
+    channel_details.packet_sequence += 1;
 
     let message = MsgRecvPacket {
         packet: Some(packet),
         proof_commitment,
         proof_height: Some(proof_height),
-        signer: sender,
+        signer: context.signer().to_account_address(&chain_state.id).await?,
     };
 
     build(context, chain_state, &[message], memo, request_id).await

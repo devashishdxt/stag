@@ -1,7 +1,3 @@
-mod channel;
-mod client;
-mod connection;
-
 use anyhow::{anyhow, bail, Result};
 
 use crate::{
@@ -13,7 +9,7 @@ use crate::{
     types::{chain_state::ConnectionDetails, ics::core::ics24_host::identifier::ChainId},
 };
 
-use self::{channel::transfer, client::create_client, connection::establish_connection};
+use super::{channel::transfer, client::create_client, connection::establish_connection};
 
 pub async fn connect<C>(
     context: &C,
@@ -123,9 +119,10 @@ where
 
     let connection_details = chain_state.connection_details.as_mut().unwrap();
 
-    connection_details
-        .channels
-        .insert(channel_details.port_id.clone(), channel_details.clone());
+    connection_details.channels.insert(
+        channel_details.solo_machine_port_id.clone(),
+        channel_details.clone(),
+    );
 
     context.storage().update_chain_state(&chain_state).await?;
 

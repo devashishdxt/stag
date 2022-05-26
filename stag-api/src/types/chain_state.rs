@@ -70,8 +70,10 @@ pub struct ConnectionDetails {
 pub struct ChannelDetails {
     /// Packet sequence of channel (used when creating transactions on chain)
     pub packet_sequence: u32,
-    /// Port ID of the channel
-    pub port_id: PortId,
+    /// Port ID of channel on solo machine
+    pub solo_machine_port_id: PortId,
+    /// Port ID on channel on IBC enabled chain
+    pub tendermint_port_id: PortId,
     /// Channel ID of solo machine client on IBC enabled chain
     pub solo_machine_channel_id: ChannelId,
     /// Channel ID of IBC enabled chain on solo machine
