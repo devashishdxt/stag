@@ -106,6 +106,54 @@ async fn test_stag_flow() {
         } if denom == "gld".parse().unwrap() && amount == 100u8.into()
     ));
 
+    // Burn some tokens
+    assert!(stag
+        .burn(
+            chain_id.clone(),
+            None,
+            U256::from_dec_str("50").unwrap(),
+            "gld".parse().unwrap(),
+            "stag".to_string(),
+        )
+        .await
+        .is_ok());
+
+    // Check balance
+    let gld_balance = stag
+        .get_ibc_balance(&chain_id, &port_id, &"gld".parse().unwrap())
+        .await
+        .unwrap();
+    assert_eq!(gld_balance, "50".parse().unwrap());
+
+    // Check history
+    let history = stag.get_history(&chain_id, None, None).await;
+    assert!(history.is_ok());
+    let mut history = history.unwrap();
+    assert_eq!(history.len(), 2);
+
+    // History should be in reverse order
+    let operation_type = history.remove(0).operation_type;
+
+    assert!(matches!(
+        operation_type,
+        OperationType::Burn {
+            from: _,
+            denom,
+            amount,
+        } if denom == "gld".parse().unwrap() && amount == 50u8.into()
+    ));
+
+    let operation_type = history.remove(0).operation_type;
+
+    assert!(matches!(
+        operation_type,
+        OperationType::Mint {
+            to: _,
+            denom,
+            amount,
+        } if denom == "gld".parse().unwrap() && amount == 100u8.into()
+    ));
+
     // Update signer to use new mnemonic
     let new_public_key = common::get_public_key(&chain_id, common::MNEMONIC_2).await;
 
