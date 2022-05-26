@@ -151,7 +151,11 @@ impl ChainState {
             )
         })?;
 
-        let denom_trace = DenomTrace::new(port_id, &channel_details.solo_machine_channel_id, denom);
+        let denom_trace = DenomTrace::new(
+            &channel_details.tendermint_port_id,
+            &channel_details.tendermint_channel_id,
+            denom,
+        );
 
         let hash = Sha256::digest(denom_trace.to_string().as_bytes());
 

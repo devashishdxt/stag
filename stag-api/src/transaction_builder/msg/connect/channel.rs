@@ -77,7 +77,7 @@ where
     let proof_try = get_channel_proof(
         context,
         chain_state,
-        tendermint_channel_id,
+        solo_machine_channel_id,
         port_id,
         request_id,
     )
@@ -87,8 +87,8 @@ where
 
     let message = MsgChannelOpenAck {
         port_id: port_id.to_string(),
-        channel_id: solo_machine_channel_id.to_string(),
-        counterparty_channel_id: tendermint_channel_id.to_string(),
+        channel_id: tendermint_channel_id.to_string(),
+        counterparty_channel_id: solo_machine_channel_id.to_string(),
         counterparty_version: "ics20-1".to_string(),
         proof_height: Some(proof_height),
         proof_try,

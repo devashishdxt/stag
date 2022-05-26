@@ -60,7 +60,7 @@ where
 
     context
         .handle_event(Event::InitializedChannelOnSoloMachine {
-            channel_id: tendermint_channel_id.clone(),
+            channel_id: solo_machine_channel_id.clone(),
             port_id: port_id.clone(),
         })
         .await?;
@@ -78,16 +78,16 @@ where
 
     context
         .handle_event(Event::ConfirmedChannelOnTendermint {
-            channel_id: solo_machine_channel_id.clone(),
+            channel_id: tendermint_channel_id.clone(),
             port_id: port_id.clone(),
         })
         .await?;
 
-    channel_open_confirm(context, &port_id, &tendermint_channel_id).await?;
+    channel_open_confirm(context, &port_id, &solo_machine_channel_id).await?;
 
     context
         .handle_event(Event::ConfirmedChannelOnSoloMachine {
-            channel_id: tendermint_channel_id.clone(),
+            channel_id: solo_machine_channel_id.clone(),
             port_id: port_id.clone(),
         })
         .await?;
@@ -121,7 +121,7 @@ where
         port_id,
         port_id,
         ChannelOrder::Unordered,
-        "ica20-1".to_string(),
+        "ics20-1".to_string(),
         memo,
         request_id,
     )
