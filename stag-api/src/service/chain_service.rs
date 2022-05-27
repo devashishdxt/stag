@@ -1,3 +1,5 @@
+#[cfg(all(not(feature = "wasm"), feature = "non-wasm"))]
+use anyhow::Context;
 use anyhow::{anyhow, Result};
 use cosmos_sdk_proto::ibc::core::channel::v1::{
     query_client::QueryClient as ChannelQueryClient, QueryChannelRequest,
@@ -189,7 +191,7 @@ where
         .as_str()
         .ok_or_else(|| {
             anyhow!(
-                "unable to convert ICA address to string for channel with id {} and port {}",
+                "unable to convert ICA address to string for tendermint channel with id {} and port {}",
                 tendermint_channel_id,
                 tendermint_port_id
             )

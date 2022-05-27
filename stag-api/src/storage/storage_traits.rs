@@ -72,7 +72,6 @@ pub trait Storage: Base {
         offset: Option<u32>,
     ) -> Result<Vec<ChainKey>>;
 
-    #[allow(clippy::too_many_arguments)]
     /// Adds a new IBC operation to the storage
     async fn add_operation(
         &self,

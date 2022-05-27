@@ -1,11 +1,11 @@
-use anyhow::{ensure, Error};
+use anyhow::Error;
 use chrono::{DateTime, Utc};
 use sqlx::{types::Json, Row};
 
 use crate::types::{
     chain_state::{ChainConfig, ChainKey, ChainState, ConnectionDetails},
     ibc_data::IbcData,
-    operation::Operation,
+    operation::{Operation, OperationType},
 };
 
 use super::DbRow;
@@ -17,31 +17,17 @@ impl TryFrom<DbRow> for Operation {
         let id: i64 = row.try_get("id")?;
         let request_id: Option<String> = row.try_get("request_id")?;
         let chain_id: String = row.try_get("chain_id")?;
-        let address: String = row.try_get("address")?;
-        let denom: String = row.try_get("denom")?;
-        let amount: Vec<u8> = row.try_get("amount")?;
-        let operation_type: String = row.try_get("operation_type")?;
+        let port_id: String = row.try_get("port_id")?;
+        let operation_type: Json<OperationType> = row.try_get("operation_type")?;
         let transaction_hash: String = row.try_get("transaction_hash")?;
         let created_at: DateTime<Utc> = row.try_get("created_at")?;
-
-        let mut amount_bytes = [0; 32];
-
-        ensure!(
-            amount.len() == 32,
-            "expected amount in u256 little endian bytes {}",
-            amount.len()
-        );
-
-        amount_bytes.copy_from_slice(&amount);
 
         Ok(Self {
             id,
             request_id,
             chain_id: chain_id.parse()?,
-            address,
-            denom: denom.parse()?,
-            amount: amount_bytes.into(),
-            operation_type: operation_type.parse()?,
+            port_id: port_id.parse()?,
+            operation_type: operation_type.0,
             transaction_hash,
             created_at,
         })
@@ -57,7 +43,6 @@ impl TryFrom<DbRow> for ChainState {
         let config: Json<ChainConfig> = row.try_get("config")?;
         let consensus_timestamp: DateTime<Utc> = row.try_get("consensus_timestamp")?;
         let sequence: u32 = row.try_get("sequence")?;
-        let packet_sequence: u32 = row.try_get("packet_sequence")?;
         let connection_details: Option<Json<ConnectionDetails>> =
             row.try_get("connection_details")?;
         let created_at: DateTime<Utc> = row.try_get("created_at")?;
@@ -69,7 +54,6 @@ impl TryFrom<DbRow> for ChainState {
             config: config.0,
             consensus_timestamp,
             sequence,
-            packet_sequence,
             connection_details: connection_details.map(|json| json.0),
             created_at,
             updated_at,
