@@ -16,7 +16,7 @@ wasm_bindgen_test_configure!(run_in_browser);
 mod common;
 
 #[wasm_bindgen_test]
-async fn test_stag_flow() {
+async fn test_stag_transfer_flow() {
     // Build stag (IBC solo machine)
     let stag = common::setup(common::MNEMONIC_1).await;
 
