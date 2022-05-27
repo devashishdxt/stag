@@ -1,10 +1,10 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use cosmos_sdk_proto::{
     cosmos::tx::v1beta1::TxRaw,
     ibc::core::{
         channel::v1::{
-            Channel, Counterparty as ChannelCounterparty, MsgChannelOpenAck, MsgChannelOpenInit,
-            Order as ChannelOrder, State as ChannelState,
+            Channel, Counterparty as ChannelCounterparty, MsgChannelOpenAck, MsgChannelOpenConfirm,
+            MsgChannelOpenInit, MsgChannelOpenTry, Order as ChannelOrder, State as ChannelState,
         },
         client::v1::Height,
     },
@@ -58,12 +58,68 @@ where
     build(context, chain_state, &[message], memo, request_id).await
 }
 
+#[allow(clippy::too_many_arguments)]
+pub async fn msg_channel_open_try<C>(
+    context: &C,
+    chain_state: &mut ChainState,
+    port_id: &PortId,
+    counterparty_channel_id: &ChannelId,
+    counterparty_port_id: &PortId,
+    counterparty_version: String,
+    memo: String,
+    request_id: Option<&str>,
+) -> Result<TxRaw>
+where
+    C: StagContext,
+    C::Signer: Signer,
+    C::Storage: Storage,
+{
+    let proof_height = Height::new(0, chain_state.sequence.into());
+
+    let proof_init = get_channel_proof(
+        context,
+        chain_state,
+        counterparty_channel_id,
+        counterparty_port_id,
+        request_id,
+    )
+    .await?;
+
+    chain_state.sequence += 1;
+
+    let channel = context
+        .storage()
+        .get_channel(counterparty_port_id, counterparty_channel_id)
+        .await?
+        .ok_or_else(|| {
+            anyhow!(
+                "channel with port id {} and channel id {} not found",
+                counterparty_port_id,
+                counterparty_channel_id
+            )
+        })?;
+
+    let message = MsgChannelOpenTry {
+        port_id: port_id.to_string(),
+        previous_channel_id: "".to_owned(),
+        channel: Some(channel),
+        counterparty_version,
+        proof_init,
+        proof_height: Some(proof_height),
+        signer: context.signer().to_account_address(&chain_state.id).await?,
+    };
+
+    build(context, chain_state, &[message], memo, request_id).await
+}
+
+#[allow(clippy::too_many_arguments)]
 pub async fn msg_channel_open_ack<C>(
     context: &C,
     chain_state: &mut ChainState,
-    solo_machine_channel_id: &ChannelId,
-    tendermint_channel_id: &ChannelId,
+    channel_id: &ChannelId,
     port_id: &PortId,
+    counterparty_channel_id: &ChannelId,
+    counterparty_port_id: &PortId,
     memo: String,
     request_id: Option<&str>,
 ) -> Result<TxRaw>
@@ -77,8 +133,8 @@ where
     let proof_try = get_channel_proof(
         context,
         chain_state,
-        solo_machine_channel_id,
-        port_id,
+        counterparty_channel_id,
+        counterparty_port_id,
         request_id,
     )
     .await?;
@@ -87,11 +143,51 @@ where
 
     let message = MsgChannelOpenAck {
         port_id: port_id.to_string(),
-        channel_id: tendermint_channel_id.to_string(),
-        counterparty_channel_id: solo_machine_channel_id.to_string(),
+        channel_id: channel_id.to_string(),
+        counterparty_channel_id: counterparty_channel_id.to_string(),
         counterparty_version: "ics20-1".to_string(),
         proof_height: Some(proof_height),
         proof_try,
+        signer: context.signer().to_account_address(&chain_state.id).await?,
+    };
+
+    build(context, chain_state, &[message], memo, request_id).await
+}
+
+#[allow(clippy::too_many_arguments)]
+pub async fn msg_channel_open_confirm<C>(
+    context: &C,
+    chain_state: &mut ChainState,
+    port_id: &PortId,
+    channel_id: &ChannelId,
+    counterparty_port_id: &PortId,
+    counterparty_channel_id: &ChannelId,
+    memo: String,
+    request_id: Option<&str>,
+) -> Result<TxRaw>
+where
+    C: StagContext,
+    C::Signer: Signer,
+    C::Storage: Storage,
+{
+    let proof_height = Height::new(0, chain_state.sequence.into());
+
+    let proof_ack = get_channel_proof(
+        context,
+        chain_state,
+        counterparty_channel_id,
+        counterparty_port_id,
+        request_id,
+    )
+    .await?;
+
+    chain_state.sequence += 1;
+
+    let message = MsgChannelOpenConfirm {
+        port_id: port_id.to_string(),
+        channel_id: channel_id.to_string(),
+        proof_ack,
+        proof_height: Some(proof_height),
         signer: context.signer().to_account_address(&chain_state.id).await?,
     };
 

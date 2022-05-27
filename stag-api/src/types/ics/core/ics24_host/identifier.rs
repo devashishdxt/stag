@@ -65,6 +65,14 @@ impl PortId {
     pub fn transfer() -> PortId {
         "transfer".parse().unwrap()
     }
+
+    pub fn ica_host() -> PortId {
+        "icahost".parse().unwrap()
+    }
+
+    pub fn generate_ica_controller() -> PortId {
+        Self(Identifier::generate("icacontroller", 4).unwrap())
+    }
 }
 
 /// A chain identifier

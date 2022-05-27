@@ -69,6 +69,7 @@ where
         context,
         chain_state,
         &solo_machine_channel_id,
+        &port_id,
         &tendermint_channel_id,
         &port_id,
         memo,
@@ -173,12 +174,14 @@ where
     Ok(channel_id)
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn channel_open_ack<C>(
     context: &C,
     chain_state: &mut ChainState,
     solo_machine_channel_id: &ChannelId,
+    solo_machine_port_id: &PortId,
     tendermint_channel_id: &ChannelId,
-    port_id: &PortId,
+    tendermint_port_id: &PortId,
     memo: String,
     request_id: Option<&str>,
 ) -> Result<()>
@@ -191,9 +194,10 @@ where
     let msg = transaction_builder::msg_channel_open_ack(
         context,
         chain_state,
-        solo_machine_channel_id,
         tendermint_channel_id,
-        port_id,
+        tendermint_port_id,
+        solo_machine_channel_id,
+        solo_machine_port_id,
         memo,
         request_id,
     )
