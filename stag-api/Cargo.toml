@@ -46,7 +46,7 @@ sqlite-storage = ["non-wasm", "sqlx/sqlite"]
 tracing-event-handler = ["tracing"]
 
 # Enables all the required dependencies for wasm environments
-wasm = ["getrandom", "tonic-web-wasm-client", "js-sys"]
+wasm = ["getrandom", "js-sys", "tonic-web-wasm-client"]
 
 [dependencies]
 anyhow = "1.0.57"
