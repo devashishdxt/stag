@@ -173,6 +173,23 @@ impl ChainState {
             .await
     }
 
+    /// Fetches channel details for given port ID
+    pub fn get_channel_details(&self, port_id: &PortId) -> Result<ChannelDetails> {
+        let connection_details = self
+            .connection_details
+            .as_ref()
+            .ok_or_else(|| anyhow!("connection is not established with given chain"))?;
+
+        let channel_details = connection_details.channels.get(port_id).ok_or_else(|| {
+            anyhow!(
+                "channel with port id {} is not created with given chain",
+                port_id
+            )
+        })?;
+
+        Ok(channel_details.clone())
+    }
+
     /// Returns true if current chain has all the connection details set
     pub fn is_connected(&self) -> bool {
         self.connection_details.is_some()

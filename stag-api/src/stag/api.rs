@@ -6,7 +6,8 @@ use crate::{
     event::NoopEventHandler,
     service::{
         add_chain, connect, create_ica_channel, create_transfer_channel, get_all_chains, get_chain,
-        get_history, get_ibc_balance, get_ibc_denom, get_public_keys, transfer, update_signer,
+        get_history, get_ibc_balance, get_ibc_denom, get_ica_address, get_public_keys, transfer,
+        update_signer,
     },
     signer::{NoopSigner, Signer, SignerConfig},
     storage::{NoopStorage, Storage, TransactionProvider},
@@ -121,6 +122,11 @@ where
         denom: &Identifier,
     ) -> Result<Decimal> {
         get_ibc_balance(&self.context, chain_id, port_id, denom).await
+    }
+
+    /// Get on-chain ICA (Interchain Account) address
+    pub async fn get_ica_address(&self, chain_id: &ChainId) -> Result<String> {
+        get_ica_address(&self.context, chain_id).await
     }
 }
 

@@ -29,7 +29,7 @@ use crate::{
 pub async fn msg_receive_packet<C>(
     context: &C,
     chain_state: &mut ChainState,
-    port_id: &PortId,
+    solo_machine_port_id: &PortId,
     packet_data: Vec<u8>,
     memo: String,
     request_id: Option<&str>,
@@ -46,12 +46,17 @@ where
 
     let channel_details = connection_details
         .channels
-        .get(port_id)
-        .ok_or_else(|| anyhow!("channel details for port {} not found", port_id))?;
+        .get(solo_machine_port_id)
+        .ok_or_else(|| {
+            anyhow!(
+                "channel details for port {} not found",
+                solo_machine_port_id
+            )
+        })?;
 
     let packet = Packet {
         sequence: channel_details.packet_sequence.into(),
-        source_port: port_id.to_string(),
+        source_port: solo_machine_port_id.to_string(),
         source_channel: channel_details.solo_machine_channel_id.to_string(),
         destination_port: channel_details.tendermint_port_id.to_string(),
         destination_channel: channel_details.tendermint_channel_id.to_string(),
@@ -65,8 +70,14 @@ where
         timeout_timestamp: 0,
     };
 
-    let proof_commitment =
-        get_packet_commitment_proof(context, chain_state, port_id, &packet, request_id).await?;
+    let proof_commitment = get_packet_commitment_proof(
+        context,
+        chain_state,
+        solo_machine_port_id,
+        &packet,
+        request_id,
+    )
+    .await?;
 
     let proof_height = Height::new(0, chain_state.sequence.into());
 
@@ -79,8 +90,13 @@ where
 
     let channel_details = connection_details
         .channels
-        .get_mut(port_id)
-        .ok_or_else(|| anyhow!("channel details for port {} not found", port_id))?;
+        .get_mut(solo_machine_port_id)
+        .ok_or_else(|| {
+            anyhow!(
+                "channel details for port {} not found",
+                solo_machine_port_id
+            )
+        })?;
 
     channel_details.packet_sequence += 1;
 

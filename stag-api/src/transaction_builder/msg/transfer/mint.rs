@@ -25,7 +25,7 @@ struct TokenTransferPacketData {
 }
 
 /// Creates and signs a `MsgRecvPacket` transaction.
-pub async fn msg_token_send<C>(
+pub async fn msg_mint<C>(
     context: &C,
     chain_state: &mut ChainState,
     amount: U256,

@@ -32,14 +32,24 @@ where
     C::Storage: Storage,
     C::RpcClient: TendermintClient,
 {
-    let solo_machine_port_id = PortId::generate_ica_controller();
+    let solo_machine_port_id = PortId::ica_controller(context.signer(), &chain_state.id).await?;
     let tendermint_port_id = PortId::ica_host();
+
+    let solo_machine_version = serde_json::to_string(&json!({
+       "version": "ics27-1",
+       "controller_connection_id": solo_machine_connection_id,
+       "host_connection_id": tendermint_connection_id,
+       "address": "",
+       "encoding": "proto3",
+       "tx_type": "sdk_multi_msg",
+    }))?;
 
     let solo_machine_channel_id = channel_open_init(
         context,
         &solo_machine_port_id,
         tendermint_connection_id,
         &tendermint_port_id,
+        solo_machine_version.clone(),
     )
     .await?;
 
@@ -53,11 +63,10 @@ where
     let tendermint_channel_id = channel_open_try(
         context,
         chain_state,
-        solo_machine_connection_id,
         &solo_machine_channel_id,
         &solo_machine_port_id,
-        tendermint_connection_id,
         &tendermint_port_id,
+        solo_machine_version,
         memo.clone(),
         request_id,
     )
@@ -118,6 +127,7 @@ async fn channel_open_init<C>(
     solo_machine_port_id: &PortId,
     tendermint_connection_id: &ConnectionId,
     tendermint_port_id: &PortId,
+    solo_machine_version: String,
 ) -> Result<ChannelId>
 where
     C: StagContext,
@@ -133,7 +143,7 @@ where
             channel_id: "".to_string(),
         }),
         connection_hops: vec![tendermint_connection_id.to_string()],
-        version: "ics20-1".to_string(),
+        version: solo_machine_version,
     };
 
     context
@@ -148,11 +158,10 @@ where
 async fn channel_open_try<C>(
     context: &C,
     chain_state: &mut ChainState,
-    solo_machine_connection_id: &ConnectionId,
     solo_machine_channel_id: &ChannelId,
     solo_machine_port_id: &PortId,
-    tendermint_connection_id: &ConnectionId,
     tendermint_port_id: &PortId,
+    solo_machine_version: String,
     memo: String,
     request_id: Option<&str>,
 ) -> Result<ChannelId>
@@ -162,22 +171,13 @@ where
     C::Storage: Storage,
     C::RpcClient: TendermintClient,
 {
-    let version = serde_json::to_string(&json!({
-       "version": "ics27-1",
-       "controller_connection_id": solo_machine_connection_id,
-       "host_connection_id": tendermint_connection_id,
-       "address": "",
-       "encoding": "proto3",
-       "tx_type": "sdk_multi_msg",
-    }))?;
-
     let msg = transaction_builder::msg_channel_open_try(
         context,
         chain_state,
         tendermint_port_id,
         solo_machine_channel_id,
         solo_machine_port_id,
-        version,
+        solo_machine_version,
         memo,
         request_id,
     )

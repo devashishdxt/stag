@@ -5,7 +5,7 @@ use rand::{distributions::Alphanumeric, Rng};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
-use crate::types::ics::core::ics02_client::client_type::ClientType;
+use crate::{signer::GetPublicKey, types::ics::core::ics02_client::client_type::ClientType};
 
 pub(crate) const MAX_IDENTIFIER_LEN: usize = 64;
 const VALID_CHAIN_ID_PATTERN: &str = r"^.+[^-]-{1}[1-9][0-9]*$";
@@ -70,8 +70,11 @@ impl PortId {
         "icahost".parse().unwrap()
     }
 
-    pub fn generate_ica_controller() -> PortId {
-        Self(Identifier::generate("icacontroller", 4).unwrap())
+    pub async fn ica_controller(
+        signer: &impl GetPublicKey,
+        chain_id: &ChainId,
+    ) -> Result<PortId, Error> {
+        format!("ica-controller-{}", signer.get_public_key(chain_id).await?).parse()
     }
 }
 

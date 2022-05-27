@@ -40,7 +40,7 @@ where
         .await?
         .ok_or_else(|| anyhow!("chain details for {} not found", chain_id))?;
 
-    let msg = transaction_builder::transfer::msg_transfer(
+    let msg = transaction_builder::transfer::msg_burn(
         context,
         &chain_state,
         amount,

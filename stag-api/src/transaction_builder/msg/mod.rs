@@ -1,4 +1,5 @@
 mod connect;
+pub mod ica;
 mod packet;
 pub mod transfer;
 mod update_signer;
