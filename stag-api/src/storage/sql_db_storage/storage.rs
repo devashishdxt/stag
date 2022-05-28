@@ -762,4 +762,68 @@ mod tests {
 
         assert_eq!(updated_channel, channel);
     }
+
+    #[tokio::test]
+    async fn test_ica_address() {
+        let storage = SqlDbStorage::new(URI.to_owned()).await.unwrap();
+
+        let connection_id: ConnectionId = "connection-1".parse().unwrap();
+        let port_id: PortId = "transfer".parse().unwrap();
+        let address_1 = "ica-address-1".to_owned();
+        let address_2 = "ica-address-2".to_owned();
+
+        // Add ica address for a connection id and port id
+        assert!(storage
+            .add_ica_address(&connection_id, &port_id, &address_1)
+            .await
+            .is_ok());
+
+        // Should not return ica address for invalid connection id
+        let ica_address = storage
+            .get_ica_address(&"connection-2".parse().unwrap(), &port_id)
+            .await;
+        assert!(ica_address.is_ok(), "error: {:?}", ica_address.unwrap_err());
+        let ica_address = ica_address.unwrap();
+
+        assert!(ica_address.is_none());
+
+        // Should not return ica address for invalid port id
+        let ica_address = storage
+            .get_ica_address(&connection_id, &"port-2".parse().unwrap())
+            .await;
+        assert!(ica_address.is_ok(), "error: {:?}", ica_address.unwrap_err());
+        let ica_address = ica_address.unwrap();
+
+        assert!(ica_address.is_none());
+
+        // Should return ica address for valid connection id and port id
+        let ica_address = storage.get_ica_address(&connection_id, &port_id).await;
+        assert!(ica_address.is_ok(), "error: {:?}", ica_address.unwrap_err());
+        let ica_address = ica_address.unwrap();
+
+        assert!(ica_address.is_some());
+        let ica_address = ica_address.unwrap();
+
+        assert_eq!(ica_address, address_1);
+
+        // Update ica address
+        assert!(storage
+            .update_ica_address(&connection_id, &port_id, &address_2)
+            .await
+            .is_ok());
+
+        // Should return updated ica address for valid channel id and port id
+        let updated_ica_address = storage.get_ica_address(&connection_id, &port_id).await;
+        assert!(
+            updated_ica_address.is_ok(),
+            "error: {:?}",
+            updated_ica_address.unwrap_err()
+        );
+        let updated_ica_address = updated_ica_address.unwrap();
+
+        assert!(updated_ica_address.is_some());
+        let updated_ica_address = updated_ica_address.unwrap();
+
+        assert_eq!(updated_ica_address, address_2);
+    }
 }
