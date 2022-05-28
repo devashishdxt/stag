@@ -1,4 +1,4 @@
-use anyhow::{anyhow, ensure, Result};
+use anyhow::{anyhow, ensure, Context, Result};
 
 use cosmos_sdk_proto::{
     cosmos::tx::v1beta1::TxRaw,
@@ -65,7 +65,7 @@ where
             get_latest_height(context, chain_state)
                 .await?
                 .checked_add(chain_state.config.packet_timeout_height_offset)
-                .ok_or_else(|| anyhow!("height addition overflow"))?,
+                .context("height addition overflow")?,
         ),
         timeout_timestamp: 0,
     };

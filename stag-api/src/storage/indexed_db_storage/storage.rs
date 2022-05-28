@@ -81,6 +81,9 @@ impl IndexedDbStorage {
                 "add_channel" => (IBC_DATA_STORE_NAME, true),
                 "get_channel" => (IBC_DATA_STORE_NAME, false),
                 "update_channel" => (IBC_DATA_STORE_NAME, true),
+                "add_ica_address" => (IBC_DATA_STORE_NAME, true),
+                "get_ica_address" => (IBC_DATA_STORE_NAME, false),
+                "update_ica_address" => (IBC_DATA_STORE_NAME, true),
                 _ => return Err(anyhow!("unknown access point: {}", access_point)),
             };
 
@@ -369,6 +372,52 @@ impl Storage for IndexedDbStorage {
 
         transaction
             .update_channel(port_id, channel_id, channel)
+            .await?;
+
+        transaction.done().await
+    }
+
+    async fn add_ica_address(
+        &self,
+        connection_id: &ConnectionId,
+        port_id: &PortId,
+        address: &str,
+    ) -> Result<()> {
+        let transaction = self.get_transaction(&["add_ica_address"])?;
+
+        transaction
+            .add_ica_address(connection_id, port_id, address)
+            .await?;
+
+        transaction.done().await
+    }
+
+    /// Gets ICA address from the storage
+    async fn get_ica_address(
+        &self,
+        connection_id: &ConnectionId,
+        port_id: &PortId,
+    ) -> Result<Option<String>> {
+        let transaction = self.get_transaction(&["get_ica_address"])?;
+
+        let result = transaction.get_ica_address(connection_id, port_id).await?;
+
+        transaction.done().await?;
+
+        Ok(result)
+    }
+
+    /// Updates ICA address in the storage
+    async fn update_ica_address(
+        &self,
+        connection_id: &ConnectionId,
+        port_id: &PortId,
+        address: &str,
+    ) -> Result<()> {
+        let transaction = self.get_transaction(&["update_ica_address"])?;
+
+        transaction
+            .update_ica_address(connection_id, port_id, address)
             .await?;
 
         transaction.done().await

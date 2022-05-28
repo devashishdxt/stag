@@ -209,3 +209,18 @@ impl PacketAcknowledgementPath {
         )
     }
 }
+
+impl_path!(
+    "Path for storing interchain account address",
+    InterchainAccountAddressPath
+);
+
+impl InterchainAccountAddressPath {
+    pub fn new(connection_id: &ConnectionId, port_id: &PortId) -> Self {
+        Self(
+            format!("owner/{}/{}", connection_id, port_id)
+                .parse()
+                .unwrap(),
+        )
+    }
+}

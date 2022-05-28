@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Context, Result};
 use cosmos_sdk_proto::{
     cosmos::{
         staking::v1beta1::{query_client::QueryClient as StakingQueryClient, QueryParamsRequest},
@@ -123,9 +123,9 @@ async fn get_unbonding_period(chain_state: &ChainState) -> Result<Duration> {
         .await?
         .into_inner()
         .params
-        .ok_or_else(|| anyhow!("staking params are empty"))?
+        .context("staking params are empty")?
         .unbonding_time
-        .ok_or_else(|| anyhow!("missing unbonding period in staking params"))
+        .context("missing unbonding period in staking params")
 }
 
 async fn get_latest_header<T>(light_client: &LightClient<T>) -> Result<Header>

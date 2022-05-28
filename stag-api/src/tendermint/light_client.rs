@@ -84,7 +84,7 @@ where
         let highest = state
             .light_store
             .highest_trusted_or_verified()
-            .ok_or_else(|| anyhow!("no initial trusted state in light client"))?;
+            .context("no initial trusted state in light client")?;
 
         if target_height >= highest.height() {
             // Perform forward verification with bisection
@@ -243,7 +243,7 @@ where
         let root = state
             .light_store
             .highest_trusted_or_verified()
-            .ok_or_else(|| anyhow!("no initial trusted state"))?;
+            .context("no initial trusted state")?;
 
         assert!(root.height() >= target_height);
 

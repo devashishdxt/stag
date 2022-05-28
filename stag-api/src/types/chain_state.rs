@@ -2,7 +2,7 @@ use std::{collections::HashMap, time::Duration};
 
 #[cfg(all(not(feature = "wasm"), feature = "non-wasm"))]
 use anyhow::Context;
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use chrono::{DateTime, Utc};
 use cosmos_sdk_proto::cosmos::bank::v1beta1::{
     query_client::QueryClient as BankQueryClient, QueryBalanceRequest,
@@ -142,7 +142,7 @@ impl ChainState {
         let connection_details = self
             .connection_details
             .as_ref()
-            .ok_or_else(|| anyhow!("connection is not established with given chain"))?;
+            .context("connection is not established with given chain")?;
 
         let channel_details = connection_details.channels.get(port_id).ok_or_else(|| {
             anyhow!(
@@ -178,7 +178,7 @@ impl ChainState {
         let connection_details = self
             .connection_details
             .as_ref()
-            .ok_or_else(|| anyhow!("connection is not established with given chain"))?;
+            .context("connection is not established with given chain")?;
 
         let channel_details = connection_details.channels.get(port_id).ok_or_else(|| {
             anyhow!(

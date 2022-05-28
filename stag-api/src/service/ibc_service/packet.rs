@@ -31,24 +31,24 @@ pub fn extract_packets(response: &TxCommitResponse) -> Result<Vec<Packet>> {
             let packet = Packet {
                 sequence: attributes
                     .remove("packet_sequence")
-                    .ok_or_else(|| anyhow!("`packet_sequence` is missing from packet data"))?
+                    .context("`packet_sequence` is missing from packet data")?
                     .parse()
                     .context("invalid `packet_sequence`")?,
                 source_port: attributes
                     .remove("packet_src_port")
-                    .ok_or_else(|| anyhow!("`packet_src_port` is missing from packet data"))?,
+                    .context("`packet_src_port` is missing from packet data")?,
                 source_channel: attributes
                     .remove("packet_src_channel")
-                    .ok_or_else(|| anyhow!("`packet_src_channel` is missing from packet data"))?,
+                    .context("`packet_src_channel` is missing from packet data")?,
                 destination_port: attributes
                     .remove("packet_dst_port")
-                    .ok_or_else(|| anyhow!("`packet_dst_port` is missing from packet data"))?,
+                    .context("`packet_dst_port` is missing from packet data")?,
                 destination_channel: attributes
                     .remove("packet_dst_channel")
-                    .ok_or_else(|| anyhow!("`packet_dst_channel` is missing from packet data"))?,
+                    .context("`packet_dst_channel` is missing from packet data")?,
                 data: attributes
                     .remove("packet_data")
-                    .ok_or_else(|| anyhow!("`packet_data` is missing from packet data"))?
+                    .context("`packet_data` is missing from packet data")?
                     .into_bytes(),
                 timeout_height: Some(
                     Height::from_str(&attributes.remove("packet_timeout_height").ok_or_else(
@@ -58,9 +58,7 @@ pub fn extract_packets(response: &TxCommitResponse) -> Result<Vec<Packet>> {
                 ),
                 timeout_timestamp: attributes
                     .remove("packet_timeout_timestamp")
-                    .ok_or_else(|| {
-                        anyhow!("`packet_timeout_timestamp` is missing from packet data")
-                    })?
+                    .context("`packet_timeout_timestamp` is missing from packet data")?
                     .parse()
                     .context("invalid `packet_timeout_timestamp`")?,
             };

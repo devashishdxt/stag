@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Context, Result};
 
 use crate::{
     event::{Event, EventHandler},
@@ -91,7 +91,7 @@ where
     let latest_height = client_state
         .latest_height
         .as_ref()
-        .ok_or_else(|| anyhow!("latest height cannot be absent in client state"))?;
+        .context("latest height cannot be absent in client state")?;
 
     context
         .storage()

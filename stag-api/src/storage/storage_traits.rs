@@ -158,6 +158,29 @@ pub trait Storage: Base {
         channel: &Channel,
     ) -> Result<()>;
 
+    /// Adds new ICA address to the storage
+    async fn add_ica_address(
+        &self,
+        connection_id: &ConnectionId,
+        port_id: &PortId,
+        address: &str,
+    ) -> Result<()>;
+
+    /// Gets ICA address from the storage
+    async fn get_ica_address(
+        &self,
+        connection_id: &ConnectionId,
+        port_id: &PortId,
+    ) -> Result<Option<String>>;
+
+    /// Updates ICA address in the storage
+    async fn update_ica_address(
+        &self,
+        connection_id: &ConnectionId,
+        port_id: &PortId,
+        address: &str,
+    ) -> Result<()>;
+
     /// Delete the storage (should only be used for testing)
     async fn delete(self) -> Result<()>;
 }

@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use cosmos_sdk_proto::ibc::{
     core::channel::v1::Packet,
     lightclients::solomachine::v2::{
@@ -274,7 +274,7 @@ where
 
     let height = client_state
         .latest_height
-        .ok_or_else(|| anyhow!("client state does not contain latest height"))?;
+        .context("client state does not contain latest height")?;
 
     let consensus_state = context
         .storage()

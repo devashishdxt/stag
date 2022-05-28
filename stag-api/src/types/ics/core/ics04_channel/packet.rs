@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Context, Result};
 use cosmos_sdk_proto::ibc::core::channel::v1::Packet;
 use sha2::{Digest, Sha256};
 
@@ -11,7 +11,7 @@ impl IPacket for Packet {
         let timeout_height = self
             .timeout_height
             .as_ref()
-            .ok_or_else(|| anyhow!("timeout height is not set"))?;
+            .context("timeout height is not set")?;
 
         let mut buf = Vec::new();
 

@@ -18,7 +18,10 @@ use crate::{
         ibc_data::IbcData,
         ics::core::ics24_host::{
             identifier::{ChainId, ChannelId, ClientId, ConnectionId, PortId},
-            path::{ChannelPath, ClientStatePath, ConnectionPath, ConsensusStatePath},
+            path::{
+                ChannelPath, ClientStatePath, ConnectionPath, ConsensusStatePath,
+                InterchainAccountAddressPath,
+            },
         },
         operation::{Operation, OperationType},
         proto_util::proto_encode,
@@ -522,6 +525,51 @@ impl Storage for IndexedDbTransaction {
         let ibc_data = IbcData {
             path: ChannelPath::new(port_id, channel_id).into(),
             data: proto_encode(channel)?,
+        };
+
+        self.update_ibc_data(&ibc_data).await
+    }
+
+    async fn add_ica_address(
+        &self,
+        connection_id: &ConnectionId,
+        port_id: &PortId,
+        address: &str,
+    ) -> Result<()> {
+        let ibc_data = IbcData {
+            path: InterchainAccountAddressPath::new(connection_id, port_id).into(),
+            data: address.as_bytes().to_vec(),
+        };
+
+        self.add_ibc_data(&ibc_data).await
+    }
+
+    async fn get_ica_address(
+        &self,
+        connection_id: &ConnectionId,
+        port_id: &PortId,
+    ) -> Result<Option<String>> {
+        let path: String = InterchainAccountAddressPath::new(connection_id, port_id).into();
+
+        let ibc_data: Option<IbcData> = self.get_ibc_data(&path).await?;
+
+        match ibc_data {
+            None => Ok(None),
+            Some(ibc_data) => String::from_utf8(ibc_data.data)
+                .context("invalid utf-8 bytes in ica address")
+                .map(Some),
+        }
+    }
+
+    async fn update_ica_address(
+        &self,
+        connection_id: &ConnectionId,
+        port_id: &PortId,
+        address: &str,
+    ) -> Result<()> {
+        let ibc_data = IbcData {
+            path: InterchainAccountAddressPath::new(connection_id, port_id).into(),
+            data: address.as_bytes().to_vec(),
         };
 
         self.update_ibc_data(&ibc_data).await

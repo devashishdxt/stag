@@ -1,15 +1,23 @@
+#[cfg(all(not(feature = "wasm"), feature = "non-wasm"))]
+use anyhow::Context;
 use anyhow::{anyhow, Result};
 use cosmos_sdk_proto::ibc::core::channel::v1::{
-    Channel, Counterparty as ChannelCounterparty, Order as ChannelOrder, State as ChannelState,
+    query_client::QueryClient as ChannelQueryClient, Channel, Counterparty as ChannelCounterparty,
+    Order as ChannelOrder, QueryChannelRequest, State as ChannelState,
 };
 use serde_json::json;
+#[cfg(all(not(feature = "wasm"), feature = "non-wasm"))]
+use tonic::transport::Channel;
+#[cfg(feature = "wasm")]
+use tonic_web_wasm_client::Client;
+use url::Url;
 
 use crate::{
     event::{Event, EventHandler},
     service::ibc_service::common::{ensure_response_success, extract_attribute},
     signer::Signer,
     stag::StagContext,
-    storage::Storage,
+    storage::{Storage, Transaction},
     tendermint::TendermintClient,
     transaction_builder,
     types::{
@@ -29,7 +37,7 @@ pub async fn open_channel<C>(
 where
     C: StagContext,
     C::Signer: Signer,
-    C::Storage: Storage,
+    C::Storage: Transaction,
     C::RpcClient: TendermintClient,
 {
     let solo_machine_port_id = PortId::ica_controller(context.signer(), &chain_state.id).await?;
@@ -81,9 +89,12 @@ where
 
     channel_open_ack(
         context,
-        &solo_machine_port_id,
+        chain_state,
+        solo_machine_connection_id,
         &solo_machine_channel_id,
+        &solo_machine_port_id,
         &tendermint_channel_id,
+        &tendermint_port_id,
     )
     .await?;
 
@@ -200,13 +211,16 @@ where
 
 async fn channel_open_ack<C>(
     context: &C,
-    solo_machine_port_id: &PortId,
+    chain_state: &ChainState,
+    solo_machine_connection_id: &ConnectionId,
     solo_machine_channel_id: &ChannelId,
+    solo_machine_port_id: &PortId,
     tendermint_channel_id: &ChannelId,
+    tendermint_port_id: &PortId,
 ) -> Result<()>
 where
     C: StagContext,
-    C::Storage: Storage,
+    C::Storage: Transaction,
 {
     let mut channel = context
         .storage()
@@ -235,7 +249,21 @@ where
     context
         .storage()
         .update_channel(solo_machine_port_id, solo_machine_channel_id, &channel)
-        .await
+        .await?;
+
+    let ica_address =
+        get_ica_address(chain_state, tendermint_channel_id, tendermint_port_id).await?;
+
+    context
+        .storage()
+        .add_ica_address(
+            solo_machine_connection_id,
+            solo_machine_port_id,
+            &ica_address,
+        )
+        .await?;
+
+    Ok(())
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -275,4 +303,69 @@ where
     ensure_response_success(&response)?;
 
     Ok(())
+}
+
+async fn get_ica_address(
+    chain_state: &ChainState,
+    tendermint_channel_id: &ChannelId,
+    tendermint_port_id: &PortId,
+) -> Result<String> {
+    let mut query_client = get_channel_query_client(chain_state.config.grpc_addr.clone()).await?;
+
+    let channel = query_client
+        .channel(QueryChannelRequest {
+            channel_id: tendermint_channel_id.to_string(),
+            port_id: tendermint_port_id.to_string(),
+        })
+        .await?
+        .into_inner()
+        .channel
+        .ok_or_else(|| {
+            anyhow!(
+                "tendermint channel not found with id {} and port {}",
+                tendermint_channel_id,
+                tendermint_port_id
+            )
+        })?;
+
+    let version: serde_json::Value = serde_json::from_str(&channel.version)?;
+    let ica_address = version
+        .get("address")
+        .ok_or_else(|| {
+            anyhow!(
+                "address not found in version of tendermint channel with id {} and port {}",
+                tendermint_channel_id,
+                tendermint_port_id
+            )
+        })?
+        .as_str()
+        .ok_or_else(|| {
+            anyhow!(
+                "unable to convert ICA address to string for tendermint channel with id {} and port {}",
+                tendermint_channel_id,
+                tendermint_port_id
+            )
+        })?
+        .to_string();
+
+    Ok(ica_address)
+}
+
+#[cfg(feature = "wasm")]
+async fn get_channel_query_client(grpc_addr: Url) -> Result<ChannelQueryClient<Client>> {
+    let mut url = grpc_addr.to_string();
+
+    if url.ends_with('/') {
+        url.pop();
+    }
+
+    let grpc_client = Client::new(url);
+    Ok(ChannelQueryClient::new(grpc_client))
+}
+
+#[cfg(all(not(feature = "wasm"), feature = "non-wasm"))]
+async fn get_channel_query_client(grpc_addr: Url) -> Result<ChannelQueryClient<Channel>> {
+    ChannelQueryClient::connect(grpc_addr.to_string())
+        .await
+        .context("error when initializing grpc client")
 }
