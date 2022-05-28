@@ -210,6 +210,32 @@ impl Storage for SqlDbStorage {
         executor::update_channel(&self.pool, port_id, channel_id, channel).await
     }
 
+    async fn add_ica_address(
+        &self,
+        connection_id: &ConnectionId,
+        port_id: &PortId,
+        address: &str,
+    ) -> Result<()> {
+        executor::add_ica_address(&self.pool, connection_id, port_id, address).await
+    }
+
+    async fn get_ica_address(
+        &self,
+        connection_id: &ConnectionId,
+        port_id: &PortId,
+    ) -> Result<Option<String>> {
+        executor::get_ica_address(&self.pool, connection_id, port_id).await
+    }
+
+    async fn update_ica_address(
+        &self,
+        connection_id: &ConnectionId,
+        port_id: &PortId,
+        address: &str,
+    ) -> Result<()> {
+        executor::update_ica_address(&self.pool, connection_id, port_id, address).await
+    }
+
     async fn delete(self) -> Result<()> {
         self.pool.close().await;
 

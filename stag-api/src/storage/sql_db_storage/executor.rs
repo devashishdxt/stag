@@ -15,7 +15,10 @@ use crate::types::{
     ibc_data::IbcData,
     ics::core::ics24_host::{
         identifier::{ChainId, ChannelId, ClientId, ConnectionId, PortId},
-        path::{ChannelPath, ClientStatePath, ConnectionPath, ConsensusStatePath},
+        path::{
+            ChannelPath, ClientStatePath, ConnectionPath, ConsensusStatePath,
+            InterchainAccountAddressPath,
+        },
     },
     operation::{Operation, OperationType},
     proto_util::proto_encode,
@@ -292,6 +295,39 @@ pub async fn update_channel<'e>(
 ) -> Result<()> {
     let path: String = ChannelPath::new(port_id, channel_id).into();
     let data = proto_encode(channel)?;
+
+    update_ibc_data(executor, path, data).await
+}
+
+pub async fn add_ica_address<'e>(
+    executor: impl Executor<'e, Database = Db>,
+    connection_id: &ConnectionId,
+    port_id: &PortId,
+    address: &str,
+) -> Result<()> {
+    let path: String = InterchainAccountAddressPath::new(connection_id, port_id).into();
+    let data = proto_encode(&address.to_owned())?;
+
+    add_ibc_data(executor, path, data).await
+}
+
+pub async fn get_ica_address<'e>(
+    executor: impl Executor<'e, Database = Db>,
+    connection_id: &ConnectionId,
+    port_id: &PortId,
+) -> Result<Option<String>> {
+    let path: String = InterchainAccountAddressPath::new(connection_id, port_id).into();
+    get_ibc_data(executor, &path).await
+}
+
+pub async fn update_ica_address<'e>(
+    executor: impl Executor<'e, Database = Db>,
+    connection_id: &ConnectionId,
+    port_id: &PortId,
+    address: &str,
+) -> Result<()> {
+    let path: String = InterchainAccountAddressPath::new(connection_id, port_id).into();
+    let data = proto_encode(&address.to_owned())?;
 
     update_ibc_data(executor, path, data).await
 }

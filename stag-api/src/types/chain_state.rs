@@ -1,7 +1,5 @@
 use std::{collections::HashMap, time::Duration};
 
-#[cfg(all(not(feature = "wasm"), feature = "non-wasm"))]
-use anyhow::Context;
 use anyhow::{anyhow, Context, Result};
 use chrono::{DateTime, Utc};
 use cosmos_sdk_proto::cosmos::bank::v1beta1::{

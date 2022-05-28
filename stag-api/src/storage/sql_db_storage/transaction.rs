@@ -232,6 +232,38 @@ impl Storage for SqlDbTransaction {
         executor::update_channel(&mut *transaction, port_id, channel_id, channel).await
     }
 
+    async fn add_ica_address(
+        &self,
+        connection_id: &ConnectionId,
+        port_id: &PortId,
+        address: &str,
+    ) -> Result<()> {
+        let mut transaction = self.transaction.lock().await;
+
+        executor::add_ica_address(&mut *transaction, connection_id, port_id, address).await
+    }
+
+    async fn get_ica_address(
+        &self,
+        connection_id: &ConnectionId,
+        port_id: &PortId,
+    ) -> Result<Option<String>> {
+        let mut transaction = self.transaction.lock().await;
+
+        executor::get_ica_address(&mut *transaction, connection_id, port_id).await
+    }
+
+    async fn update_ica_address(
+        &self,
+        connection_id: &ConnectionId,
+        port_id: &PortId,
+        address: &str,
+    ) -> Result<()> {
+        let mut transaction = self.transaction.lock().await;
+
+        executor::update_ica_address(&mut *transaction, connection_id, port_id, address).await
+    }
+
     async fn delete(self) -> Result<()> {
         Err(anyhow!("cannot delete storage from a transaction"))
     }

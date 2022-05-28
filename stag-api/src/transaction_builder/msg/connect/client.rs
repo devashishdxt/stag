@@ -160,8 +160,6 @@ async fn get_staking_query_client(grpc_addr: Url) -> Result<StakingQueryClient<C
 
 #[cfg(all(not(feature = "wasm"), feature = "non-wasm"))]
 async fn get_staking_query_client(grpc_addr: Url) -> Result<StakingQueryClient<Channel>> {
-    use anyhow::Context;
-
     StakingQueryClient::connect(grpc_addr.to_string())
         .await
         .context("error when initializing grpc client")

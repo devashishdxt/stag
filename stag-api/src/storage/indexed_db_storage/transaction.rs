@@ -511,7 +511,7 @@ impl Storage for IndexedDbTransaction {
         match ibc_data {
             None => Ok(None),
             Some(ibc_data) => Channel::decode(ibc_data.data.as_slice())
-                .context("error when deserializing connection")
+                .context("error when deserializing channel")
                 .map(Some),
         }
     }
@@ -538,7 +538,7 @@ impl Storage for IndexedDbTransaction {
     ) -> Result<()> {
         let ibc_data = IbcData {
             path: InterchainAccountAddressPath::new(connection_id, port_id).into(),
-            data: address.as_bytes().to_vec(),
+            data: proto_encode(&address.to_string())?,
         };
 
         self.add_ibc_data(&ibc_data).await
@@ -555,8 +555,8 @@ impl Storage for IndexedDbTransaction {
 
         match ibc_data {
             None => Ok(None),
-            Some(ibc_data) => String::from_utf8(ibc_data.data)
-                .context("invalid utf-8 bytes in ica address")
+            Some(ibc_data) => String::decode(ibc_data.data.as_slice())
+                .context("error when deserializing ica address")
                 .map(Some),
         }
     }
@@ -569,7 +569,7 @@ impl Storage for IndexedDbTransaction {
     ) -> Result<()> {
         let ibc_data = IbcData {
             path: InterchainAccountAddressPath::new(connection_id, port_id).into(),
-            data: address.as_bytes().to_vec(),
+            data: proto_encode(&address.to_string())?,
         };
 
         self.update_ibc_data(&ibc_data).await

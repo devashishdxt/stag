@@ -7,7 +7,7 @@ use cosmos_sdk_proto::ibc::core::channel::v1::{
 };
 use serde_json::json;
 #[cfg(all(not(feature = "wasm"), feature = "non-wasm"))]
-use tonic::transport::Channel;
+use tonic::transport::Channel as TonicChannel;
 #[cfg(feature = "wasm")]
 use tonic_web_wasm_client::Client;
 use url::Url;
@@ -364,7 +364,7 @@ async fn get_channel_query_client(grpc_addr: Url) -> Result<ChannelQueryClient<C
 }
 
 #[cfg(all(not(feature = "wasm"), feature = "non-wasm"))]
-async fn get_channel_query_client(grpc_addr: Url) -> Result<ChannelQueryClient<Channel>> {
+async fn get_channel_query_client(grpc_addr: Url) -> Result<ChannelQueryClient<TonicChannel>> {
     ChannelQueryClient::connect(grpc_addr.to_string())
         .await
         .context("error when initializing grpc client")
