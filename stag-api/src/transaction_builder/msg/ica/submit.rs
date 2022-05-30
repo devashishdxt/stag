@@ -1,7 +1,9 @@
 use anyhow::Result;
 use cosmos_sdk_proto::{
-    cosmos::tx::v1beta1::TxRaw, ibc::applications::interchain_accounts::v1::Type,
+    cosmos::tx::v1beta1::TxRaw,
+    ibc::applications::interchain_accounts::v1::{CosmosTx, Type},
 };
+use prost_types::Any;
 use serde::Serialize;
 
 use crate::{
@@ -9,7 +11,10 @@ use crate::{
     stag::StagContext,
     tendermint::TendermintClient,
     transaction_builder::msg_receive_packet,
-    types::{chain_state::ChainState, ics::core::ics24_host::identifier::PortId},
+    types::{
+        chain_state::ChainState, ics::core::ics24_host::identifier::PortId,
+        proto_util::proto_encode,
+    },
 };
 
 #[derive(Debug, Serialize)]
@@ -24,7 +29,7 @@ pub async fn msg_submit<C>(
     context: &C,
     chain_state: &mut ChainState,
     solo_machine_port_id: &PortId,
-    data: Vec<u8>,
+    messages: Vec<Any>,
     memo: String,
     request_id: Option<&str>,
 ) -> Result<TxRaw>
@@ -33,6 +38,9 @@ where
     C::Signer: Signer,
     C::RpcClient: TendermintClient,
 {
+    let cosmos_tx = CosmosTx { messages };
+    let data = proto_encode(&cosmos_tx)?;
+
     let packet_data = InterchainAccountPacketData {
         ty: Type::ExecuteTx.into(),
         data,

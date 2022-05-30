@@ -8,8 +8,8 @@ use crate::{
         packet::{extract_packets, process_packets},
     },
     signer::{GetPublicKey, Signer},
-    stag::StagContext,
-    storage::Storage,
+    stag::{StagContext, WithTransaction},
+    storage::{Storage, Transaction, TransactionProvider},
     tendermint::TendermintClient,
     transaction_builder,
     types::{
@@ -28,20 +28,23 @@ pub async fn burn_tokens<C>(
     memo: String,
 ) -> Result<String>
 where
-    C: StagContext,
+    C: StagContext + WithTransaction,
     C::Signer: Signer,
-    C::Storage: Storage,
+    C::Storage: TransactionProvider,
     C::RpcClient: TendermintClient,
 {
     let address = context.signer().to_account_address(&chain_id).await?;
-    let chain_state = context
+
+    let transaction_context = context.with_transaction().await?;
+
+    let chain_state = transaction_context
         .storage()
         .get_chain_state(&chain_id)
         .await?
         .ok_or_else(|| anyhow!("chain details for {} not found", chain_id))?;
 
     let msg = transaction_builder::transfer::msg_burn(
-        context,
+        &transaction_context,
         &chain_state,
         amount,
         &denom,
@@ -51,7 +54,7 @@ where
     )
     .await?;
 
-    let response = context
+    let response = transaction_context
         .rpc_client()
         .broadcast_tx(&chain_state.config.rpc_addr, msg)
         .await?;
@@ -60,7 +63,7 @@ where
 
     let port_id = PortId::transfer();
 
-    context
+    transaction_context
         .storage()
         .add_operation(
             request_id.as_deref(),
@@ -74,6 +77,9 @@ where
             &transaction_hash,
         )
         .await?;
+
+    let (_, transaction, _, _) = transaction_context.unwrap();
+    transaction.done().await?;
 
     context
         .handle_event(Event::TokensBurnt {

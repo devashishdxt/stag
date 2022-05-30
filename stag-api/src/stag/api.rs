@@ -6,8 +6,8 @@ use crate::{
     event::NoopEventHandler,
     service::{
         add_chain, connect, create_ica_channel, create_transfer_channel, get_all_chains, get_chain,
-        get_history, get_ibc_balance, get_ibc_denom, get_ica_address, get_public_keys, transfer,
-        update_signer,
+        get_history, get_ibc_balance, get_ibc_denom, get_ica_address, get_public_keys, ica,
+        transfer, update_signer,
     },
     signer::{NoopSigner, Signer, SignerConfig},
     storage::{NoopStorage, Storage, TransactionProvider},
@@ -206,15 +206,7 @@ where
         )
         .await
     }
-}
 
-impl<C> Stag<C>
-where
-    C: StagContext,
-    C::Signer: Signer,
-    C::Storage: Storage,
-    C::RpcClient: JsonRpcClient,
-{
     /// Burns tokens on given chain
     pub async fn burn(
         &self,
@@ -225,6 +217,28 @@ where
         memo: String,
     ) -> Result<String> {
         transfer::burn_tokens(&self.context, chain_id, request_id, amount, denom, memo).await
+    }
+
+    /// Send tokens from ICA (Interchain Account) on host chain
+    pub async fn ica_send(
+        &self,
+        chain_id: ChainId,
+        request_id: Option<String>,
+        to_address: String,
+        amount: U256,
+        denom: Identifier,
+        memo: String,
+    ) -> Result<String> {
+        ica::send_tokens(
+            &self.context,
+            chain_id,
+            request_id,
+            to_address,
+            amount,
+            denom,
+            memo,
+        )
+        .await
     }
 }
 

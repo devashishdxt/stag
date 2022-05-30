@@ -107,7 +107,9 @@ where
         signer: context.signer().to_account_address(&chain_state.id).await?,
     };
 
-    build(context, chain_state, &[message], memo, request_id).await
+    let tx_raw = build(context, chain_state, &[message], memo, request_id).await?;
+
+    Ok(tx_raw)
 }
 
 pub async fn msg_acknowledgement<C>(

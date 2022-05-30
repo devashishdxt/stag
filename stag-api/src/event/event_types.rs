@@ -54,6 +54,21 @@ pub enum Event {
         /// New signer's public key
         new_public_key: PublicKey,
     },
+    /// Tokens sent from ICA (Interchain Account)
+    TokensSentFromIca {
+        /// Chain ID of IBC enabled chain
+        chain_id: ChainId,
+        /// Optional request ID (for tracking purposes)
+        request_id: Option<String>,
+        /// Address of account on IBC enabled chain
+        to_address: String,
+        /// Amount of tokens minted
+        amount: U256,
+        /// Denom of tokens minted
+        denom: Identifier,
+        /// Hash of transaction on IBC enabled chain (in hex)
+        transaction_hash: String,
+    },
 
     // ----- IBC connection handshake events ----- //
     /// Created solo machine client on IBC enabled chain

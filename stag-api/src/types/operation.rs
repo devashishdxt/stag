@@ -48,4 +48,13 @@ pub enum OperationType {
         /// Amount of tokens
         amount: U256,
     },
+    /// Send some tokens from ICA account on host chain
+    IcaSend {
+        /// Address of the account
+        to: String,
+        /// Denom of tokens
+        denom: Identifier,
+        /// Amount of tokens
+        amount: U256,
+    },
 }

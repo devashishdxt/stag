@@ -53,3 +53,20 @@ pub fn ensure_response_success(response: &TxCommitResponse) -> Result<String> {
 
     Ok(response.hash.to_string())
 }
+
+pub fn get_packet_acknowledgement(events: &[AbciEvent]) -> Result<serde_json::Value> {
+    let acknowledgement = extract_attribute(events, "write_acknowledgement", "packet_ack")?;
+    let acknowledgement: serde_json::Value = serde_json::from_str(&acknowledgement)?;
+
+    let result = acknowledgement.get("result");
+    let error = acknowledgement.get("error");
+
+    match (result, error) {
+        (None, None) => Err(anyhow!(
+            "`result` and `error` are both missing in acknowledgement: {}",
+            acknowledgement
+        )),
+        (Some(result), _) => Ok(result.clone()),
+        (None, Some(error)) => Err(anyhow!("acknowledgement contains error: {}", error)),
+    }
+}

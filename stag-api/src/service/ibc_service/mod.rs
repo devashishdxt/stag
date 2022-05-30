@@ -7,7 +7,7 @@ mod packet;
 mod update_signer;
 
 pub use self::{
-    channel::transfer,
+    channel::{ica, transfer},
     handshake::{connect, create_ica_channel, create_transfer_channel},
     update_signer::update_signer,
 };
