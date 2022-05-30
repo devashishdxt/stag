@@ -14,6 +14,7 @@ use crate::{
     types::{chain_state::ChainState, proto_util::AnyConvert, public_key::PublicKey},
 };
 
+/// Creates a message for updating solo machine client on IBC enabled chain
 pub async fn msg_update_solo_machine_client<C>(
     context: &C,
     chain_state: &mut ChainState,

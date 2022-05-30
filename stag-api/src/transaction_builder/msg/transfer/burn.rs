@@ -18,6 +18,7 @@ use crate::{
     },
 };
 
+/// Creates a message (`MsgTransfer`) for burning tokens on IBC enabled chain
 pub async fn msg_burn<C>(
     context: &C,
     chain_state: &ChainState,

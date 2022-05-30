@@ -40,6 +40,7 @@ use crate::{
     },
 };
 
+/// Creates a message for creating a solo machine client on IBC enabled chain
 pub async fn msg_create_solo_machine_client<C>(
     context: &C,
     chain_state: &ChainState,
@@ -80,6 +81,7 @@ where
     build(context, chain_state, &[message], memo, request_id).await
 }
 
+/// Creates tendermint client on solo machine
 pub async fn msg_create_tendermint_client<T>(
     chain_state: &ChainState,
     light_client: &LightClient<T>,

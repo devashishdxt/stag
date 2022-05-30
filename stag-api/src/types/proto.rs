@@ -1,3 +1,5 @@
+#![allow(missing_docs)]
+
 #[cfg(feature = "ethermint")]
 pub mod ethermint {
     pub mod crypto {

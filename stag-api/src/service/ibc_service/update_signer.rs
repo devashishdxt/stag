@@ -12,6 +12,7 @@ use crate::{
 
 use super::common::ensure_response_success;
 
+/// Updates signer's public key on IBC enabled chain for future messages from solo machine
 pub async fn update_signer<C>(
     context: &C,
     chain_id: ChainId,

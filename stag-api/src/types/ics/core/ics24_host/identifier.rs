@@ -157,6 +157,7 @@ impl Deref for ChainId {
 pub struct Identifier(String);
 
 impl Identifier {
+    /// Generates a new identifier with given prefix and random suffix of given length
     pub fn generate(prefix: &str, suffix_len: usize) -> Result<Self, Error> {
         let mut rng = rand::thread_rng();
 
@@ -167,6 +168,11 @@ impl Identifier {
             .collect();
 
         format!("{}-{}", prefix, suffix).parse()
+    }
+
+    /// Creates a new unchecked identifier from string
+    pub fn from_str_unchecked(s: String) -> Self {
+        Self(s)
     }
 
     fn validate_length(&self, min: usize, max: usize) -> Result<(), Error> {

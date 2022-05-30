@@ -25,6 +25,7 @@ use crate::{
 };
 
 #[allow(clippy::too_many_arguments)]
+/// Creates a message for opening (init) a channel on IBC enabled chain
 pub async fn msg_channel_open_init<C>(
     context: &C,
     chain_state: &ChainState,
@@ -59,6 +60,7 @@ where
 }
 
 #[allow(clippy::too_many_arguments)]
+/// Creates a message for opening (init) a channel on IBC enabled chain
 pub async fn msg_channel_open_try<C>(
     context: &C,
     chain_state: &mut ChainState,
@@ -113,6 +115,7 @@ where
 }
 
 #[allow(clippy::too_many_arguments)]
+/// Creates a message for acknowledging a channel on IBC enabled chain
 pub async fn msg_channel_open_ack<C>(
     context: &C,
     chain_state: &mut ChainState,
@@ -155,6 +158,7 @@ where
 }
 
 #[allow(clippy::too_many_arguments)]
+/// Creates a message for confirming a channel on IBC enabled chain
 pub async fn msg_channel_open_confirm<C>(
     context: &C,
     chain_state: &mut ChainState,

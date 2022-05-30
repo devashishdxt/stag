@@ -26,6 +26,7 @@ use crate::{
     },
 };
 
+/// Creates a message for sending a packet on IBC enabled chain
 pub async fn msg_receive_packet<C>(
     context: &C,
     chain_state: &mut ChainState,
@@ -112,6 +113,7 @@ where
     Ok(tx_raw)
 }
 
+/// Creates a message for acknowledging a packet on IBC enabled chain
 pub async fn msg_acknowledgement<C>(
     context: &C,
     chain_state: &mut ChainState,

@@ -79,15 +79,18 @@ pub enum PublicKey {
 }
 
 impl PublicKey {
+    /// Creates a new instance of PublicKey from a verifying key (using secp256k1)
     pub fn new_secp256k1(key: VerifyingKey) -> Self {
         Self::Secp256k1(key)
     }
 
     #[cfg(feature = "ethermint")]
+    /// Creates a new instance of PublicKey from a verifying key (using eth-secp256k1)
     pub fn new_eth_secp256k1(key: VerifyingKey) -> Self {
         Self::EthSecp256k1(key)
     }
 
+    /// Returns the public key algorithm
     pub fn algo(&self) -> PublicKeyAlgo {
         match self {
             Self::Secp256k1(_) => PublicKeyAlgo::Secp256k1,
@@ -96,10 +99,12 @@ impl PublicKey {
         }
     }
 
+    /// Returns the address of the public key
     pub fn address(&self) -> Result<String> {
         Ok(hex::encode(&self.address_bytes()?))
     }
 
+    /// Returns the account address of the public key
     pub fn account_address(&self, prefix: &str) -> Result<String> {
         bech32::encode(prefix, self.address_bytes()?.to_base32(), Variant::Bech32)
             .map_err(Into::into)

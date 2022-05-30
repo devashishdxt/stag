@@ -26,6 +26,7 @@ use crate::{
     },
 };
 
+/// Opens an ICA channel on IBC enabled chain
 pub async fn open_channel<C>(
     context: &C,
     chain_state: &mut ChainState,

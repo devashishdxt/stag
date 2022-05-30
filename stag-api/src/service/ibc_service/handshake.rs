@@ -15,6 +15,7 @@ use super::{
     connection::establish_connection,
 };
 
+/// Creates IBC client and connection with an IBC enabled chain
 pub async fn connect<C>(
     context: &C,
     chain_id: ChainId,
@@ -78,6 +79,7 @@ where
     }
 }
 
+/// Creates IBC transfer channel with an IBC enabled chain
 pub async fn create_transfer_channel<C>(
     context: &C,
     chain_id: ChainId,
@@ -141,6 +143,7 @@ where
         .await
 }
 
+/// Creates ICA (Interchain Accounts) channel with an IBC enabled chain
 pub async fn create_ica_channel<C>(
     context: &C,
     chain_id: ChainId,

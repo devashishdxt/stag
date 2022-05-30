@@ -1,6 +1,8 @@
 mod connect;
+/// ICA (Interchain accounts) transactions
 pub mod ica;
 mod packet;
+/// IBC transfer transactions
 pub mod transfer;
 mod update_signer;
 

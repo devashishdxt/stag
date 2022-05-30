@@ -143,6 +143,7 @@ pub enum Event {
         /// Connection details
         connection_details: ConnectionDetails,
     },
+    /// Channel successfully created
     ChannelCreated {
         /// Chain ID of IBC enabled chain
         chain_id: ChainId,

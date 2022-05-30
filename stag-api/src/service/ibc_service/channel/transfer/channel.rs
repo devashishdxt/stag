@@ -17,6 +17,7 @@ use crate::{
     },
 };
 
+/// Opens an IBC transfer channel on IBC enabled chain
 pub async fn open_channel<C>(
     context: &C,
     chain_state: &mut ChainState,

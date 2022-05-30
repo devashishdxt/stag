@@ -29,6 +29,7 @@ use crate::{
     },
 };
 
+/// Creates a message for opening a connection on IBC enabled chain
 pub async fn msg_connection_open_init<C>(
     context: &C,
     chain_state: &ChainState,
@@ -62,6 +63,7 @@ where
 }
 
 #[allow(clippy::too_many_arguments)]
+/// Creates a message for acknowledginging a connection open on IBC enabled chain
 pub async fn msg_connection_open_ack<C>(
     context: &C,
     chain_state: &mut ChainState,
