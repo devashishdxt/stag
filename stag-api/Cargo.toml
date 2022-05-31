@@ -51,7 +51,7 @@ wasm = ["getrandom", "js-sys", "tonic-web-wasm-client"]
 [dependencies]
 anyhow = "1.0.57"
 async-trait = "0.1.53"
-base64 = { version = "0.13.0" }
+base64 = "0.13.0"
 bech32 = "0.9.0"
 bip32 = { version = "0.4.0", features = ["bip39"], optional = true }
 chrono = { version = "0.4.19", features = ["serde"] }

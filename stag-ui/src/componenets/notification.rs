@@ -6,6 +6,7 @@ const BUTTON_CLASSES: &[&str] = &[
     "rounded",
     "bg-slate-200",
     "hover:bg-slate-300",
+    "hover:shadow",
     "transition-all",
 ];
 

@@ -2,6 +2,7 @@ mod burn;
 mod chains;
 mod channels;
 mod connections;
+mod history;
 mod home;
 mod mint;
 mod not_found;
@@ -14,8 +15,8 @@ use yew_router::Routable;
 use crate::AppState;
 
 use self::{
-    burn::Burn, chains::Chains, channels::Channels, connections::Connections, home::Home,
-    mint::Mint, not_found::NotFound, signers::Signers,
+    burn::Burn, chains::Chains, channels::Channels, connections::Connections, history::History,
+    home::Home, mint::Mint, not_found::NotFound, signers::Signers,
 };
 
 #[derive(Clone, PartialEq, Routable)]
@@ -34,6 +35,8 @@ pub enum Route {
     Mint,
     #[at("/burn")]
     Burn,
+    #[at("/history")]
+    History,
     #[not_found]
     #[at("/not-found")]
     NotFound,
@@ -48,10 +51,10 @@ pub fn switch(route: &Route, state: AppState) -> Html {
             <Signers notification={state.notification} signer={state.signer} />
         },
         Route::Chains => html! {
-            <Chains />
+            <Chains notification={state.notification} signer={state.signer} storage={state.storage} rpc_client={state.rpc} event_handler={state.event_handler} />
         },
         Route::Connections => html! {
-            <Connections />
+            <Connections notification={state.notification} signer={state.signer} storage={state.storage} rpc_client={state.rpc} event_handler={state.event_handler} />
         },
         Route::Channels => html! {
             <Channels />
@@ -61,6 +64,9 @@ pub fn switch(route: &Route, state: AppState) -> Html {
         },
         Route::Burn => html! {
             <Burn />
+        },
+        Route::History => html! {
+            <History />
         },
         Route::NotFound => html! {
             <NotFound />
