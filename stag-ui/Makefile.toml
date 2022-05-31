@@ -1,0 +1,76 @@
+[tasks.install-trunk]
+install_crate = { crate_name = "trunk" }
+
+[tasks.trunk-build]
+dependencies = ["install-trunk"]
+command = "trunk"
+args = ["build"]
+
+[tasks.tailwind-build]
+command = "npx"
+args = [
+    "tailwindcss",
+    "--config",
+    "tailwind.config.js",
+    "--input",
+    "main.css",
+    "--output",
+    "tailwind.css",
+]
+
+[tasks.build]
+clear = true
+dependencies = ["tailwind-build", "trunk-build"]
+
+[tasks.trunk-build-release]
+dependencies = ["install-trunk"]
+command = "trunk"
+args = ["build", "--release"]
+
+[tasks.tailwind-build-release]
+command = "npx"
+args = [
+    "tailwindcss",
+    "--config",
+    "tailwind.config.js",
+    "--input",
+    "main.css",
+    "--output",
+    "tailwind.css",
+    "--minify",
+]
+
+[tasks.build-release]
+clear = true
+dependencies = ["tailwind-build-release", "trunk-build-release"]
+
+[tasks.test]
+clear = true
+
+[tasks.browser-test]
+
+[tasks.coverage]
+clear = true
+
+[tasks.coverage-html]
+
+[tasks.trunk-serve]
+dependencies = ["install-trunk"]
+command = "trunk"
+args = ["serve", "--open"]
+
+[tasks.tailwind-watch]
+command = "npx"
+args = [
+    "tailwindcss",
+    "--config",
+    "tailwind.config.js",
+    "--input",
+    "main.css",
+    "--output",
+    "tailwind.css",
+    "--watch",
+]
+
+[tasks.serve]
+run_task = { name = ["tailwind-watch", "trunk-serve"], parallel = true }
