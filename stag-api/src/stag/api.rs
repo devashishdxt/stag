@@ -5,9 +5,9 @@ use rust_decimal::Decimal;
 use crate::{
     event::NoopEventHandler,
     service::{
-        add_chain, connect, create_ica_channel, create_transfer_channel, get_all_chains, get_chain,
-        get_history, get_ibc_balance, get_ibc_denom, get_ica_address, get_public_keys, ica,
-        transfer, update_signer,
+        add_chain, connect, create_ica_channel, create_transfer_channel, get_all_chains,
+        get_balance, get_chain, get_history, get_ibc_balance, get_ibc_denom, get_ica_address,
+        get_public_keys, ica, transfer, update_signer,
     },
     signer::{NoopSigner, Signer, SignerConfig},
     storage::{NoopStorage, Storage, TransactionProvider},
@@ -122,6 +122,11 @@ where
         denom: &Identifier,
     ) -> Result<Decimal> {
         get_ibc_balance(&self.context, chain_id, port_id, denom).await
+    }
+
+    /// Get on-chain balance of given denom
+    pub async fn get_balance(&self, chain_id: &ChainId, denom: &Identifier) -> Result<Decimal> {
+        get_balance(&self.context, chain_id, denom).await
     }
 
     /// Get on-chain ICA (Interchain Account) address

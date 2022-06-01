@@ -112,7 +112,7 @@ where
         .await
 }
 
-/// Fetches the balance of an IBC  token on solo machine client on given chain
+/// Fetches the balance of an IBC token on solo machine client on given chain
 pub async fn get_ibc_balance<C>(
     context: &C,
     chain_id: &ChainId,
@@ -130,6 +130,19 @@ where
     chain_state
         .get_ibc_balance(context.signer(), port_id, denom)
         .await
+}
+
+/// Fetches the balance of a denom on given chain
+pub async fn get_balance<C>(context: &C, chain_id: &ChainId, denom: &Identifier) -> Result<Decimal>
+where
+    C: StagContext,
+    C::Signer: Signer,
+    C::Storage: Storage,
+{
+    let chain_state = get_chain(context, chain_id)
+        .await?
+        .context("chain details not found when computing balance")?;
+    chain_state.get_balance(context.signer(), denom).await
 }
 
 /// Fetches ICA (Interchain Account) address (on host chain) for given chain

@@ -61,6 +61,11 @@ pub fn sidebar() -> Html {
                     <i class={classes!("fa-solid", "fa-fire", "w-8", "text-center", "mr-4")}></i><span>{ "Burn" }</span>
                 </div>
             </Link<Route>>
+            <Link<Route> to={Route::Balance}>
+                <div class={classes!(LINK_CLASSES, (current_route == Route::Balance).then(|| ["border-r-4", "bg-slate-800"].as_ref()))}>
+                    <i class={classes!("fa-solid", "fa-sack-dollar", "w-8", "text-center", "mr-4")}></i><span>{ "Balance" }</span>
+                </div>
+            </Link<Route>>
             <Link<Route> to={Route::History}>
                 <div class={classes!(LINK_CLASSES, (current_route == Route::History).then(|| ["border-r-4", "bg-slate-800"].as_ref()))}>
                     <i class={classes!("fa-solid", "fa-calendar-days", "w-8", "text-center", "mr-4")}></i><span>{ "History" }</span>

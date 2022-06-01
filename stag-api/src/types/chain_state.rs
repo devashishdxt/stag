@@ -160,7 +160,7 @@ impl ChainState {
         Ok(format!("ibc/{}", hex::encode_upper(hash)))
     }
 
-    /// Fetches on-chain balance of given denom
+    /// Fetches on-chain balance of given IBC denom
     pub async fn get_ibc_balance(
         &self,
         signer: &impl GetPublicKey,
@@ -169,6 +169,15 @@ impl ChainState {
     ) -> Result<Decimal> {
         self.get_balance_inner(signer, self.get_ibc_denom(port_id, denom)?)
             .await
+    }
+
+    /// Fetches on-chain balance of given denom
+    pub async fn get_balance(
+        &self,
+        signer: &impl GetPublicKey,
+        denom: &Identifier,
+    ) -> Result<Decimal> {
+        self.get_balance_inner(signer, denom.to_string()).await
     }
 
     /// Fetches channel details for given port ID

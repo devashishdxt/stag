@@ -7,3 +7,4 @@ pub mod radio_input;
 pub mod sidebar;
 pub mod signer;
 pub mod text_input;
+pub mod transfer;
