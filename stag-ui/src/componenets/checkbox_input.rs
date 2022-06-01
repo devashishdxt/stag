@@ -1,7 +1,5 @@
-use web_sys::HtmlInputElement;
-use yew::{
-    classes, function_component, html, Classes, InputEvent, Properties, TargetCast, UseStateHandle,
-};
+use web_sys::{Event, HtmlInputElement};
+use yew::{classes, function_component, html, Classes, Properties, TargetCast, UseStateHandle};
 
 const CHECKBOX_CLASSES: &[&str] = &[
     "appearance-none",
@@ -27,10 +25,10 @@ pub struct Props {
 pub fn checkbox_input(props: &Props) -> Html {
     html! {
         <div class={classes!("flex", "items-center", props.class.clone())}>
-            <input type="checkbox" class={classes!(CHECKBOX_CLASSES)} oninput={
+            <input type="checkbox" class={classes!(CHECKBOX_CLASSES)} onchange={
                 let value = props.value.clone();
 
-                move |event: InputEvent| {
+                move |event: Event| {
                     let target: HtmlInputElement = event.target_unchecked_into();
                     value.set(target.checked());
                 }

@@ -37,7 +37,7 @@ where
     let tendermint_channel_id = channel_open_init(
         context,
         chain_state,
-        solo_machine_connection_id,
+        tendermint_connection_id,
         &port_id,
         memo.clone(),
         request_id,
@@ -54,8 +54,8 @@ where
     let solo_machine_channel_id = channel_open_try(
         context,
         &port_id,
+        solo_machine_connection_id,
         &tendermint_channel_id,
-        tendermint_connection_id,
     )
     .await?;
 
@@ -106,7 +106,7 @@ where
 async fn channel_open_init<C>(
     context: &C,
     chain_state: &ChainState,
-    solo_machine_connection_id: &ConnectionId,
+    tendermint_connection_id: &ConnectionId,
     port_id: &PortId,
     memo: String,
     request_id: Option<&str>,
@@ -119,7 +119,7 @@ where
     let msg = transaction_builder::msg_channel_open_init(
         context,
         chain_state,
-        solo_machine_connection_id,
+        tendermint_connection_id,
         port_id,
         port_id,
         ChannelOrder::Unordered,
@@ -147,8 +147,8 @@ where
 async fn channel_open_try<C>(
     context: &C,
     port_id: &PortId,
+    solo_machine_connection_id: &ConnectionId,
     tendermint_channel_id: &ChannelId,
-    tendermint_connection_id: &ConnectionId,
 ) -> Result<ChannelId>
 where
     C: StagContext,
@@ -163,7 +163,7 @@ where
             port_id: port_id.to_string(),
             channel_id: tendermint_channel_id.to_string(),
         }),
-        connection_hops: vec![tendermint_connection_id.to_string()],
+        connection_hops: vec![solo_machine_connection_id.to_string()],
         version: "ics20-1".to_string(),
     };
 

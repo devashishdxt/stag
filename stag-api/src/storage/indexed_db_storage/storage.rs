@@ -392,7 +392,6 @@ impl Storage for IndexedDbStorage {
         transaction.done().await
     }
 
-    /// Gets ICA address from the storage
     async fn get_ica_address(
         &self,
         connection_id: &ConnectionId,
@@ -407,7 +406,6 @@ impl Storage for IndexedDbStorage {
         Ok(result)
     }
 
-    /// Updates ICA address in the storage
     async fn update_ica_address(
         &self,
         connection_id: &ConnectionId,

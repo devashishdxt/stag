@@ -35,7 +35,7 @@ where
     C::Storage: Transaction,
     C::RpcClient: TendermintClient,
 {
-    let solo_machine_connection_id = connection_open_init(
+    let tendermint_connection_id = connection_open_init(
         context,
         chain_state,
         request_id,
@@ -47,21 +47,21 @@ where
 
     context
         .handle_event(Event::InitializedConnectionOnTendermint {
-            connection_id: solo_machine_connection_id.clone(),
+            connection_id: tendermint_connection_id.clone(),
         })
         .await?;
 
-    let tendermint_connection_id = connection_open_try(
+    let solo_machine_connection_id = connection_open_try(
         context,
         tendermint_client_id,
         solo_machine_client_id,
-        &solo_machine_connection_id,
+        &tendermint_connection_id,
     )
     .await?;
 
     context
         .handle_event(Event::InitializedConnectionOnSoloMachine {
-            connection_id: tendermint_connection_id.clone(),
+            connection_id: solo_machine_connection_id.clone(),
         })
         .await?;
 
@@ -70,23 +70,23 @@ where
         chain_state,
         request_id,
         memo,
+        solo_machine_client_id,
         &solo_machine_connection_id,
-        tendermint_client_id,
         &tendermint_connection_id,
     )
     .await?;
 
     context
         .handle_event(Event::ConfirmedConnectionOnTendermint {
-            connection_id: solo_machine_connection_id.clone(),
+            connection_id: tendermint_connection_id.clone(),
         })
         .await?;
 
-    connection_open_confirm(context, &tendermint_connection_id).await?;
+    connection_open_confirm(context, &solo_machine_connection_id).await?;
 
     context
         .handle_event(Event::ConfirmedConnectionOnSoloMachine {
-            connection_id: tendermint_connection_id.clone(),
+            connection_id: solo_machine_connection_id.clone(),
         })
         .await?;
 
@@ -109,8 +109,8 @@ where
     let msg = transaction_builder::msg_connection_open_init(
         context,
         chain_state,
-        solo_machine_client_id,
         tendermint_client_id,
+        solo_machine_client_id,
         memo,
         request_id,
     )
@@ -135,7 +135,7 @@ async fn connection_open_try<C>(
     context: &C,
     tendermint_client_id: &ClientId,
     solo_machine_client_id: &ClientId,
-    solo_machine_connection_id: &ConnectionId,
+    tendermint_connection_id: &ConnectionId,
 ) -> Result<ConnectionId>
 where
     C: StagContext,
@@ -144,10 +144,10 @@ where
     let connection_id = ConnectionId::generate();
 
     let connection = ConnectionEnd {
-        client_id: tendermint_client_id.to_string(),
+        client_id: solo_machine_client_id.to_string(),
         counterparty: Some(ConnectionCounterparty {
-            client_id: solo_machine_client_id.to_string(),
-            connection_id: solo_machine_connection_id.to_string(),
+            client_id: tendermint_client_id.to_string(),
+            connection_id: tendermint_connection_id.to_string(),
             prefix: Some(MerklePrefix {
                 key_prefix: "ibc".as_bytes().to_vec(),
             }),
@@ -173,8 +173,8 @@ async fn connection_open_ack<C>(
     chain_state: &mut ChainState,
     request_id: Option<&str>,
     memo: String,
+    solo_machine_client_id: &ClientId,
     solo_machine_connection_id: &ConnectionId,
-    tendermint_client_id: &ClientId,
     tendermint_connection_id: &ConnectionId,
 ) -> Result<()>
 where
@@ -186,9 +186,9 @@ where
     let msg = transaction_builder::msg_connection_open_ack(
         context,
         chain_state,
-        solo_machine_connection_id,
-        tendermint_client_id,
         tendermint_connection_id,
+        solo_machine_client_id,
+        solo_machine_connection_id,
         memo,
         request_id,
     )

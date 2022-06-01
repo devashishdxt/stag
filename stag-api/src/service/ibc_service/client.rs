@@ -26,20 +26,20 @@ where
     C::Storage: Transaction,
     C::RpcClient: TendermintClient,
 {
-    let solo_machine_client_id =
+    let tendermint_client_id =
         create_solo_machine_client(context, chain_state, request_id, memo).await?;
 
     context
         .handle_event(Event::CreatedSoloMachineClient {
-            client_id: solo_machine_client_id.clone(),
+            client_id: tendermint_client_id.clone(),
         })
         .await?;
 
-    let tendermint_client_id = create_tendermint_client(context, chain_state).await?;
+    let solo_machine_client_id = create_tendermint_client(context, chain_state).await?;
 
     context
         .handle_event(Event::CreatedTendermintClient {
-            client_id: tendermint_client_id.clone(),
+            client_id: solo_machine_client_id.clone(),
         })
         .await?;
 

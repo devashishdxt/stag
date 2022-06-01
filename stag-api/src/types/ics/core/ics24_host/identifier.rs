@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{signer::GetPublicKey, types::ics::core::ics02_client::client_type::ClientType};
 
-pub(crate) const MAX_IDENTIFIER_LEN: usize = 64;
+pub(crate) const MAX_IDENTIFIER_LEN: usize = 128;
 const VALID_CHAIN_ID_PATTERN: &str = r"^.+[^-]-{1}[1-9][0-9]*$";
 const VALID_ID_PATTERN: &str = r"^[a-zA-Z0-9\._\+\-\#\[\]<>]+$";
 
@@ -74,7 +74,7 @@ impl PortId {
         signer: &impl GetPublicKey,
         chain_id: &ChainId,
     ) -> Result<PortId, Error> {
-        format!("ica-controller-{}", signer.get_public_key(chain_id).await?).parse()
+        format!("icacontroller-{}", signer.get_public_key(chain_id).await?).parse()
     }
 }
 

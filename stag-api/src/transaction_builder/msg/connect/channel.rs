@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use cosmos_sdk_proto::{
     cosmos::tx::v1beta1::TxRaw,
     ibc::core::{
@@ -29,7 +29,7 @@ use crate::{
 pub async fn msg_channel_open_init<C>(
     context: &C,
     chain_state: &ChainState,
-    solo_machine_connection_id: &ConnectionId,
+    connection_id: &ConnectionId,
     port_id: &PortId,
     counterparty_port_id: &PortId,
     ordering: ChannelOrder,
@@ -50,7 +50,7 @@ where
                 port_id: counterparty_port_id.to_string(),
                 channel_id: "".to_string(),
             }),
-            connection_hops: vec![solo_machine_connection_id.to_string()],
+            connection_hops: vec![connection_id.to_string()],
             version,
         }),
         signer: context.signer().to_account_address(&chain_state.id).await?,
@@ -64,10 +64,13 @@ where
 pub async fn msg_channel_open_try<C>(
     context: &C,
     chain_state: &mut ChainState,
+    connection_id: &ConnectionId,
     port_id: &PortId,
     counterparty_channel_id: &ChannelId,
     counterparty_port_id: &PortId,
     counterparty_version: String,
+    ordering: ChannelOrder,
+    version: String,
     memo: String,
     request_id: Option<&str>,
 ) -> Result<TxRaw>
@@ -89,22 +92,19 @@ where
 
     chain_state.sequence += 1;
 
-    let channel = context
-        .storage()
-        .get_channel(counterparty_port_id, counterparty_channel_id)
-        .await?
-        .ok_or_else(|| {
-            anyhow!(
-                "channel with port id {} and channel id {} not found",
-                counterparty_port_id,
-                counterparty_channel_id
-            )
-        })?;
-
     let message = MsgChannelOpenTry {
         port_id: port_id.to_string(),
         previous_channel_id: "".to_owned(),
-        channel: Some(channel),
+        channel: Some(Channel {
+            state: ChannelState::Tryopen.into(),
+            ordering: ordering.into(),
+            counterparty: Some(ChannelCounterparty {
+                port_id: counterparty_port_id.to_string(),
+                channel_id: counterparty_channel_id.to_string(),
+            }),
+            connection_hops: vec![connection_id.to_string()],
+            version,
+        }),
         counterparty_version,
         proof_init,
         proof_height: Some(proof_height),

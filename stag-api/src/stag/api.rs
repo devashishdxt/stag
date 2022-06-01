@@ -168,10 +168,10 @@ where
     pub async fn create_ica_channel(
         &self,
         chain_id: ChainId,
-        receiver: Option<String>,
+        request_id: Option<String>,
         memo: String,
     ) -> Result<()> {
-        create_ica_channel(&self.context, chain_id, receiver, memo).await
+        create_ica_channel(&self.context, chain_id, request_id, memo).await
     }
 
     /// Updates signer for future IBC transactions

@@ -57,7 +57,7 @@ pub fn switch(route: &Route, state: AppState) -> Html {
             <Connections notification={state.notification} signer={state.signer} storage={state.storage} rpc_client={state.rpc} event_handler={state.event_handler} />
         },
         Route::Channels => html! {
-            <Channels />
+            <Channels notification={state.notification} signer={state.signer} storage={state.storage} rpc_client={state.rpc} event_handler={state.event_handler} />
         },
         Route::Mint => html! {
             <Mint />
