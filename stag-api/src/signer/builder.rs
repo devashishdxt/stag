@@ -4,9 +4,9 @@ use std::collections::HashMap;
 use anyhow::{ensure, Result};
 use sealed::sealed;
 
-use crate::trait_util::Base;
 #[cfg(feature = "mnemonic-signer")]
 use crate::types::{ics::core::ics24_host::identifier::ChainId, public_key::PublicKeyAlgo};
+use crate::{trait_util::Base, types::public_key::PublicKey};
 
 #[cfg(feature = "keplr-signer")]
 use super::keplr_signer::KeplrSigner as KeplrSignerImpl;
@@ -115,6 +115,17 @@ impl MnemonicSigner {
                 Ok((chain_id.clone(), config.get_account_address()?))
             })
             .collect()
+    }
+
+    /// Computes public key for given signer details
+    pub fn compute_public_key(
+        mnemonic: &str,
+        hd_path: Option<&str>,
+        account_prefix: Option<&str>,
+        algo: Option<PublicKeyAlgo>,
+    ) -> Result<PublicKey> {
+        let config = MnemonicSignerConfig::new(mnemonic, hd_path, account_prefix, algo)?;
+        config.get_public_key()
     }
 }
 

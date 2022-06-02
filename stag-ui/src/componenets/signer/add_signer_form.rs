@@ -130,7 +130,7 @@ pub fn add_signer_form(props: &Props) -> Html {
                 }
                 Err(err) => {
                     error!("Invalid data: {:?}", err);
-                    notification.set(Some(NotificationData::error("Invalid data".to_string())));
+                    notification.set(Some(NotificationData::error(err.to_string())));
                 }
             }
         }
