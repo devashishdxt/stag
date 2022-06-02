@@ -89,9 +89,12 @@ pub async fn get_chain_config() -> Result<ChainConfig> {
 }
 
 fn get_mnemonic_signer(mnemonic: &str) -> MnemonicSigner {
-    MnemonicSigner::new()
+    let mut signer = MnemonicSigner::new();
+    signer
         .add_chain_config(CHAIN_ID.parse().unwrap(), mnemonic, None, None, None)
-        .unwrap()
+        .unwrap();
+
+    signer
 }
 
 #[cfg(target_arch = "wasm32")]

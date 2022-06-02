@@ -10,10 +10,10 @@ crate-type = ["cdylib", "rlib"]
 [features]
 default = [
     "ethermint",
-    "indexed-db-storage",
+    # "indexed-db-storage",
     "mnemonic-signer",
     "reqwest-client",
-    # "sqlite-storage",
+    "sqlite-storage",
     "tracing-event-handler",
 ]
 

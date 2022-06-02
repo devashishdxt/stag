@@ -105,14 +105,16 @@ pub fn add_signer_form(props: &Props) -> Html {
 
             match state.parse() {
                 Ok((chain_id, mnemonic, hd_path, account_prefix, algo)) => {
-                    match (*signer).clone().add_chain_config(
+                    let mut new_signer = (*signer).clone();
+
+                    match new_signer.add_chain_config(
                         chain_id,
                         &mnemonic,
                         hd_path.as_deref(),
                         account_prefix.as_deref(),
                         algo,
                     ) {
-                        Ok(new_signer) => {
+                        Ok(_) => {
                             signer.set(new_signer);
                             state.clear();
                             notification
