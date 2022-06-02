@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use primitive_types::U256;
-use serde::{Deserialize, Serialize, Serializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::types::ics::core::ics24_host::identifier::{ChainId, Identifier};
 
@@ -37,7 +37,10 @@ pub enum OperationType {
         /// Denom of tokens
         denom: Identifier,
         /// Amount of tokens
-        #[serde(serialize_with = "serialize_u256")]
+        #[serde(
+            serialize_with = "serialize_u256",
+            deserialize_with = "deserialize_u256"
+        )]
         amount: U256,
     },
     /// Burn some tokens on IBC enabled chain
@@ -47,7 +50,10 @@ pub enum OperationType {
         /// Denom of tokens
         denom: Identifier,
         /// Amount of tokens
-        #[serde(serialize_with = "serialize_u256")]
+        #[serde(
+            serialize_with = "serialize_u256",
+            deserialize_with = "deserialize_u256"
+        )]
         amount: U256,
     },
     /// Send some tokens from ICA account on host chain
@@ -57,11 +63,25 @@ pub enum OperationType {
         /// Denom of tokens
         denom: Identifier,
         /// Amount of tokens
-        #[serde(serialize_with = "serialize_u256")]
+        #[serde(
+            serialize_with = "serialize_u256",
+            deserialize_with = "deserialize_u256"
+        )]
         amount: U256,
     },
 }
 
-fn serialize_u256<S: Serializer>(value: &U256, serializer: S) -> Result<S::Ok, S::Error> {
+fn serialize_u256<S>(value: &U256, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
     serializer.serialize_str(&value.to_string())
+}
+
+fn deserialize_u256<'de, D>(deserializer: D) -> Result<U256, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+    U256::from_dec_str(&s).map_err(serde::de::Error::custom)
 }

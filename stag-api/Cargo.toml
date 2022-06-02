@@ -34,7 +34,11 @@ keplr-signer = ["js-sys", "wasm", "web-sys"]
 mnemonic-signer = ["bip32"]
 
 # Enables all the required dependencies for non-wasm environments
-non-wasm = ["cosmos-sdk-proto/grpc-transport", "tonic/transport", "tonic-build/transport"]
+non-wasm = [
+    "cosmos-sdk-proto/grpc-transport",
+    "tonic/transport",
+    "tonic-build/transport",
+]
 
 # Enables support for HTTP client using `reqwest` crate
 reqwest-client = ["reqwest"]
@@ -55,7 +59,9 @@ base64 = "0.13.0"
 bech32 = "0.9.0"
 bip32 = { version = "0.4.0", features = ["bip39"], optional = true }
 chrono = { version = "0.4.19", features = ["serde"] }
-cosmos-sdk-proto = { version = "0.12.2", default-features = false, features = ["grpc"] }
+cosmos-sdk-proto = { version = "0.12.2", default-features = false, features = [
+    "grpc",
+] }
 getrandom = { version = "0.2.6", default-features = false, features = [
     "js",
 ], optional = true }

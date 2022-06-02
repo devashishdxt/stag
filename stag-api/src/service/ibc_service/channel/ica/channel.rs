@@ -1,5 +1,3 @@
-#[cfg(all(not(feature = "wasm"), feature = "non-wasm"))]
-use anyhow::Context;
 use anyhow::{anyhow, Context, Result};
 use cosmos_sdk_proto::ibc::core::channel::v1::{
     query_client::QueryClient as ChannelQueryClient, Channel, Counterparty as ChannelCounterparty,

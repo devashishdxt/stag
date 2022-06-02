@@ -103,7 +103,7 @@ pub fn get_history_form(props: &Props) -> Html {
             {
                 if !history.is_empty() {
                     html! {
-                        <div class={classes!("border-t-2", "border-slate-400", "p-6")}>
+                        <div class={classes!("border-t-2", "border-slate-400", "p-6", "mt-6")}>
                             <table class={classes!("text-left", "mx-auto", "my-10")}>
                                 <tr>
                                     <th class={classes!("px-4", "py-2", "border", "border-slate-600")}>{ "ID" }</th>

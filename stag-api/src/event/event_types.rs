@@ -1,5 +1,5 @@
 use primitive_types::U256;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::types::{
     chain_state::{ChannelDetails, ConnectionDetails},
@@ -24,6 +24,10 @@ pub enum Event {
         /// Address of account on IBC enabled chain
         to_address: String,
         /// Amount of tokens minted
+        #[serde(
+            serialize_with = "serialize_u256",
+            deserialize_with = "deserialize_u256"
+        )]
         amount: U256,
         /// Denom of tokens minted
         denom: Identifier,
@@ -39,6 +43,10 @@ pub enum Event {
         /// Address of account on IBC enabled chain
         from_address: String,
         /// Amount of tokens minted
+        #[serde(
+            serialize_with = "serialize_u256",
+            deserialize_with = "deserialize_u256"
+        )]
         amount: U256,
         /// Denom of tokens minted
         denom: Identifier,
@@ -63,6 +71,10 @@ pub enum Event {
         /// Address of account on IBC enabled chain
         to_address: String,
         /// Amount of tokens minted
+        #[serde(
+            serialize_with = "serialize_u256",
+            deserialize_with = "deserialize_u256"
+        )]
         amount: U256,
         /// Denom of tokens minted
         denom: Identifier,
@@ -169,4 +181,19 @@ pub enum Event {
     /// Test event
     #[cfg(test)]
     Test,
+}
+
+fn serialize_u256<S>(value: &U256, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    serializer.serialize_str(&value.to_string())
+}
+
+fn deserialize_u256<'de, D>(deserializer: D) -> Result<U256, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+    U256::from_dec_str(&s).map_err(serde::de::Error::custom)
 }

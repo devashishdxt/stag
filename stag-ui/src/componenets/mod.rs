@@ -2,6 +2,7 @@ pub mod chain;
 pub mod channel;
 pub mod checkbox_input;
 pub mod connection;
+pub mod ica;
 pub mod notification;
 pub mod radio_input;
 pub mod sidebar;
