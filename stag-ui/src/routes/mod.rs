@@ -5,6 +5,7 @@ mod channels;
 mod connections;
 mod history;
 mod home;
+mod ica;
 mod mint;
 mod not_found;
 mod page;
@@ -17,7 +18,7 @@ use crate::AppState;
 
 use self::{
     balance::Balance, burn::Burn, chains::Chains, channels::Channels, connections::Connections,
-    history::History, home::Home, mint::Mint, not_found::NotFound, signers::Signers,
+    history::History, home::Home, ica::Ica, mint::Mint, not_found::NotFound, signers::Signers,
 };
 
 #[derive(Clone, PartialEq, Routable)]
@@ -36,6 +37,8 @@ pub enum Route {
     Mint,
     #[at("/burn")]
     Burn,
+    #[at("/ica")]
+    Ica,
     #[at("/balance")]
     Balance,
     #[at("/history")]
@@ -68,11 +71,14 @@ pub fn switch(route: &Route, state: AppState) -> Html {
         Route::Burn => html! {
             <Burn notification={state.notification} signer={state.signer} storage={state.storage} rpc_client={state.rpc} event_handler={state.event_handler} />
         },
+        Route::Ica => html! {
+            <Ica />
+        },
         Route::Balance => html! {
             <Balance notification={state.notification} signer={state.signer} storage={state.storage} />
         },
         Route::History => html! {
-            <History />
+            <History notification={state.notification} storage={state.storage} />
         },
         Route::NotFound => html! {
             <NotFound />

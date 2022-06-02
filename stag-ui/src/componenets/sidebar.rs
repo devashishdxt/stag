@@ -31,6 +31,7 @@ pub fn sidebar() -> Html {
                     <i class={classes!("fa-solid", "fa-house", "w-8", "text-center", "mr-4")}></i><span>{ "Home" }</span>
                 </div>
             </Link<Route>>
+            <fieldset class={classes!("border-t-2", "border-slate-700", "border-dotted", "my-2")}><legend class={classes!("text-sm", "text-slate-400", "mx-4", "px-2")}>{ "Core" }</legend></fieldset>
             <Link<Route> to={Route::Signers}>
                 <div class={classes!(LINK_CLASSES, (current_route == Route::Signers).then(|| ["border-r-4", "bg-slate-800"].as_ref()))}>
                     <i class={classes!("fa-solid", "fa-signature", "w-8", "text-center", "mr-4")}></i><span>{ "Signers" }</span>
@@ -51,6 +52,7 @@ pub fn sidebar() -> Html {
                     <i class={classes!("fa-solid", "fa-bridge", "w-8", "text-center", "mr-4")}></i><span>{ "Channels" }</span>
                 </div>
             </Link<Route>>
+            <fieldset class={classes!("border-t-2", "border-slate-700", "border-dotted", "my-2")}><legend class={classes!("text-sm", "text-slate-400", "mx-4", "px-2")}>{ "Applications" }</legend></fieldset>
             <Link<Route> to={Route::Mint}>
                 <div class={classes!(LINK_CLASSES, (current_route == Route::Mint).then(|| ["border-r-4", "bg-slate-800"].as_ref()))}>
                     <i class={classes!("fa-solid", "fa-coins", "w-8", "text-center", "mr-4")}></i><span>{ "Mint" }</span>
@@ -61,6 +63,12 @@ pub fn sidebar() -> Html {
                     <i class={classes!("fa-solid", "fa-fire", "w-8", "text-center", "mr-4")}></i><span>{ "Burn" }</span>
                 </div>
             </Link<Route>>
+            <Link<Route> to={Route::Ica}>
+                <div class={classes!(LINK_CLASSES, (current_route == Route::Ica).then(|| ["border-r-4", "bg-slate-800"].as_ref()))}>
+                    <i class={classes!("fa-solid", "fa-user-astronaut", "w-8", "text-center", "mr-4")}></i><span>{ "ICA" }</span>
+                </div>
+            </Link<Route>>
+            <fieldset class={classes!("border-t-2", "border-slate-700", "border-dotted", "my-2")}><legend class={classes!("text-sm", "text-slate-400", "mx-4", "px-2")}>{ "Query" }</legend></fieldset>
             <Link<Route> to={Route::Balance}>
                 <div class={classes!(LINK_CLASSES, (current_route == Route::Balance).then(|| ["border-r-4", "bg-slate-800"].as_ref()))}>
                     <i class={classes!("fa-solid", "fa-sack-dollar", "w-8", "text-center", "mr-4")}></i><span>{ "Balance" }</span>

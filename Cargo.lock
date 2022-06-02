@@ -2399,6 +2399,7 @@ dependencies = [
  "hex",
  "humantime",
  "primitive-types",
+ "serde_json",
  "stag-api",
  "tracing",
  "tracing-wasm",

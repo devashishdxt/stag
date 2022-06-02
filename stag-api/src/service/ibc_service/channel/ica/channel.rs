@@ -1,6 +1,6 @@
 #[cfg(all(not(feature = "wasm"), feature = "non-wasm"))]
 use anyhow::Context;
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use cosmos_sdk_proto::ibc::core::channel::v1::{
     query_client::QueryClient as ChannelQueryClient, Channel, Counterparty as ChannelCounterparty,
     Order as ChannelOrder, QueryChannelRequest, State as ChannelState,
@@ -217,6 +217,7 @@ where
     .parse()
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn channel_open_ack<C>(
     context: &C,
     chain_state: &ChainState,
@@ -230,6 +231,10 @@ where
     C: StagContext,
     C::Storage: Transaction,
 {
+    let tendermint_version =
+        get_ica_version(chain_state, tendermint_channel_id, tendermint_port_id).await?;
+    let ica_address = get_ica_address(&tendermint_version)?;
+
     let mut channel = context
         .storage()
         .get_channel(solo_machine_port_id, solo_machine_channel_id)
@@ -243,6 +248,7 @@ where
         })?;
 
     channel.set_state(ChannelState::Open);
+    channel.version = tendermint_version.clone();
 
     let counterparty = channel.counterparty.as_mut().ok_or_else(|| {
         anyhow!(
@@ -258,9 +264,6 @@ where
         .storage()
         .update_channel(solo_machine_port_id, solo_machine_channel_id, &channel)
         .await?;
-
-    let ica_address =
-        get_ica_address(chain_state, tendermint_channel_id, tendermint_port_id).await?;
 
     context
         .storage()
@@ -313,7 +316,7 @@ where
     Ok(())
 }
 
-async fn get_ica_address(
+async fn get_ica_version(
     chain_state: &ChainState,
     tendermint_channel_id: &ChannelId,
     tendermint_port_id: &PortId,
@@ -336,24 +339,16 @@ async fn get_ica_address(
             )
         })?;
 
-    let version: serde_json::Value = serde_json::from_str(&channel.version)?;
+    Ok(channel.version)
+}
+
+fn get_ica_address(version: &str) -> Result<String> {
+    let version: serde_json::Value = serde_json::from_str(version)?;
     let ica_address = version
         .get("address")
-        .ok_or_else(|| {
-            anyhow!(
-                "address not found in version of tendermint channel with id {} and port {}",
-                tendermint_channel_id,
-                tendermint_port_id
-            )
-        })?
+        .context("address not found in version of tendermint channel")?
         .as_str()
-        .ok_or_else(|| {
-            anyhow!(
-                "unable to convert ICA address to string for tendermint channel with id {} and port {}",
-                tendermint_channel_id,
-                tendermint_port_id
-            )
-        })?
+        .context("unable to convert ICA address to string for tendermint channel")?
         .to_string();
 
     Ok(ica_address)

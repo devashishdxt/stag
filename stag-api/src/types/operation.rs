@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use primitive_types::U256;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
 
 use crate::types::ics::core::ics24_host::identifier::{ChainId, Identifier};
 
@@ -37,6 +37,7 @@ pub enum OperationType {
         /// Denom of tokens
         denom: Identifier,
         /// Amount of tokens
+        #[serde(serialize_with = "serialize_u256")]
         amount: U256,
     },
     /// Burn some tokens on IBC enabled chain
@@ -46,6 +47,7 @@ pub enum OperationType {
         /// Denom of tokens
         denom: Identifier,
         /// Amount of tokens
+        #[serde(serialize_with = "serialize_u256")]
         amount: U256,
     },
     /// Send some tokens from ICA account on host chain
@@ -55,6 +57,11 @@ pub enum OperationType {
         /// Denom of tokens
         denom: Identifier,
         /// Amount of tokens
+        #[serde(serialize_with = "serialize_u256")]
         amount: U256,
     },
+}
+
+fn serialize_u256<S: Serializer>(value: &U256, serializer: S) -> Result<S::Ok, S::Error> {
+    serializer.serialize_str(&value.to_string())
 }

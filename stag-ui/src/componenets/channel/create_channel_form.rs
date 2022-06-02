@@ -106,7 +106,7 @@ pub fn create_channel_form(props: &Props) -> Html {
                             Ok(()) => {
                                 state.clear();
                                 notification.set(Some(NotificationData::success(
-                                    "Successfullt created channel".to_string(),
+                                    "Successfully created channel".to_string(),
                                 )));
                             }
                             Err(err) => {
