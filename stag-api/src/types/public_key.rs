@@ -8,7 +8,7 @@ use k256::elliptic_curve::sec1::ToEncodedPoint;
 use prost::Message;
 use prost_types::Any;
 use ripemd::Ripemd160;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 #[cfg(feature = "ethermint")]
 use sha3::Keccak256;
@@ -57,25 +57,13 @@ impl FromStr for PublicKeyAlgo {
 
 /// Public Key
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "type")]
+#[serde(tag = "type", content = "public_key", rename_all = "camelCase")]
 pub enum PublicKey {
     /// Secp256k1 (tendermint)
-    Secp256k1(
-        #[serde(
-            serialize_with = "serialize_verifying_key",
-            deserialize_with = "deserialize_verifying_key"
-        )]
-        VerifyingKey,
-    ),
+    Secp256k1(VerifyingKey),
     #[cfg(feature = "ethermint")]
     /// EthSecp256k1 (ethermint)
-    EthSecp256k1(
-        #[serde(
-            serialize_with = "serialize_verifying_key",
-            deserialize_with = "deserialize_verifying_key"
-        )]
-        VerifyingKey,
-    ),
+    EthSecp256k1(VerifyingKey),
 }
 
 impl PublicKey {
@@ -176,17 +164,17 @@ impl AnyConvert for PublicKey {
     }
 }
 
-fn serialize_verifying_key<S>(key: &VerifyingKey, serializer: S) -> Result<S::Ok, S::Error>
-where
-    S: Serializer,
-{
-    hex::serialize_upper(key.to_bytes(), serializer)
-}
+// fn serialize_verifying_key<S>(key: &VerifyingKey, serializer: S) -> Result<S::Ok, S::Error>
+// where
+//     S: Serializer,
+// {
+//     hex::serialize_upper(key.to_bytes(), serializer)
+// }
 
-fn deserialize_verifying_key<'de, D>(deserializer: D) -> Result<VerifyingKey, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let bytes: Vec<u8> = hex::deserialize(deserializer)?;
-    VerifyingKey::from_sec1_bytes(&bytes).map_err(serde::de::Error::custom)
-}
+// fn deserialize_verifying_key<'de, D>(deserializer: D) -> Result<VerifyingKey, D::Error>
+// where
+//     D: Deserializer<'de>,
+// {
+//     let bytes: Vec<u8> = hex::deserialize(deserializer)?;
+//     VerifyingKey::from_sec1_bytes(&bytes).map_err(serde::de::Error::custom)
+// }

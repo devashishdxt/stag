@@ -450,6 +450,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13dd2ae565c0a381dde7fade45fce95984c568bdcb4700a4fdbe3175e0380b2f"
 dependencies = [
  "const-oid",
+ "pem-rfc7468",
  "zeroize",
 ]
 
@@ -499,6 +500,7 @@ dependencies = [
  "der",
  "elliptic-curve",
  "rfc6979",
+ "serdect",
  "signature",
 ]
 
@@ -542,9 +544,11 @@ dependencies = [
  "ff",
  "generic-array",
  "group",
+ "pem-rfc7468",
  "pkcs8",
  "rand_core 0.6.3",
  "sec1",
+ "serdect",
  "subtle",
  "zeroize",
 ]
@@ -1184,6 +1188,7 @@ dependencies = [
  "cfg-if 1.0.0",
  "ecdsa",
  "elliptic-curve",
+ "serdect",
  "sha2 0.10.2",
  "sha3",
 ]
@@ -1546,6 +1551,15 @@ name = "peg-runtime"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c719dcf55f09a3a7e764c6649ab594c18a177e3599c467983cdf644bfc0a4088"
+
+[[package]]
+name = "pem-rfc7468"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "24d159833a9105500e0398934e205e0773f0b27529557134ecfc51c27646adac"
+dependencies = [
+ "base64ct",
+]
 
 [[package]]
 name = "percent-encoding"
@@ -2019,6 +2033,7 @@ dependencies = [
  "der",
  "generic-array",
  "pkcs8",
+ "serdect",
  "subtle",
  "zeroize",
 ]
@@ -2139,6 +2154,16 @@ dependencies = [
  "form_urlencoded",
  "itoa",
  "ryu",
+ "serde",
+]
+
+[[package]]
+name = "serdect"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "038fce1bf4d74b9b30ea7dcd59df75ba8ec669a5dcb3cc64fbfcef7334ced32c"
+dependencies = [
+ "base16ct",
  "serde",
 ]
 
