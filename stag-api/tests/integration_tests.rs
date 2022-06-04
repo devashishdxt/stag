@@ -172,13 +172,13 @@ async fn test_stag_transfer_flow() {
 
     // Update signer in stag
     let mut stag = stag;
-    assert!(stag
-        .set_signer(
-            MnemonicSigner::new()
-                .add_chain_config(chain_id.clone(), common::MNEMONIC_2, None, None, None)
-                .unwrap(),
-        )
-        .is_ok());
+
+    let mut new_signer = MnemonicSigner::new();
+    new_signer
+        .add_chain_config(chain_id.clone(), common::MNEMONIC_2, None, None, None)
+        .unwrap();
+
+    assert!(stag.set_signer(new_signer).is_ok());
 
     // New ibc denom should be same as old
     let new_ibc_denom = stag
