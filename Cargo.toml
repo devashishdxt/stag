@@ -1,5 +1,5 @@
 [workspace]
-members = ["stag-api", "stag-ui"]
+members = ["stag-api", "stag-ui", "stag-ui-next"]
 resolver = "2"
 
 [profile.release]

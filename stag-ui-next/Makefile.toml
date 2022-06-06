@@ -1,0 +1,23 @@
+[tasks.install-trunk]
+install_crate = { crate_name = "trunk" }
+
+[tasks.trunk-serve]
+dependencies = ["install-trunk"]
+command = "trunk"
+args = ["serve", "--open"]
+
+[tasks.tailwind-watch]
+command = "npx"
+args = [
+    "tailwindcss",
+    "--config",
+    "tailwind.config.js",
+    "--input",
+    "main.css",
+    "--output",
+    "tailwind.css",
+    "--watch",
+]
+
+[tasks.serve]
+run_task = { name = ["tailwind-watch", "trunk-serve"], parallel = true }
