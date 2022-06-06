@@ -8,7 +8,7 @@ use k256::elliptic_curve::sec1::ToEncodedPoint;
 use prost::Message;
 use prost_types::Any;
 use ripemd::Ripemd160;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 #[cfg(feature = "ethermint")]
 use sha3::Keccak256;
@@ -57,37 +57,28 @@ impl FromStr for PublicKeyAlgo {
 
 /// Public Key
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "type")]
+#[serde(tag = "type", content = "public_key", rename_all = "camelCase")]
 pub enum PublicKey {
     /// Secp256k1 (tendermint)
-    Secp256k1(
-        #[serde(
-            serialize_with = "serialize_verifying_key",
-            deserialize_with = "deserialize_verifying_key"
-        )]
-        VerifyingKey,
-    ),
+    Secp256k1(VerifyingKey),
     #[cfg(feature = "ethermint")]
     /// EthSecp256k1 (ethermint)
-    EthSecp256k1(
-        #[serde(
-            serialize_with = "serialize_verifying_key",
-            deserialize_with = "deserialize_verifying_key"
-        )]
-        VerifyingKey,
-    ),
+    EthSecp256k1(VerifyingKey),
 }
 
 impl PublicKey {
+    /// Creates a new instance of PublicKey from a verifying key (using secp256k1)
     pub fn new_secp256k1(key: VerifyingKey) -> Self {
         Self::Secp256k1(key)
     }
 
     #[cfg(feature = "ethermint")]
+    /// Creates a new instance of PublicKey from a verifying key (using eth-secp256k1)
     pub fn new_eth_secp256k1(key: VerifyingKey) -> Self {
         Self::EthSecp256k1(key)
     }
 
+    /// Returns the public key algorithm
     pub fn algo(&self) -> PublicKeyAlgo {
         match self {
             Self::Secp256k1(_) => PublicKeyAlgo::Secp256k1,
@@ -96,10 +87,12 @@ impl PublicKey {
         }
     }
 
+    /// Returns the address of the public key
     pub fn address(&self) -> Result<String> {
         Ok(hex::encode(&self.address_bytes()?))
     }
 
+    /// Returns the account address of the public key
     pub fn account_address(&self, prefix: &str) -> Result<String> {
         bech32::encode(prefix, self.address_bytes()?.to_base32(), Variant::Bech32)
             .map_err(Into::into)
@@ -171,17 +164,17 @@ impl AnyConvert for PublicKey {
     }
 }
 
-fn serialize_verifying_key<S>(key: &VerifyingKey, serializer: S) -> Result<S::Ok, S::Error>
-where
-    S: Serializer,
-{
-    hex::serialize_upper(key.to_bytes(), serializer)
-}
+// fn serialize_verifying_key<S>(key: &VerifyingKey, serializer: S) -> Result<S::Ok, S::Error>
+// where
+//     S: Serializer,
+// {
+//     hex::serialize_upper(key.to_bytes(), serializer)
+// }
 
-fn deserialize_verifying_key<'de, D>(deserializer: D) -> Result<VerifyingKey, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let bytes: Vec<u8> = hex::deserialize(deserializer)?;
-    VerifyingKey::from_sec1_bytes(&bytes).map_err(serde::de::Error::custom)
-}
+// fn deserialize_verifying_key<'de, D>(deserializer: D) -> Result<VerifyingKey, D::Error>
+// where
+//     D: Deserializer<'de>,
+// {
+//     let bytes: Vec<u8> = hex::deserialize(deserializer)?;
+//     VerifyingKey::from_sec1_bytes(&bytes).map_err(serde::de::Error::custom)
+// }

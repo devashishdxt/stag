@@ -1,12 +1,12 @@
 #[cfg(feature = "mnemonic-signer")]
 use std::collections::HashMap;
 
-use anyhow::Result;
+use anyhow::{ensure, Result};
 use sealed::sealed;
 
-use crate::trait_util::Base;
 #[cfg(feature = "mnemonic-signer")]
 use crate::types::{ics::core::ics24_host::identifier::ChainId, public_key::PublicKeyAlgo};
+use crate::{trait_util::Base, types::public_key::PublicKey};
 
 #[cfg(feature = "keplr-signer")]
 use super::keplr_signer::KeplrSigner as KeplrSignerImpl;
@@ -58,19 +58,53 @@ impl MnemonicSigner {
 
     /// Adds configuration for a chain id to the mnemonic signer
     pub fn add_chain_config(
-        mut self,
+        &mut self,
         chain_id: ChainId,
         mnemonic: &str,
         hd_path: Option<&str>,
         account_prefix: Option<&str>,
         algo: Option<PublicKeyAlgo>,
-    ) -> Result<Self> {
+    ) -> Result<&mut Self> {
+        ensure!(
+            !self.config_map.contains_key(&chain_id),
+            "Signer config for chain id {} already exists",
+            chain_id
+        );
+
         self.config_map.insert(
             chain_id,
             MnemonicSignerConfig::new(mnemonic, hd_path, account_prefix, algo)?,
         );
 
         Ok(self)
+    }
+
+    /// Updates configuration for a chain id to the mnemonic signer
+    pub fn update_chain_config(
+        &mut self,
+        chain_id: ChainId,
+        mnemonic: &str,
+        hd_path: Option<&str>,
+        account_prefix: Option<&str>,
+        algo: Option<PublicKeyAlgo>,
+    ) -> Result<&mut Self> {
+        ensure!(
+            self.config_map.contains_key(&chain_id),
+            "Signer config for chain id {} does not exist",
+            chain_id
+        );
+
+        self.config_map.insert(
+            chain_id,
+            MnemonicSignerConfig::new(mnemonic, hd_path, account_prefix, algo)?,
+        );
+
+        Ok(self)
+    }
+
+    /// Checks if mnemonic signer has configuration for a chain id
+    pub fn has_chain_config(&self, chain_id: &ChainId) -> bool {
+        self.config_map.contains_key(chain_id)
     }
 
     /// Returns a list of chain IDs and their corresponding account addresses
@@ -81,6 +115,17 @@ impl MnemonicSigner {
                 Ok((chain_id.clone(), config.get_account_address()?))
             })
             .collect()
+    }
+
+    /// Computes public key for given signer details
+    pub fn compute_public_key(
+        mnemonic: &str,
+        hd_path: Option<&str>,
+        account_prefix: Option<&str>,
+        algo: Option<PublicKeyAlgo>,
+    ) -> Result<PublicKey> {
+        let config = MnemonicSignerConfig::new(mnemonic, hd_path, account_prefix, algo)?;
+        config.get_public_key()
     }
 }
 
@@ -115,10 +160,10 @@ mod tests {
     async fn test_add_chain_config() {
         let chain_id: ChainId = "test-1".parse().unwrap();
 
-        let config = MnemonicSigner::new();
-        let config = config.add_chain_config(chain_id.clone(), MNEMONIC, None, None, None);
-        assert!(config.is_ok());
-        let config = config.unwrap();
+        let mut config = MnemonicSigner::new();
+        assert!(config
+            .add_chain_config(chain_id.clone(), MNEMONIC, None, None, None)
+            .is_ok());
 
         let signer = config.into_signer();
         assert!(signer.is_ok());
@@ -131,25 +176,70 @@ mod tests {
         assert_eq!(account_address, ACCOUNT_ADDRESS);
     }
 
-    #[tokio::test]
-    async fn test_add_invalid_chain_config() {
+    #[test]
+    fn test_add_invalid_chain_config() {
         let chain_id: ChainId = "test-1".parse().unwrap();
 
-        let config = MnemonicSigner::new();
-        let config = config.add_chain_config(chain_id, "invalid mnemonic", None, None, None);
-        assert!(config.is_err());
+        let mut config = MnemonicSigner::new();
+        assert!(config
+            .add_chain_config(chain_id, "invalid mnemonic", None, None, None)
+            .is_err());
     }
 
     #[test]
     fn test_get_signers() {
-        let config = MnemonicSigner::new();
-        let config = config.add_chain_config("test-1".parse().unwrap(), MNEMONIC, None, None, None);
-        assert!(config.is_ok());
-        let config = config.unwrap();
+        let mut config = MnemonicSigner::new();
+        assert!(config
+            .add_chain_config("test-1".parse().unwrap(), MNEMONIC, None, None, None)
+            .is_ok());
 
         let signers = config.get_signers().unwrap();
         assert_eq!(signers.len(), 1);
         assert_eq!(signers[0].0, "test-1".parse().unwrap());
         assert_eq!(signers[0].1, ACCOUNT_ADDRESS);
+    }
+
+    #[test]
+    fn test_cannot_add_same_config_twice() {
+        let chain_id: ChainId = "test-1".parse().unwrap();
+
+        let mut config = MnemonicSigner::new();
+        assert!(config
+            .add_chain_config(chain_id.clone(), MNEMONIC, None, None, None)
+            .is_ok());
+
+        assert!(config
+            .add_chain_config(chain_id, MNEMONIC, None, None, None)
+            .is_err());
+    }
+
+    #[test]
+    fn test_update_config() {
+        let chain_id: ChainId = "test-1".parse().unwrap();
+
+        let mut config = MnemonicSigner::new();
+        assert!(config
+            .add_chain_config(chain_id.clone(), MNEMONIC, None, None, None)
+            .is_ok());
+
+        assert!(config
+            .update_chain_config(
+                chain_id,
+                MNEMONIC,
+                Some("m/44'/394'/0'/0/0"),
+                Some("cro"),
+                None
+            )
+            .is_ok());
+    }
+
+    #[test]
+    fn test_cannot_update_non_existing_config() {
+        let chain_id: ChainId = "test-1".parse().unwrap();
+
+        let mut config = MnemonicSigner::new();
+        assert!(config
+            .update_chain_config(chain_id, MNEMONIC, None, None, None)
+            .is_err());
     }
 }

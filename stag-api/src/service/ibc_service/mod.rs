@@ -1,9 +1,13 @@
-mod burn;
+mod channel;
+mod client;
 mod common;
-mod connect;
-mod mint;
+mod connection;
+mod handshake;
+mod packet;
 mod update_signer;
 
 pub use self::{
-    burn::burn_tokens, connect::connect, mint::mint_tokens, update_signer::update_signer,
+    channel::{ica, transfer},
+    handshake::{connect, create_ica_channel, create_transfer_channel},
+    update_signer::update_signer,
 };

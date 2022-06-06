@@ -6,7 +6,6 @@ use cosmos_sdk_proto::ibc::{
         ClientState as TendermintClientState, ConsensusState as TendermintConsensusState,
     },
 };
-use primitive_types::U256;
 use prost::Message;
 use rexie::{Direction, KeyRange, Transaction as RexieTransaction};
 use tendermint::node::Id as NodeId;
@@ -18,8 +17,11 @@ use crate::{
         chain_state::{ChainConfig, ChainKey, ChainState},
         ibc_data::IbcData,
         ics::core::ics24_host::{
-            identifier::{ChainId, ChannelId, ClientId, ConnectionId, Identifier, PortId},
-            path::{ChannelPath, ClientStatePath, ConnectionPath, ConsensusStatePath},
+            identifier::{ChainId, ChannelId, ClientId, ConnectionId, PortId},
+            path::{
+                ChannelPath, ClientStatePath, ConnectionPath, ConsensusStatePath,
+                InterchainAccountAddressPath,
+            },
         },
         operation::{Operation, OperationType},
         proto_util::proto_encode,
@@ -124,7 +126,6 @@ impl Storage for IndexedDbTransaction {
             config: chain_config,
             consensus_timestamp: current_time,
             sequence: 1,
-            packet_sequence: 1,
             connection_details: None,
             created_at: current_time,
             updated_at: current_time,
@@ -305,18 +306,14 @@ impl Storage for IndexedDbTransaction {
         &self,
         request_id: Option<&str>,
         chain_id: &ChainId,
-        address: &str,
-        denom: &Identifier,
-        amount: &U256,
-        operation_type: OperationType,
+        port_id: &PortId,
+        operation_type: &OperationType,
         transaction_hash: &str,
     ) -> Result<()> {
         let operation = OperationRequest {
             request_id,
             chain_id,
-            address,
-            denom,
-            amount,
+            port_id,
             operation_type,
             transaction_hash,
             created_at: now_utc(),
@@ -514,7 +511,7 @@ impl Storage for IndexedDbTransaction {
         match ibc_data {
             None => Ok(None),
             Some(ibc_data) => Channel::decode(ibc_data.data.as_slice())
-                .context("error when deserializing connection")
+                .context("error when deserializing channel")
                 .map(Some),
         }
     }
@@ -528,6 +525,51 @@ impl Storage for IndexedDbTransaction {
         let ibc_data = IbcData {
             path: ChannelPath::new(port_id, channel_id).into(),
             data: proto_encode(channel)?,
+        };
+
+        self.update_ibc_data(&ibc_data).await
+    }
+
+    async fn add_ica_address(
+        &self,
+        connection_id: &ConnectionId,
+        port_id: &PortId,
+        address: &str,
+    ) -> Result<()> {
+        let ibc_data = IbcData {
+            path: InterchainAccountAddressPath::new(connection_id, port_id).into(),
+            data: proto_encode(&address.to_string())?,
+        };
+
+        self.add_ibc_data(&ibc_data).await
+    }
+
+    async fn get_ica_address(
+        &self,
+        connection_id: &ConnectionId,
+        port_id: &PortId,
+    ) -> Result<Option<String>> {
+        let path: String = InterchainAccountAddressPath::new(connection_id, port_id).into();
+
+        let ibc_data: Option<IbcData> = self.get_ibc_data(&path).await?;
+
+        match ibc_data {
+            None => Ok(None),
+            Some(ibc_data) => String::decode(ibc_data.data.as_slice())
+                .context("error when deserializing ica address")
+                .map(Some),
+        }
+    }
+
+    async fn update_ica_address(
+        &self,
+        connection_id: &ConnectionId,
+        port_id: &PortId,
+        address: &str,
+    ) -> Result<()> {
+        let ibc_data = IbcData {
+            path: InterchainAccountAddressPath::new(connection_id, port_id).into(),
+            data: proto_encode(&address.to_string())?,
         };
 
         self.update_ibc_data(&ibc_data).await

@@ -1,26 +1,73 @@
-mod atoms;
-mod components;
+mod componenets;
 mod routes;
 
-use bounce::BounceRoot;
-use yew::prelude::*;
-use yew_router::prelude::*;
+use componenets::notification::NotificationData;
+use stag_api::{
+    event::TracingEventHandler, signer::MnemonicSigner, storage::IndexedDb,
+    tendermint::ReqwestClient,
+};
+use yew::{classes, function_component, html, use_state, UseStateHandle};
+use yew_router::{BrowserRouter, Switch};
 
-use crate::routes::{switch, Route};
+use self::{
+    componenets::{notification::Notification, sidebar::Sidebar},
+    routes::{switch, Route},
+};
+
+pub struct AppState {
+    notification: UseStateHandle<Option<NotificationData>>,
+    signer: UseStateHandle<MnemonicSigner>,
+    storage: IndexedDb,
+    rpc: ReqwestClient,
+    event_handler: TracingEventHandler,
+}
+
+impl Clone for AppState {
+    fn clone(&self) -> Self {
+        Self {
+            notification: self.notification.clone(),
+            signer: self.signer.clone(),
+            storage: self.storage.clone(),
+            rpc: self.rpc,
+            event_handler: self.event_handler,
+        }
+    }
+}
+
+impl Default for AppState {
+    fn default() -> Self {
+        let notification = use_state(|| None);
+        let signer = use_state(MnemonicSigner::default);
+        let storage = IndexedDb::new("stag-ui");
+        let rpc = ReqwestClient;
+        let event_handler = TracingEventHandler;
+
+        Self {
+            notification,
+            signer,
+            storage,
+            rpc,
+            event_handler,
+        }
+    }
+}
 
 #[function_component(App)]
 fn app() -> Html {
+    let state = AppState::default();
+
     html! {
-        <BounceRoot>
-            <BrowserRouter>
-                <Switch<Route> render={Switch::render(switch)} />
-            </BrowserRouter>
-        </BounceRoot>
+        <BrowserRouter>
+            <Notification data={state.notification.clone()} />
+            <Sidebar />
+            <div class={classes!("ml-60")}>
+                <Switch<Route> render={Switch::render(move |route| switch(route, state.clone()))} />
+            </div>
+        </BrowserRouter>
     }
 }
 
 fn main() {
     tracing_wasm::set_as_global_default();
-
     yew::start_app::<App>();
 }

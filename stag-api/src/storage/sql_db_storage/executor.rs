@@ -6,7 +6,6 @@ use cosmos_sdk_proto::ibc::{
         ClientState as TendermintClientState, ConsensusState as TendermintConsensusState,
     },
 };
-use primitive_types::U256;
 use prost::Message;
 use sqlx::{types::Json, Executor};
 use tendermint::node::Id as NodeId;
@@ -15,8 +14,11 @@ use crate::types::{
     chain_state::{ChainConfig, ChainKey, ChainState},
     ibc_data::IbcData,
     ics::core::ics24_host::{
-        identifier::{ChainId, ChannelId, ClientId, ConnectionId, Identifier, PortId},
-        path::{ChannelPath, ClientStatePath, ConnectionPath, ConsensusStatePath},
+        identifier::{ChainId, ChannelId, ClientId, ConnectionId, PortId},
+        path::{
+            ChannelPath, ClientStatePath, ConnectionPath, ConsensusStatePath,
+            InterchainAccountAddressPath,
+        },
     },
     operation::{Operation, OperationType},
     proto_util::proto_encode,
@@ -66,12 +68,11 @@ pub async fn update_chain_state<'e>(
     chain_state: &ChainState,
 ) -> Result<()> {
     let rows_affected =
-        sqlx::query("UPDATE chain_states SET node_id = $1, config = $2, consensus_timestamp = $3, sequence = $4, packet_sequence = $5, connection_details = $6, updated_at = $7 WHERE id = $8")
+        sqlx::query("UPDATE chain_states SET node_id = $1, config = $2, consensus_timestamp = $3, sequence = $4, connection_details = $5, updated_at = $6 WHERE id = $7")
             .bind(chain_state.node_id.to_string())
             .bind(Json(&chain_state.config))
             .bind(&chain_state.consensus_timestamp)
             .bind(&chain_state.sequence)
-            .bind(&chain_state.packet_sequence)
             .bind(chain_state.connection_details.as_ref().map(Json))
             .bind(Utc::now())
             .bind(chain_state.id.to_string())
@@ -170,23 +171,17 @@ pub async fn add_operation<'e>(
     executor: impl Executor<'e, Database = Db>,
     request_id: Option<&str>,
     chain_id: &ChainId,
-    address: &str,
-    denom: &Identifier,
-    amount: &U256,
-    operation_type: OperationType,
+    port_id: &PortId,
+    operation_type: &OperationType,
     transaction_hash: &str,
 ) -> Result<()> {
-    let amount_bytes: [u8; 32] = (*amount).into();
-
     let rows_affected = sqlx::query(
-            "INSERT INTO operations (request_id, chain_id, address, denom, amount, operation_type, transaction_hash) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+            "INSERT INTO operations (request_id, chain_id, port_id, operation_type, transaction_hash) VALUES ($1, $2, $3, $4, $5)",
         )
         .bind(request_id)
         .bind(chain_id.to_string())
-        .bind(address)
-        .bind(denom.to_string())
-        .bind(amount_bytes.to_vec())
-        .bind(operation_type.to_string())
+        .bind(port_id.to_string())
+        .bind(Json(&operation_type))
         .bind(transaction_hash)
         .execute(executor)
         .await
@@ -300,6 +295,39 @@ pub async fn update_channel<'e>(
 ) -> Result<()> {
     let path: String = ChannelPath::new(port_id, channel_id).into();
     let data = proto_encode(channel)?;
+
+    update_ibc_data(executor, path, data).await
+}
+
+pub async fn add_ica_address<'e>(
+    executor: impl Executor<'e, Database = Db>,
+    connection_id: &ConnectionId,
+    port_id: &PortId,
+    address: &str,
+) -> Result<()> {
+    let path: String = InterchainAccountAddressPath::new(connection_id, port_id).into();
+    let data = proto_encode(&address.to_owned())?;
+
+    add_ibc_data(executor, path, data).await
+}
+
+pub async fn get_ica_address<'e>(
+    executor: impl Executor<'e, Database = Db>,
+    connection_id: &ConnectionId,
+    port_id: &PortId,
+) -> Result<Option<String>> {
+    let path: String = InterchainAccountAddressPath::new(connection_id, port_id).into();
+    get_ibc_data(executor, &path).await
+}
+
+pub async fn update_ica_address<'e>(
+    executor: impl Executor<'e, Database = Db>,
+    connection_id: &ConnectionId,
+    port_id: &PortId,
+    address: &str,
+) -> Result<()> {
+    let path: String = InterchainAccountAddressPath::new(connection_id, port_id).into();
+    let data = proto_encode(&address.to_owned())?;
 
     update_ibc_data(executor, path, data).await
 }

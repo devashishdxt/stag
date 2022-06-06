@@ -10,3 +10,5 @@ wasm-pack.log
 .config
 mars
 **/lcov.info
+**/node_modules
+**/tailwind.css

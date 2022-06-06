@@ -28,13 +28,17 @@ indexed-db-storage = ["rexie", "serde-wasm-bindgen", "wasm", "wasm-bindgen"]
 
 # Enables support for transaction signing using Keplr wallet on browser (currently not working: https://github.com/chainapsis/keplr-wallet/issues/251)
 # Enables `wasm` feature automatically.
-keplr-signer = ["base64", "js-sys", "wasm", "web-sys"]
+keplr-signer = ["js-sys", "wasm", "web-sys"]
 
 # Enables support for transaction signing using mnemonic phrase
 mnemonic-signer = ["bip32"]
 
 # Enables all the required dependencies for non-wasm environments
-non-wasm = ["cosmos-sdk-proto/grpc-transport", "tonic/transport", "tonic-build/transport"]
+non-wasm = [
+    "cosmos-sdk-proto/grpc-transport",
+    "tonic/transport",
+    "tonic-build/transport",
+]
 
 # Enables support for HTTP client using `reqwest` crate
 reqwest-client = ["reqwest"]
@@ -46,22 +50,24 @@ sqlite-storage = ["non-wasm", "sqlx/sqlite"]
 tracing-event-handler = ["tracing"]
 
 # Enables all the required dependencies for wasm environments
-wasm = ["getrandom", "tonic-web-wasm-client", "js-sys"]
+wasm = ["getrandom", "js-sys", "tonic-web-wasm-client"]
 
 [dependencies]
 anyhow = "1.0.57"
 async-trait = "0.1.53"
-base64 = { version = "0.13.0", optional = true }
+base64 = "0.13.0"
 bech32 = "0.9.0"
 bip32 = { version = "0.4.0", features = ["bip39"], optional = true }
 chrono = { version = "0.4.19", features = ["serde"] }
-cosmos-sdk-proto = { version = "0.12.2", default-features = false, features = ["grpc"] }
+cosmos-sdk-proto = { version = "0.12.2", default-features = false, features = [
+    "grpc",
+] }
 getrandom = { version = "0.2.6", default-features = false, features = [
     "js",
 ], optional = true }
 hex = { version = "0.4.3", features = ["serde"] }
 js-sys = { version = "0.3.57", optional = true }
-k256 = { version = "0.11.2", features = ["keccak256"] }
+k256 = { version = "0.11.2", features = ["keccak256", "pem", "serde"] }
 num-rational = { version = "0.4.0", features = ["serde"] }
 primitive-types = { version = "0.11.1", features = ["serde"] }
 prost = "0.10.4"
@@ -71,7 +77,7 @@ regex = "1.5.6"
 reqwest = { version = "0.11.10", optional = true }
 rexie = { version = "0.4.1", default-features = false, optional = true }
 ripemd = "0.1.1"
-rust_decimal = "1.23.1"
+rust_decimal = "1.24.0"
 sealed = "0.4.0"
 serde = { version = "1.0.137", features = ["derive"] }
 serde-wasm-bindgen = { version = "0.4.3", optional = true }

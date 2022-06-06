@@ -6,7 +6,6 @@ use cosmos_sdk_proto::ibc::{
         ClientState as TendermintClientState, ConsensusState as TendermintConsensusState,
     },
 };
-use primitive_types::U256;
 use sqlx::{
     migrate::{MigrateDatabase, Migrator},
     Pool,
@@ -17,9 +16,7 @@ use crate::{
     storage::{Storage, TransactionProvider},
     types::{
         chain_state::{ChainConfig, ChainKey, ChainState},
-        ics::core::ics24_host::identifier::{
-            ChainId, ChannelId, ClientId, ConnectionId, Identifier, PortId,
-        },
+        ics::core::ics24_host::identifier::{ChainId, ChannelId, ClientId, ConnectionId, PortId},
         operation::{Operation, OperationType},
     },
 };
@@ -110,19 +107,15 @@ impl Storage for SqlDbStorage {
         &self,
         request_id: Option<&str>,
         chain_id: &ChainId,
-        address: &str,
-        denom: &Identifier,
-        amount: &U256,
-        operation_type: OperationType,
+        port_id: &PortId,
+        operation_type: &OperationType,
         transaction_hash: &str,
     ) -> Result<()> {
         executor::add_operation(
             &self.pool,
             request_id,
             chain_id,
-            address,
-            denom,
-            amount,
+            port_id,
             operation_type,
             transaction_hash,
         )
@@ -217,6 +210,32 @@ impl Storage for SqlDbStorage {
         executor::update_channel(&self.pool, port_id, channel_id, channel).await
     }
 
+    async fn add_ica_address(
+        &self,
+        connection_id: &ConnectionId,
+        port_id: &PortId,
+        address: &str,
+    ) -> Result<()> {
+        executor::add_ica_address(&self.pool, connection_id, port_id, address).await
+    }
+
+    async fn get_ica_address(
+        &self,
+        connection_id: &ConnectionId,
+        port_id: &PortId,
+    ) -> Result<Option<String>> {
+        executor::get_ica_address(&self.pool, connection_id, port_id).await
+    }
+
+    async fn update_ica_address(
+        &self,
+        connection_id: &ConnectionId,
+        port_id: &PortId,
+        address: &str,
+    ) -> Result<()> {
+        executor::update_ica_address(&self.pool, connection_id, port_id, address).await
+    }
+
     async fn delete(self) -> Result<()> {
         self.pool.close().await;
 
@@ -230,7 +249,9 @@ impl Storage for SqlDbStorage {
 mod tests {
     use std::time::Duration;
 
-    use crate::types::chain_state::Fee;
+    use primitive_types::U256;
+
+    use crate::types::{chain_state::Fee, ics::core::ics24_host::identifier::Identifier};
 
     use super::*;
 
@@ -260,7 +281,6 @@ mod tests {
             max_clock_drift: Duration::from_secs(3),
             rpc_timeout: Duration::from_secs(60),
             diversifier: "stag".to_owned(),
-            port_id: "transfer".parse().unwrap(),
             trusted_height: 1,
             trusted_hash: [0; 32],
             packet_timeout_height_offset: 10,
@@ -289,11 +309,9 @@ mod tests {
         assert_eq!(chain_state.node_id, node_id);
         assert_eq!(chain_state.config, chain_config);
         assert_eq!(chain_state.sequence, 1);
-        assert_eq!(chain_state.packet_sequence, 1);
 
         // Update chain state
         chain_state.sequence += 1;
-        chain_state.packet_sequence += 1;
 
         assert!(storage.update_chain_state(&chain_state).await.is_ok());
 
@@ -308,7 +326,6 @@ mod tests {
         assert_eq!(chain_state.node_id, node_id);
         assert_eq!(chain_state.config, chain_config);
         assert_eq!(chain_state.sequence, 2);
-        assert_eq!(chain_state.packet_sequence, 2);
 
         // Get all chain states should return one chain state
         let chain_states = storage.get_all_chain_states(None, None).await;
@@ -324,7 +341,6 @@ mod tests {
         assert_eq!(chain_states[0].node_id, node_id);
         assert_eq!(chain_states[0].config, chain_config);
         assert_eq!(chain_states[0].sequence, 2);
-        assert_eq!(chain_states[0].packet_sequence, 2);
 
         // Get all chain states should not return any values when limit is zero
         let chain_states = storage.get_all_chain_states(Some(0), None).await;
@@ -413,6 +429,7 @@ mod tests {
         let storage = SqlDbStorage::new(URI.to_owned()).await.unwrap();
 
         let chain_id: ChainId = "test-1".parse().unwrap();
+        let port_id = PortId::transfer();
         let denom: Identifier = "denom".parse().unwrap();
         let amount: U256 = 1u8.into();
 
@@ -421,10 +438,12 @@ mod tests {
             .add_operation(
                 None,
                 &chain_id,
-                "address-1",
-                &denom,
-                &amount,
-                OperationType::Mint,
+                &port_id,
+                &OperationType::Mint {
+                    to: "address-1".to_string(),
+                    denom: denom.clone(),
+                    amount,
+                },
                 "transaction-hash-1"
             )
             .await
@@ -434,10 +453,12 @@ mod tests {
             .add_operation(
                 None,
                 &chain_id,
-                "address-2",
-                &denom,
-                &amount,
-                OperationType::Mint,
+                &port_id,
+                &OperationType::Mint {
+                    to: "address-2".to_string(),
+                    denom: denom.clone(),
+                    amount,
+                },
                 "transaction-hash-2"
             )
             .await
@@ -447,10 +468,12 @@ mod tests {
             .add_operation(
                 None,
                 &chain_id,
-                "address-3",
-                &denom,
-                &amount,
-                OperationType::Mint,
+                &port_id,
+                &OperationType::Mint {
+                    to: "address-3".to_string(),
+                    denom: denom.clone(),
+                    amount,
+                },
                 "transaction-hash-3"
             )
             .await
@@ -473,9 +496,18 @@ mod tests {
         assert_eq!(operations.len(), 3);
 
         // Operations are sorted by reverse insertion order
-        assert_eq!(operations[0].address, "address-3");
-        assert_eq!(operations[1].address, "address-2");
-        assert_eq!(operations[2].address, "address-1");
+        assert!(matches!(
+            operations[0].operation_type,
+            OperationType::Mint { ref to, .. } if to == "address-3"
+        ));
+        assert!(matches!(
+            operations[1].operation_type,
+            OperationType::Mint { ref to, .. } if to == "address-2"
+        ));
+        assert!(matches!(
+            operations[2].operation_type,
+            OperationType::Mint { ref to, .. } if to == "address-1"
+        ));
     }
 
     #[tokio::test]
@@ -729,5 +761,69 @@ mod tests {
         let updated_channel = updated_channel.unwrap();
 
         assert_eq!(updated_channel, channel);
+    }
+
+    #[tokio::test]
+    async fn test_ica_address() {
+        let storage = SqlDbStorage::new(URI.to_owned()).await.unwrap();
+
+        let connection_id: ConnectionId = "connection-1".parse().unwrap();
+        let port_id: PortId = "transfer".parse().unwrap();
+        let address_1 = "ica-address-1".to_owned();
+        let address_2 = "ica-address-2".to_owned();
+
+        // Add ica address for a connection id and port id
+        assert!(storage
+            .add_ica_address(&connection_id, &port_id, &address_1)
+            .await
+            .is_ok());
+
+        // Should not return ica address for invalid connection id
+        let ica_address = storage
+            .get_ica_address(&"connection-2".parse().unwrap(), &port_id)
+            .await;
+        assert!(ica_address.is_ok(), "error: {:?}", ica_address.unwrap_err());
+        let ica_address = ica_address.unwrap();
+
+        assert!(ica_address.is_none());
+
+        // Should not return ica address for invalid port id
+        let ica_address = storage
+            .get_ica_address(&connection_id, &"port-2".parse().unwrap())
+            .await;
+        assert!(ica_address.is_ok(), "error: {:?}", ica_address.unwrap_err());
+        let ica_address = ica_address.unwrap();
+
+        assert!(ica_address.is_none());
+
+        // Should return ica address for valid connection id and port id
+        let ica_address = storage.get_ica_address(&connection_id, &port_id).await;
+        assert!(ica_address.is_ok(), "error: {:?}", ica_address.unwrap_err());
+        let ica_address = ica_address.unwrap();
+
+        assert!(ica_address.is_some());
+        let ica_address = ica_address.unwrap();
+
+        assert_eq!(ica_address, address_1);
+
+        // Update ica address
+        assert!(storage
+            .update_ica_address(&connection_id, &port_id, &address_2)
+            .await
+            .is_ok());
+
+        // Should return updated ica address for valid channel id and port id
+        let updated_ica_address = storage.get_ica_address(&connection_id, &port_id).await;
+        assert!(
+            updated_ica_address.is_ok(),
+            "error: {:?}",
+            updated_ica_address.unwrap_err()
+        );
+        let updated_ica_address = updated_ica_address.unwrap();
+
+        assert!(updated_ica_address.is_some());
+        let updated_ica_address = updated_ica_address.unwrap();
+
+        assert_eq!(updated_ica_address, address_2);
     }
 }

@@ -1,9 +1,11 @@
 use primitive_types::U256;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::types::{
-    chain_state::ConnectionDetails,
-    ics::core::ics24_host::identifier::{ChainId, ChannelId, ClientId, ConnectionId, Identifier},
+    chain_state::{ChannelDetails, ConnectionDetails},
+    ics::core::ics24_host::identifier::{
+        ChainId, ChannelId, ClientId, ConnectionId, Identifier, PortId,
+    },
     public_key::PublicKey,
 };
 
@@ -22,6 +24,10 @@ pub enum Event {
         /// Address of account on IBC enabled chain
         to_address: String,
         /// Amount of tokens minted
+        #[serde(
+            serialize_with = "serialize_u256",
+            deserialize_with = "deserialize_u256"
+        )]
         amount: U256,
         /// Denom of tokens minted
         denom: Identifier,
@@ -37,6 +43,10 @@ pub enum Event {
         /// Address of account on IBC enabled chain
         from_address: String,
         /// Amount of tokens minted
+        #[serde(
+            serialize_with = "serialize_u256",
+            deserialize_with = "deserialize_u256"
+        )]
         amount: U256,
         /// Denom of tokens minted
         denom: Identifier,
@@ -51,6 +61,25 @@ pub enum Event {
         old_public_key: PublicKey,
         /// New signer's public key
         new_public_key: PublicKey,
+    },
+    /// Tokens sent from ICA (Interchain Account)
+    TokensSentFromIca {
+        /// Chain ID of IBC enabled chain
+        chain_id: ChainId,
+        /// Optional request ID (for tracking purposes)
+        request_id: Option<String>,
+        /// Address of account on IBC enabled chain
+        to_address: String,
+        /// Amount of tokens minted
+        #[serde(
+            serialize_with = "serialize_u256",
+            deserialize_with = "deserialize_u256"
+        )]
+        amount: U256,
+        /// Denom of tokens minted
+        denom: Identifier,
+        /// Hash of transaction on IBC enabled chain (in hex)
+        transaction_hash: String,
     },
 
     // ----- IBC connection handshake events ----- //
@@ -88,6 +117,8 @@ pub enum Event {
     InitializedChannelOnTendermint {
         /// Channel ID of solo machine client on IBC enabled chain
         channel_id: ChannelId,
+        /// Port ID of channel
+        port_id: PortId,
     },
     /// Close channel on IBC enabled chain
     CloseChannelInitOnSoloMachine {
@@ -100,16 +131,22 @@ pub enum Event {
     InitializedChannelOnSoloMachine {
         /// Channel ID of IBC enabled chain on solo machine
         channel_id: ChannelId,
+        /// Port ID of channel
+        port_id: PortId,
     },
     /// Confirmed channel on IBC enabled chain
     ConfirmedChannelOnTendermint {
         /// Channel ID of solo machine client on IBC enabled chain
         channel_id: ChannelId,
+        /// Port ID of channel
+        port_id: PortId,
     },
     /// Confirmed channel on solo machine
     ConfirmedChannelOnSoloMachine {
         /// Channel ID of IBC enabled chain on solo machine
         channel_id: ChannelId,
+        /// Port ID of channel
+        port_id: PortId,
     },
     /// Connection successfully established
     ConnectionEstablished {
@@ -117,6 +154,13 @@ pub enum Event {
         chain_id: ChainId,
         /// Connection details
         connection_details: ConnectionDetails,
+    },
+    /// Channel successfully created
+    ChannelCreated {
+        /// Chain ID of IBC enabled chain
+        chain_id: ChainId,
+        /// Channel details
+        channel_details: ChannelDetails,
     },
 
     // ----- Chain events ----- //
@@ -137,4 +181,19 @@ pub enum Event {
     /// Test event
     #[cfg(test)]
     Test,
+}
+
+fn serialize_u256<S>(value: &U256, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    serializer.serialize_str(&value.to_string())
+}
+
+fn deserialize_u256<'de, D>(deserializer: D) -> Result<U256, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+    U256::from_dec_str(&s).map_err(serde::de::Error::custom)
 }

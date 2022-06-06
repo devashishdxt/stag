@@ -1,4 +1,4 @@
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{bail, Context, Result};
 use async_trait::async_trait;
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::json;
@@ -35,9 +35,7 @@ pub trait JsonRpcClient: Base {
 
         let value = self.send_request(url, request).await?;
 
-        let response = value
-            .as_object()
-            .ok_or_else(|| anyhow!("invalid jsonrpc response"))?;
+        let response = value.as_object().context("invalid jsonrpc response")?;
 
         if response.contains_key("error") {
             bail!("error jsonrpc response: {:?}", response["error"]);

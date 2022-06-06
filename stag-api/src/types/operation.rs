@@ -1,12 +1,10 @@
-use core::fmt;
-use std::str::FromStr;
-
-use anyhow::{anyhow, Error};
 use chrono::{DateTime, Utc};
 use primitive_types::U256;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::types::ics::core::ics24_host::identifier::{ChainId, Identifier};
+
+use super::ics::core::ics24_host::identifier::PortId;
 
 /// Denotes an operation on an account
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -18,12 +16,8 @@ pub struct Operation {
     pub request_id: Option<String>,
     /// Chain ID of the operation
     pub chain_id: ChainId,
-    /// Address of the account
-    pub address: String,
-    /// Denom of tokens
-    pub denom: Identifier,
-    /// Amount of tokens
-    pub amount: U256,
+    /// Port ID of the channel
+    pub port_id: PortId,
     /// Type of operation
     pub operation_type: OperationType,
     /// On-chain transaction hash (in hex)
@@ -33,31 +27,61 @@ pub struct Operation {
 }
 
 /// Different types of possible operations on an account
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "camelCase")]
 pub enum OperationType {
     /// Mint some tokens on IBC enabled chain
-    Mint,
+    Mint {
+        /// Address of the account
+        to: String,
+        /// Denom of tokens
+        denom: Identifier,
+        /// Amount of tokens
+        #[serde(
+            serialize_with = "serialize_u256",
+            deserialize_with = "deserialize_u256"
+        )]
+        amount: U256,
+    },
     /// Burn some tokens on IBC enabled chain
-    Burn,
+    Burn {
+        /// Address of the account
+        from: String,
+        /// Denom of tokens
+        denom: Identifier,
+        /// Amount of tokens
+        #[serde(
+            serialize_with = "serialize_u256",
+            deserialize_with = "deserialize_u256"
+        )]
+        amount: U256,
+    },
+    /// Send some tokens from ICA account on host chain
+    IcaSend {
+        /// Address of the account
+        to: String,
+        /// Denom of tokens
+        denom: Identifier,
+        /// Amount of tokens
+        #[serde(
+            serialize_with = "serialize_u256",
+            deserialize_with = "deserialize_u256"
+        )]
+        amount: U256,
+    },
 }
 
-impl fmt::Display for OperationType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            OperationType::Mint => write!(f, "mint"),
-            OperationType::Burn => write!(f, "burn"),
-        }
-    }
+fn serialize_u256<S>(value: &U256, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    serializer.serialize_str(&value.to_string())
 }
 
-impl FromStr for OperationType {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "mint" => Ok(OperationType::Mint),
-            "burn" => Ok(OperationType::Burn),
-            _ => Err(anyhow!("invalid operation type: {}", s)),
-        }
-    }
+fn deserialize_u256<'de, D>(deserializer: D) -> Result<U256, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+    U256::from_dec_str(&s).map_err(serde::de::Error::custom)
 }

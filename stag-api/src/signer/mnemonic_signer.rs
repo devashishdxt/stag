@@ -27,13 +27,13 @@ pub struct MnemonicSigner {
 #[derive(Clone)]
 pub struct MnemonicSignerConfig {
     /// Mnemonic of signer
-    pub mnemonic: Mnemonic,
+    mnemonic: Mnemonic,
     /// HD path of signer
-    pub hd_path: String,
+    hd_path: String,
     /// Bech32 prefix
-    pub account_prefix: String,
+    account_prefix: String,
     /// Algorithm used for address generation
-    pub algo: PublicKeyAlgo,
+    algo: PublicKeyAlgo,
 }
 
 impl PartialEq for MnemonicSignerConfig {
@@ -70,23 +70,7 @@ impl MnemonicSignerConfig {
             algo,
         })
     }
-}
 
-impl MnemonicSigner {
-    /// Creates a new instance of mnemonic signer
-    pub fn new(config_map: HashMap<ChainId, MnemonicSignerConfig>) -> Self {
-        Self { config_map }
-    }
-
-    /// Returns configuration for a chain id
-    fn get_config(&self, chain_id: &ChainId) -> Result<&MnemonicSignerConfig> {
-        self.config_map
-            .get(chain_id)
-            .ok_or_else(|| anyhow!("no signer config for chain id: {}", chain_id))
-    }
-}
-
-impl MnemonicSignerConfig {
     /// Returns the signing key
     fn get_signing_key(&self) -> Result<SigningKey> {
         let seed = self.mnemonic.to_seed("");
@@ -98,7 +82,7 @@ impl MnemonicSignerConfig {
     }
 
     /// Returns the public key
-    fn get_public_key(&self) -> Result<PublicKey> {
+    pub(crate) fn get_public_key(&self) -> Result<PublicKey> {
         let signing_key = self.get_signing_key()?;
         let verifying_key = signing_key.verifying_key();
 
@@ -118,6 +102,20 @@ impl MnemonicSignerConfig {
     pub(crate) fn get_account_address(&self) -> Result<String> {
         self.get_public_key()?
             .account_address(self.get_account_prefix())
+    }
+}
+
+impl MnemonicSigner {
+    /// Creates a new instance of mnemonic signer
+    pub fn new(config_map: HashMap<ChainId, MnemonicSignerConfig>) -> Self {
+        Self { config_map }
+    }
+
+    /// Returns configuration for a chain id
+    fn get_config(&self, chain_id: &ChainId) -> Result<&MnemonicSignerConfig> {
+        self.config_map
+            .get(chain_id)
+            .ok_or_else(|| anyhow!("no signer config for chain id: {}", chain_id))
     }
 }
 

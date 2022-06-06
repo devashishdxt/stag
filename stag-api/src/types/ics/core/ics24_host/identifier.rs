@@ -5,16 +5,16 @@ use rand::{distributions::Alphanumeric, Rng};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
-use crate::types::ics::core::ics02_client::client_type::ClientType;
+use crate::{signer::GetPublicKey, types::ics::core::ics02_client::client_type::ClientType};
 
-pub(crate) const MAX_IDENTIFIER_LEN: usize = 64;
+pub(crate) const MAX_IDENTIFIER_LEN: usize = 128;
 const VALID_CHAIN_ID_PATTERN: &str = r"^.+[^-]-{1}[1-9][0-9]*$";
 const VALID_ID_PATTERN: &str = r"^[a-zA-Z0-9\._\+\-\#\[\]<>]+$";
 
 macro_rules! impl_id {
     ($doc: expr, $name: ident, $min_len: expr) => {
         #[doc = $doc]
-        #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+        #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
         pub struct $name(Identifier);
 
         impl FromStr for $name {
@@ -58,6 +58,23 @@ impl ConnectionId {
 impl ChannelId {
     pub fn generate() -> ChannelId {
         Self(Identifier::generate("channel", 4).unwrap())
+    }
+}
+
+impl PortId {
+    pub fn transfer() -> PortId {
+        "transfer".parse().unwrap()
+    }
+
+    pub fn ica_host() -> PortId {
+        "icahost".parse().unwrap()
+    }
+
+    pub async fn ica_controller(
+        signer: &impl GetPublicKey,
+        chain_id: &ChainId,
+    ) -> Result<PortId, Error> {
+        format!("icacontroller-{}", signer.get_public_key(chain_id).await?).parse()
     }
 }
 
@@ -140,6 +157,7 @@ impl Deref for ChainId {
 pub struct Identifier(String);
 
 impl Identifier {
+    /// Generates a new identifier with given prefix and random suffix of given length
     pub fn generate(prefix: &str, suffix_len: usize) -> Result<Self, Error> {
         let mut rng = rand::thread_rng();
 
@@ -150,6 +168,11 @@ impl Identifier {
             .collect();
 
         format!("{}-{}", prefix, suffix).parse()
+    }
+
+    /// Creates a new unchecked identifier from string
+    pub fn from_str_unchecked(s: String) -> Self {
+        Self(s)
     }
 
     fn validate_length(&self, min: usize, max: usize) -> Result<(), Error> {

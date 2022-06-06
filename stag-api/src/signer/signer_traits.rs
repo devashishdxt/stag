@@ -20,7 +20,7 @@ pub trait GetPublicKey: Base {
 /// Type of message given to a signer
 #[derive(Debug)]
 pub enum Message<'a> {
-    /// [crate::types::proto::ibc::lightclients::solomachine::v2::SignBytes]
+    /// [cosmos_sdk_proto::ibc::lightclients::solomachine::v2::SignBytes]
     SignBytes(&'a [u8]),
     /// [cosmos_sdk_proto::cosmos::tx::v1beta1::SignDoc]
     SignDoc(&'a [u8]),

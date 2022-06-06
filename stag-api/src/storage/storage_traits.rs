@@ -6,16 +6,13 @@ use cosmos_sdk_proto::ibc::{
         ClientState as TendermintClientState, ConsensusState as TendermintConsensusState,
     },
 };
-use primitive_types::U256;
 use tendermint::node::Id as NodeId;
 
 use crate::{
     trait_util::Base,
     types::{
         chain_state::{ChainConfig, ChainKey, ChainState},
-        ics::core::ics24_host::identifier::{
-            ChainId, ChannelId, ClientId, ConnectionId, Identifier, PortId,
-        },
+        ics::core::ics24_host::identifier::{ChainId, ChannelId, ClientId, ConnectionId, PortId},
         operation::{Operation, OperationType},
     },
 };
@@ -75,16 +72,13 @@ pub trait Storage: Base {
         offset: Option<u32>,
     ) -> Result<Vec<ChainKey>>;
 
-    #[allow(clippy::too_many_arguments)]
     /// Adds a new IBC operation to the storage
     async fn add_operation(
         &self,
         request_id: Option<&str>,
         chain_id: &ChainId,
-        address: &str,
-        denom: &Identifier,
-        amount: &U256,
-        operation_type: OperationType,
+        port_id: &PortId,
+        operation_type: &OperationType,
         transaction_hash: &str,
     ) -> Result<()>;
 
@@ -162,6 +156,29 @@ pub trait Storage: Base {
         port_id: &PortId,
         channel_id: &ChannelId,
         channel: &Channel,
+    ) -> Result<()>;
+
+    /// Adds new ICA address to the storage
+    async fn add_ica_address(
+        &self,
+        connection_id: &ConnectionId,
+        port_id: &PortId,
+        address: &str,
+    ) -> Result<()>;
+
+    /// Gets ICA address from the storage
+    async fn get_ica_address(
+        &self,
+        connection_id: &ConnectionId,
+        port_id: &PortId,
+    ) -> Result<Option<String>>;
+
+    /// Updates ICA address in the storage
+    async fn update_ica_address(
+        &self,
+        connection_id: &ConnectionId,
+        port_id: &PortId,
+        address: &str,
     ) -> Result<()>;
 
     /// Delete the storage (should only be used for testing)

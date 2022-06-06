@@ -8,7 +8,6 @@ use cosmos_sdk_proto::ibc::{
         ClientState as TendermintClientState, ConsensusState as TendermintConsensusState,
     },
 };
-use primitive_types::U256;
 use rexie::{Index, ObjectStore, Rexie, TransactionMode};
 use tendermint::node::Id as NodeId;
 
@@ -16,9 +15,7 @@ use crate::{
     storage::{Storage, Transaction, TransactionProvider},
     types::{
         chain_state::{ChainConfig, ChainKey, ChainState},
-        ics::core::ics24_host::identifier::{
-            ChainId, ChannelId, ClientId, ConnectionId, Identifier, PortId,
-        },
+        ics::core::ics24_host::identifier::{ChainId, ChannelId, ClientId, ConnectionId, PortId},
         operation::{Operation, OperationType},
     },
 };
@@ -84,6 +81,9 @@ impl IndexedDbStorage {
                 "add_channel" => (IBC_DATA_STORE_NAME, true),
                 "get_channel" => (IBC_DATA_STORE_NAME, false),
                 "update_channel" => (IBC_DATA_STORE_NAME, true),
+                "add_ica_address" => (IBC_DATA_STORE_NAME, true),
+                "get_ica_address" => (IBC_DATA_STORE_NAME, false),
+                "update_ica_address" => (IBC_DATA_STORE_NAME, true),
                 _ => return Err(anyhow!("unknown access point: {}", access_point)),
             };
 
@@ -203,10 +203,8 @@ impl Storage for IndexedDbStorage {
         &self,
         request_id: Option<&str>,
         chain_id: &ChainId,
-        address: &str,
-        denom: &Identifier,
-        amount: &U256,
-        operation_type: OperationType,
+        port_id: &PortId,
+        operation_type: &OperationType,
         transaction_hash: &str,
     ) -> Result<()> {
         let transaction = self.get_transaction(&["add_operation"])?;
@@ -215,9 +213,7 @@ impl Storage for IndexedDbStorage {
             .add_operation(
                 request_id,
                 chain_id,
-                address,
-                denom,
-                amount,
+                port_id,
                 operation_type,
                 transaction_hash,
             )
@@ -376,6 +372,50 @@ impl Storage for IndexedDbStorage {
 
         transaction
             .update_channel(port_id, channel_id, channel)
+            .await?;
+
+        transaction.done().await
+    }
+
+    async fn add_ica_address(
+        &self,
+        connection_id: &ConnectionId,
+        port_id: &PortId,
+        address: &str,
+    ) -> Result<()> {
+        let transaction = self.get_transaction(&["add_ica_address"])?;
+
+        transaction
+            .add_ica_address(connection_id, port_id, address)
+            .await?;
+
+        transaction.done().await
+    }
+
+    async fn get_ica_address(
+        &self,
+        connection_id: &ConnectionId,
+        port_id: &PortId,
+    ) -> Result<Option<String>> {
+        let transaction = self.get_transaction(&["get_ica_address"])?;
+
+        let result = transaction.get_ica_address(connection_id, port_id).await?;
+
+        transaction.done().await?;
+
+        Ok(result)
+    }
+
+    async fn update_ica_address(
+        &self,
+        connection_id: &ConnectionId,
+        port_id: &PortId,
+        address: &str,
+    ) -> Result<()> {
+        let transaction = self.get_transaction(&["update_ica_address"])?;
+
+        transaction
+            .update_ica_address(connection_id, port_id, address)
             .await?;
 
         transaction.done().await

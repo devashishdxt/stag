@@ -5,7 +5,10 @@
 extern crate wasm_bindgen_test;
 
 use primitive_types::U256;
-use stag_api::{signer::MnemonicSigner, types::operation::OperationType};
+use stag_api::{
+    signer::MnemonicSigner,
+    types::{ics::core::ics24_host::identifier::PortId, operation::OperationType},
+};
 use wasm_bindgen_test::*;
 
 wasm_bindgen_test_configure!(run_in_browser);
@@ -13,7 +16,7 @@ wasm_bindgen_test_configure!(run_in_browser);
 mod common;
 
 #[wasm_bindgen_test]
-async fn test_stag_flow() {
+async fn test_stag_transfer_flow() {
     // Build stag (IBC solo machine)
     let stag = common::setup(common::MNEMONIC_1).await;
 
@@ -30,9 +33,11 @@ async fn test_stag_flow() {
     assert_eq!(chain_state.id.to_string(), common::CHAIN_ID);
     assert!(chain_state.connection_details.is_none());
 
+    let port_id = PortId::transfer();
+
     // Get ibc denom should return error before connection
     assert!(stag
-        .get_ibc_denom(&chain_id, &"gld".parse().unwrap())
+        .get_ibc_denom(&chain_id, &port_id, &"gld".parse().unwrap())
         .await
         .is_err());
 
@@ -45,14 +50,21 @@ async fn test_stag_flow() {
     assert_eq!(chain_state.id.to_string(), common::CHAIN_ID);
     assert!(chain_state.connection_details.is_some());
 
+    // Create transfer channel
+    stag.create_transfer_channel(chain_id.clone(), None, "stag".to_string())
+        .await
+        .unwrap();
+
     // Get ibc denom should return success after connection
-    let ibc_denom = stag.get_ibc_denom(&chain_id, &"gld".parse().unwrap()).await;
+    let ibc_denom = stag
+        .get_ibc_denom(&chain_id, &port_id, &"gld".parse().unwrap())
+        .await;
     assert!(ibc_denom.is_ok());
     let ibc_denom = ibc_denom.unwrap();
 
     // Check balance
     let gld_balance = stag
-        .get_balance(&chain_id, &"gld".parse().unwrap())
+        .get_ibc_balance(&chain_id, &port_id, &"gld".parse().unwrap())
         .await
         .unwrap();
     assert!(gld_balance.is_zero());
@@ -72,10 +84,27 @@ async fn test_stag_flow() {
 
     // Check balance
     let gld_balance = stag
-        .get_balance(&chain_id, &"gld".parse().unwrap())
+        .get_ibc_balance(&chain_id, &port_id, &"gld".parse().unwrap())
         .await
         .unwrap();
     assert_eq!(gld_balance, "100".parse().unwrap());
+
+    // Check history
+    let history = stag.get_history(&chain_id, None, None).await;
+    assert!(history.is_ok());
+    let mut history = history.unwrap();
+    assert_eq!(history.len(), 1);
+
+    let operation_type = history.remove(0).operation_type;
+
+    assert!(matches!(
+        operation_type,
+        OperationType::Mint {
+            to: _,
+            denom,
+            amount,
+        } if denom == "gld".parse().unwrap() && amount == 100u8.into()
+    ));
 
     // Burn some tokens
     assert!(stag
@@ -91,7 +120,7 @@ async fn test_stag_flow() {
 
     // Check balance
     let gld_balance = stag
-        .get_balance(&chain_id, &"gld".parse().unwrap())
+        .get_ibc_balance(&chain_id, &port_id, &"gld".parse().unwrap())
         .await
         .unwrap();
     assert_eq!(gld_balance, "50".parse().unwrap());
@@ -99,18 +128,31 @@ async fn test_stag_flow() {
     // Check history
     let history = stag.get_history(&chain_id, None, None).await;
     assert!(history.is_ok());
-    let history = history.unwrap();
-
+    let mut history = history.unwrap();
     assert_eq!(history.len(), 2);
 
     // History should be in reverse order
-    assert_eq!(history[0].amount, 50u8.into());
-    assert_eq!(history[0].denom.to_string(), "gld");
-    assert_eq!(history[0].operation_type, OperationType::Burn);
+    let operation_type = history.remove(0).operation_type;
 
-    assert_eq!(history[1].amount, 100u8.into());
-    assert_eq!(history[1].denom.to_string(), "gld");
-    assert_eq!(history[1].operation_type, OperationType::Mint);
+    assert!(matches!(
+        operation_type,
+        OperationType::Burn {
+            from: _,
+            denom,
+            amount,
+        } if denom == "gld".parse().unwrap() && amount == 50u8.into()
+    ));
+
+    let operation_type = history.remove(0).operation_type;
+
+    assert!(matches!(
+        operation_type,
+        OperationType::Mint {
+            to: _,
+            denom,
+            amount,
+        } if denom == "gld".parse().unwrap() && amount == 100u8.into()
+    ));
 
     // Update signer to use new mnemonic
     let new_public_key = common::get_public_key(&chain_id, common::MNEMONIC_2).await;
@@ -135,16 +177,18 @@ async fn test_stag_flow() {
 
     // Update signer in stag
     let mut stag = stag;
-    assert!(stag
-        .set_signer(
-            MnemonicSigner::new()
-                .add_chain_config(chain_id.clone(), common::MNEMONIC_2, None, None, None)
-                .unwrap(),
-        )
-        .is_ok());
+
+    let mut new_signer = MnemonicSigner::new();
+    new_signer
+        .add_chain_config(chain_id.clone(), common::MNEMONIC_2, None, None, None)
+        .unwrap();
+
+    assert!(stag.set_signer(new_signer).is_ok());
 
     // New ibc denom should be same as old
-    let new_ibc_denom = stag.get_ibc_denom(&chain_id, &"gld".parse().unwrap()).await;
+    let new_ibc_denom = stag
+        .get_ibc_denom(&chain_id, &port_id, &"gld".parse().unwrap())
+        .await;
     assert!(new_ibc_denom.is_ok());
     assert_eq!(new_ibc_denom.unwrap(), ibc_denom);
 

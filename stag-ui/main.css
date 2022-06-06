@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    html {
+        font-family: Rubik;
+        @apply text-slate-900;
+    }
+
+    code {
+        font-family: Fira Code;
+    }
+}

@@ -14,6 +14,7 @@ use crate::{
     types::{chain_state::ChainState, proto_util::AnyConvert, public_key::PublicKey},
 };
 
+/// Creates a message for updating solo machine client on IBC enabled chain
 pub async fn msg_update_solo_machine_client<C>(
     context: &C,
     chain_state: &mut ChainState,
@@ -64,7 +65,7 @@ where
     })?;
 
     let message = MsgUpdateClient {
-        client_id: connection_details.solo_machine_client_id.to_string(),
+        client_id: connection_details.tendermint_client_id.to_string(),
         header: Some(any_header),
         signer: context.signer().to_account_address(&chain_state.id).await?,
     };

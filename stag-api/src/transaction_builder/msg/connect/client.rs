@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Context, Result};
 use cosmos_sdk_proto::{
     cosmos::{
         staking::v1beta1::{query_client::QueryClient as StakingQueryClient, QueryParamsRequest},
@@ -40,6 +40,7 @@ use crate::{
     },
 };
 
+/// Creates a message for creating a solo machine client on IBC enabled chain
 pub async fn msg_create_solo_machine_client<C>(
     context: &C,
     chain_state: &ChainState,
@@ -80,6 +81,7 @@ where
     build(context, chain_state, &[message], memo, request_id).await
 }
 
+/// Creates tendermint client on solo machine
 pub async fn msg_create_tendermint_client<T>(
     chain_state: &ChainState,
     light_client: &LightClient<T>,
@@ -123,9 +125,9 @@ async fn get_unbonding_period(chain_state: &ChainState) -> Result<Duration> {
         .await?
         .into_inner()
         .params
-        .ok_or_else(|| anyhow!("staking params are empty"))?
+        .context("staking params are empty")?
         .unbonding_time
-        .ok_or_else(|| anyhow!("missing unbonding period in staking params"))
+        .context("missing unbonding period in staking params")
 }
 
 async fn get_latest_header<T>(light_client: &LightClient<T>) -> Result<Header>
@@ -160,8 +162,6 @@ async fn get_staking_query_client(grpc_addr: Url) -> Result<StakingQueryClient<C
 
 #[cfg(all(not(feature = "wasm"), feature = "non-wasm"))]
 async fn get_staking_query_client(grpc_addr: Url) -> Result<StakingQueryClient<Channel>> {
-    use anyhow::Context;
-
     StakingQueryClient::connect(grpc_addr.to_string())
         .await
         .context("error when initializing grpc client")

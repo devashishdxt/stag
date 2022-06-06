@@ -2,12 +2,16 @@ use anyhow::{Context, Result};
 use prost::Message;
 use prost_types::Any;
 
+/// Trait to serialize/deserialize types to and from `prost_types::Any`
 pub trait AnyConvert: Sized {
+    /// Deserialize value from `prost_types::Any`
     fn from_any(value: &Any) -> Result<Self>;
 
+    /// Serialize value to `prost_types::Any`
     fn to_any(&self) -> Result<Any>;
 }
 
+/// Encodes a message into protobuf
 pub fn proto_encode<M: Message>(message: &M) -> Result<Vec<u8>> {
     let mut buf = Vec::with_capacity(message.encoded_len());
     message

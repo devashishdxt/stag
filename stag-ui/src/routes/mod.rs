@@ -1,126 +1,87 @@
-mod chain;
+mod balance;
+mod burn;
+mod chains;
+mod channels;
+mod connections;
+mod history;
 mod home;
-mod ibc;
+mod ica;
+mod mint;
 mod not_found;
-mod signer;
+mod page;
+mod signers;
 
-use stag_api::types::ics::core::ics24_host::identifier::ChainId;
-use yew::prelude::*;
-use yew_router::prelude::*;
+use yew::{html, Html};
+use yew_router::Routable;
+
+use crate::AppState;
 
 use self::{
-    chain::{AddChain, Chain, GetBalance, History},
-    home::Home,
-    ibc::{Burn, Connect, Ibc, Mint},
-    not_found::NotFound,
-    signer::{ImportSigner, Signer},
+    balance::Balance, burn::Burn, chains::Chains, channels::Channels, connections::Connections,
+    history::History, home::Home, ica::Ica, mint::Mint, not_found::NotFound, signers::Signers,
 };
 
-#[derive(Clone, Routable, PartialEq)]
+#[derive(Clone, PartialEq, Routable)]
 pub enum Route {
-    #[at("/stag")]
+    #[at("/")]
     Home,
-    #[at("/stag/signer")]
-    Signer,
-    #[at("/stag/signer/:s")]
-    SignerNested,
-    #[at("/stag/chain")]
-    Chain,
-    #[at("/stag/chain/:s")]
-    ChainNested,
-    #[at("/stag/ibc")]
-    Ibc,
-    #[at("/stag/ibc/:s")]
-    IbcNested,
-    #[at("/stag/history/:chain_id")]
-    History { chain_id: ChainId },
-    #[not_found]
-    #[at("/stag/404")]
-    NotFound,
-}
-
-#[derive(Clone, Routable, PartialEq)]
-pub enum SignerRoute {
-    #[at("/stag/signer/import")]
-    Import,
-    #[not_found]
-    #[at("/stag/signer/404")]
-    NotFound,
-}
-
-#[derive(Clone, Routable, PartialEq)]
-pub enum ChainRoute {
-    #[at("/stag/chain/add")]
-    Add,
-    #[at("/stag/chain/get-balance")]
-    GetBalance,
-    #[at("/stag/chain/history")]
+    #[at("/signers")]
+    Signers,
+    #[at("/chains")]
+    Chains,
+    #[at("/connections")]
+    Connections,
+    #[at("/channels")]
+    Channels,
+    #[at("/mint")]
+    Mint,
+    #[at("/burn")]
+    Burn,
+    #[at("/ica")]
+    Ica,
+    #[at("/balance")]
+    Balance,
+    #[at("/history")]
     History,
     #[not_found]
-    #[at("/stag/chain/404")]
+    #[at("/not-found")]
     NotFound,
 }
 
-#[derive(Clone, Routable, PartialEq)]
-pub enum IbcRoute {
-    #[at("/stag/ibc/connect")]
-    Connect,
-    #[at("/stag/ibc/mint")]
-    Mint,
-    #[at("/stag/ibc/burn")]
-    Burn,
-    #[not_found]
-    #[at("/stag/ibc/404")]
-    NotFound,
-}
-
-pub fn switch(routes: &Route) -> Html {
-    match routes {
-        Route::Home => html! { <Home /> },
-        Route::Signer => html! { <Signer /> },
-        Route::SignerNested => html! {
-            <Switch<SignerRoute> render={Switch::render(switch_signer)} />
+pub fn switch(route: &Route, state: AppState) -> Html {
+    match route {
+        Route::Home => html! {
+            <Home />
         },
-        Route::Chain => html! { <Chain /> },
-        Route::ChainNested => html! {
-            <Switch<ChainRoute> render={Switch::render(switch_chain)} />
+        Route::Signers => html! {
+            <Signers notification={state.notification} signer={state.signer} storage={state.storage} rpc_client={state.rpc} event_handler={state.event_handler} />
         },
-        Route::Ibc => html! { <Ibc /> },
-        Route::IbcNested => html! {
-            <Switch<IbcRoute> render={Switch::render(switch_ibc)} />
+        Route::Chains => html! {
+            <Chains notification={state.notification} signer={state.signer} storage={state.storage} rpc_client={state.rpc} event_handler={state.event_handler} />
         },
-        Route::History { chain_id } => html! { <History chain_id = { chain_id.clone() } /> },
-        Route::NotFound => html! { <NotFound /> },
-    }
-}
-
-fn switch_signer(routes: &SignerRoute) -> Html {
-    match routes {
-        SignerRoute::Import => html! { <ImportSigner /> },
-        SignerRoute::NotFound => html! {
-            <Redirect<Route> to={Route::NotFound}/>
+        Route::Connections => html! {
+            <Connections notification={state.notification} signer={state.signer} storage={state.storage} rpc_client={state.rpc} event_handler={state.event_handler} />
         },
-    }
-}
-
-fn switch_chain(routes: &ChainRoute) -> Html {
-    match routes {
-        ChainRoute::Add => html! { <AddChain /> },
-        ChainRoute::GetBalance => html! { <GetBalance /> },
-        ChainRoute::History => html! { <History /> },
-        ChainRoute::NotFound => html! {
-            <Redirect<Route> to={Route::NotFound}/>
+        Route::Channels => html! {
+            <Channels notification={state.notification} signer={state.signer} storage={state.storage} rpc_client={state.rpc} event_handler={state.event_handler} />
         },
-    }
-}
-
-fn switch_ibc(routes: &IbcRoute) -> Html {
-    match routes {
-        IbcRoute::Connect => html! { <Connect /> },
-        IbcRoute::Mint => html! { <Mint /> },
-        IbcRoute::Burn => html! { <Burn /> },
-        IbcRoute::NotFound => html! {
-            <Redirect<Route> to={Route::NotFound}/>
+        Route::Mint => html! {
+            <Mint notification={state.notification} signer={state.signer} storage={state.storage} rpc_client={state.rpc} event_handler={state.event_handler} />
+        },
+        Route::Burn => html! {
+            <Burn notification={state.notification} signer={state.signer} storage={state.storage} rpc_client={state.rpc} event_handler={state.event_handler} />
+        },
+        Route::Ica => html! {
+            <Ica notification={state.notification} signer={state.signer} storage={state.storage} rpc_client={state.rpc} event_handler={state.event_handler} />
+        },
+        Route::Balance => html! {
+            <Balance notification={state.notification} signer={state.signer} storage={state.storage} />
+        },
+        Route::History => html! {
+            <History notification={state.notification} storage={state.storage} />
+        },
+        Route::NotFound => html! {
+            <NotFound />
         },
     }
 }

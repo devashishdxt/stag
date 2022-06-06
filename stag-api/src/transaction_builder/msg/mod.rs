@@ -1,6 +1,9 @@
-mod burn;
 mod connect;
-mod mint;
+/// ICA (Interchain accounts) transactions
+pub mod ica;
+mod packet;
+/// IBC transfer transactions
+pub mod transfer;
 mod update_signer;
 
-pub use self::{burn::*, connect::*, mint::*, update_signer::*};
+pub use self::{connect::*, packet::*, update_signer::*};

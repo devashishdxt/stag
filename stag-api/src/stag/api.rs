@@ -5,15 +5,16 @@ use rust_decimal::Decimal;
 use crate::{
     event::NoopEventHandler,
     service::{
-        add_chain, burn_tokens, connect, get_all_chains, get_balance, get_chain, get_history,
-        get_ibc_denom, get_public_keys, mint_tokens, update_signer,
+        add_chain, connect, create_ica_channel, create_transfer_channel, get_all_chains,
+        get_balance, get_chain, get_history, get_ibc_balance, get_ibc_denom, get_ica_address,
+        get_public_keys, ica, transfer, update_signer,
     },
     signer::{NoopSigner, Signer, SignerConfig},
     storage::{NoopStorage, Storage, TransactionProvider},
     tendermint::{JsonRpcClient, NoopRpcClient},
     types::{
         chain_state::{ChainConfig, ChainKey, ChainState},
-        ics::core::ics24_host::identifier::{ChainId, Identifier},
+        ics::core::ics24_host::identifier::{ChainId, Identifier, PortId},
         operation::Operation,
         public_key::PublicKey,
     },
@@ -77,8 +78,13 @@ where
     }
 
     /// Gets the final denom of a token on solo machine after sending it on given chain
-    pub async fn get_ibc_denom(&self, chain_id: &ChainId, denom: &Identifier) -> Result<String> {
-        get_ibc_denom(&self.context, chain_id, denom).await
+    pub async fn get_ibc_denom(
+        &self,
+        chain_id: &ChainId,
+        port_id: &PortId,
+        denom: &Identifier,
+    ) -> Result<String> {
+        get_ibc_denom(&self.context, chain_id, port_id, denom).await
     }
 
     /// Get all the historical public keys associated with solo machine client on given chain
@@ -108,9 +114,24 @@ where
     C::Signer: Signer,
     C::Storage: Storage,
 {
+    /// Get on-chain balance of given IBC denom
+    pub async fn get_ibc_balance(
+        &self,
+        chain_id: &ChainId,
+        port_id: &PortId,
+        denom: &Identifier,
+    ) -> Result<Decimal> {
+        get_ibc_balance(&self.context, chain_id, port_id, denom).await
+    }
+
     /// Get on-chain balance of given denom
     pub async fn get_balance(&self, chain_id: &ChainId, denom: &Identifier) -> Result<Decimal> {
         get_balance(&self.context, chain_id, denom).await
+    }
+
+    /// Get on-chain ICA (Interchain Account) address
+    pub async fn get_ica_address(&self, chain_id: &ChainId) -> Result<String> {
+        get_ica_address(&self.context, chain_id).await
     }
 }
 
@@ -138,26 +159,24 @@ where
         connect(&self.context, chain_id, request_id, memo, force).await
     }
 
-    /// Mints tokens on given chain
-    pub async fn mint(
+    /// Creates a new transfer channel
+    pub async fn create_transfer_channel(
         &self,
         chain_id: ChainId,
         request_id: Option<String>,
-        amount: U256,
-        denom: Identifier,
-        receiver: Option<String>,
         memo: String,
-    ) -> Result<String> {
-        mint_tokens(
-            &self.context,
-            chain_id,
-            request_id,
-            amount,
-            denom,
-            receiver,
-            memo,
-        )
-        .await
+    ) -> Result<()> {
+        create_transfer_channel(&self.context, chain_id, request_id, memo).await
+    }
+
+    /// Creates a new ICA (Interchain Accounts) channel
+    pub async fn create_ica_channel(
+        &self,
+        chain_id: ChainId,
+        request_id: Option<String>,
+        memo: String,
+    ) -> Result<()> {
+        create_ica_channel(&self.context, chain_id, request_id, memo).await
     }
 
     /// Updates signer for future IBC transactions
@@ -170,15 +189,29 @@ where
     ) -> Result<()> {
         update_signer(&self.context, chain_id, request_id, new_public_key, memo).await
     }
-}
 
-impl<C> Stag<C>
-where
-    C: StagContext,
-    C::Signer: Signer,
-    C::Storage: Storage,
-    C::RpcClient: JsonRpcClient,
-{
+    /// Mints tokens on given chain
+    pub async fn mint(
+        &self,
+        chain_id: ChainId,
+        request_id: Option<String>,
+        amount: U256,
+        denom: Identifier,
+        receiver: Option<String>,
+        memo: String,
+    ) -> Result<String> {
+        transfer::mint_tokens(
+            &self.context,
+            chain_id,
+            request_id,
+            amount,
+            denom,
+            receiver,
+            memo,
+        )
+        .await
+    }
+
     /// Burns tokens on given chain
     pub async fn burn(
         &self,
@@ -188,7 +221,29 @@ where
         denom: Identifier,
         memo: String,
     ) -> Result<String> {
-        burn_tokens(&self.context, chain_id, request_id, amount, denom, memo).await
+        transfer::burn_tokens(&self.context, chain_id, request_id, amount, denom, memo).await
+    }
+
+    /// Send tokens from ICA (Interchain Account) on host chain
+    pub async fn ica_send(
+        &self,
+        chain_id: ChainId,
+        request_id: Option<String>,
+        to_address: String,
+        amount: U256,
+        denom: Identifier,
+        memo: String,
+    ) -> Result<String> {
+        ica::send_tokens(
+            &self.context,
+            chain_id,
+            request_id,
+            to_address,
+            amount,
+            denom,
+            memo,
+        )
+        .await
     }
 }
 

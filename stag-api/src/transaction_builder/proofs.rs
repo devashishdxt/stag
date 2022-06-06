@@ -1,4 +1,4 @@
-use anyhow::{anyhow, ensure, Result};
+use anyhow::{anyhow, Context, Result};
 use cosmos_sdk_proto::ibc::{
     core::channel::v1::Packet,
     lightclients::solomachine::v2::{
@@ -18,7 +18,7 @@ use crate::{
             ics02_client::height::IHeight,
             ics04_channel::packet::IPacket,
             ics24_host::{
-                identifier::{ChannelId, ClientId, ConnectionId},
+                identifier::{ChannelId, ClientId, ConnectionId, PortId},
                 path::{
                     ChannelPath, ClientStatePath, ConnectionPath, ConsensusStatePath,
                     PacketAcknowledgementPath, PacketCommitmentPath,
@@ -37,6 +37,7 @@ use super::{
 pub async fn get_packet_acknowledgement_proof<C>(
     context: &C,
     chain_state: &ChainState,
+    port_id: &PortId,
     acknowledgement: Vec<u8>,
     packet_sequence: u64,
     request_id: Option<&str>,
@@ -51,13 +52,15 @@ where
             chain_state.id
         )
     })?;
-    ensure!(
-        connection_details.tendermint_channel_id.is_some(),
-        "can't find tendermint channel, channel is already closed"
-    );
+
+    let channel_details = connection_details
+        .channels
+        .get(port_id)
+        .ok_or_else(|| anyhow!("channel details for port {} not found", port_id))?;
+
     let mut acknowledgement_path = PacketAcknowledgementPath::new(
-        &chain_state.config.port_id,
-        connection_details.tendermint_channel_id.as_ref().unwrap(),
+        port_id,
+        &channel_details.solo_machine_channel_id,
         packet_sequence,
     );
     acknowledgement_path.apply_prefix(&"ibc".parse().unwrap());
@@ -83,6 +86,7 @@ where
 pub async fn get_packet_commitment_proof<C>(
     context: &C,
     chain_state: &ChainState,
+    port_id: &PortId,
     packet: &Packet,
     request_id: Option<&str>,
 ) -> Result<Vec<u8>>
@@ -98,14 +102,16 @@ where
             chain_state.id
         )
     })?;
-    ensure!(
-        connection_details.tendermint_channel_id.is_some(),
-        "can't find tendermint channel id, channel is already closed"
-    );
+
+    let channel_details = connection_details
+        .channels
+        .get(port_id)
+        .ok_or_else(|| anyhow!("channel details for port {} not found", port_id))?;
+
     let mut commitment_path = PacketCommitmentPath::new(
-        &chain_state.config.port_id,
-        connection_details.tendermint_channel_id.as_ref().unwrap(),
-        chain_state.packet_sequence.into(),
+        port_id,
+        &channel_details.solo_machine_channel_id,
+        channel_details.packet_sequence.into(),
     );
     commitment_path.apply_prefix(&"ibc".parse().unwrap());
 
@@ -131,6 +137,7 @@ pub async fn get_channel_proof<C>(
     context: &C,
     chain_state: &ChainState,
     channel_id: &ChannelId,
+    port_id: &PortId,
     request_id: Option<&str>,
 ) -> Result<Vec<u8>>
 where
@@ -140,17 +147,17 @@ where
 {
     let channel = context
         .storage()
-        .get_channel(&chain_state.config.port_id, channel_id)
+        .get_channel(port_id, channel_id)
         .await?
         .ok_or_else(|| {
             anyhow!(
                 "channel with port id {} and channel id {} not found",
-                chain_state.config.port_id,
+                port_id,
                 channel_id
             )
         })?;
 
-    let mut channel_path = ChannelPath::new(&chain_state.config.port_id, channel_id);
+    let mut channel_path = ChannelPath::new(port_id, channel_id);
     channel_path.apply_prefix(&"ibc".parse().unwrap());
 
     let channel_state_data = ChannelStateData {
@@ -267,7 +274,7 @@ where
 
     let height = client_state
         .latest_height
-        .ok_or_else(|| anyhow!("client state does not contain latest height"))?;
+        .context("client state does not contain latest height")?;
 
     let consensus_state = context
         .storage()

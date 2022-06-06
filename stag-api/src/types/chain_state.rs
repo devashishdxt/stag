@@ -1,8 +1,6 @@
-use std::time::Duration;
+use std::{collections::HashMap, time::Duration};
 
-#[cfg(all(not(feature = "wasm"), feature = "non-wasm"))]
-use anyhow::Context;
-use anyhow::{ensure, Result};
+use anyhow::{anyhow, Context, Result};
 use chrono::{DateTime, Utc};
 use cosmos_sdk_proto::cosmos::bank::v1beta1::{
     query_client::QueryClient as BankQueryClient, QueryBalanceRequest,
@@ -40,8 +38,6 @@ pub struct ChainState {
     pub consensus_timestamp: DateTime<Utc>,
     /// Sequence of solo machine (used when creating transactions on chain)
     pub sequence: u32,
-    /// Packet sequence of solo machine (used when creating transactions on chain)
-    pub packet_sequence: u32,
     /// IBC connection details
     pub connection_details: Option<ConnectionDetails>,
     /// Creation time of chain
@@ -62,10 +58,24 @@ pub struct ConnectionDetails {
     pub solo_machine_connection_id: ConnectionId,
     /// Connection ID of IBC enabled chain on solo machine
     pub tendermint_connection_id: ConnectionId,
+    /// Channels created with IBC enabled chain
+    pub channels: HashMap<PortId, ChannelDetails>,
+}
+
+/// IBC channel details
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ChannelDetails {
+    /// Packet sequence of channel (used when creating transactions on chain)
+    pub packet_sequence: u32,
+    /// Port ID of channel on solo machine
+    pub solo_machine_port_id: PortId,
+    /// Port ID on channel on IBC enabled chain
+    pub tendermint_port_id: PortId,
     /// Channel ID of solo machine client on IBC enabled chain
-    pub solo_machine_channel_id: Option<ChannelId>,
+    pub solo_machine_channel_id: ChannelId,
     /// Channel ID of IBC enabled chain on solo machine
-    pub tendermint_channel_id: Option<ChannelId>,
+    pub tendermint_channel_id: ChannelId,
 }
 
 /// Configuration related to an IBC enabled chain
@@ -88,8 +98,6 @@ pub struct ChainConfig {
     pub rpc_timeout: Duration,
     /// Diversifier used in transactions for chain
     pub diversifier: String,
-    /// Port ID used to create connection with chain
-    pub port_id: PortId,
     /// Trusted height of the chain
     pub trusted_height: u32,
     /// Block hash at trusted height of the chain
@@ -128,21 +136,22 @@ pub struct ChainKey {
 impl ChainState {
     /// Returns the IBC denom of given denomination based on connection details. Returns `None` if connection details
     /// are not present.
-    pub fn get_ibc_denom(&self, denom: &Identifier) -> Result<String> {
-        let connection_details = self.connection_details.as_ref();
-        ensure!(
-            connection_details.is_some(),
-            "connection is not established with given chain"
-        );
-        let connection_details = connection_details.unwrap();
-        ensure!(
-            connection_details.solo_machine_channel_id.is_some(),
-            "can't find solo machine channel, channel is already closed"
-        );
+    pub fn get_ibc_denom(&self, port_id: &PortId, denom: &Identifier) -> Result<String> {
+        let connection_details = self
+            .connection_details
+            .as_ref()
+            .context("connection is not established with given chain")?;
+
+        let channel_details = connection_details.channels.get(port_id).ok_or_else(|| {
+            anyhow!(
+                "channel with port id {} is not created with given chain",
+                port_id
+            )
+        })?;
 
         let denom_trace = DenomTrace::new(
-            &self.config.port_id,
-            connection_details.solo_machine_channel_id.as_ref().unwrap(),
+            &channel_details.tendermint_port_id,
+            &channel_details.tendermint_channel_id,
             denom,
         );
 
@@ -151,15 +160,62 @@ impl ChainState {
         Ok(format!("ibc/{}", hex::encode_upper(hash)))
     }
 
+    /// Fetches on-chain balance of given IBC denom
+    pub async fn get_ibc_balance(
+        &self,
+        signer: &impl GetPublicKey,
+        port_id: &PortId,
+        denom: &Identifier,
+    ) -> Result<Decimal> {
+        self.get_balance_inner(signer, self.get_ibc_denom(port_id, denom)?)
+            .await
+    }
+
     /// Fetches on-chain balance of given denom
     pub async fn get_balance(
         &self,
         signer: &impl GetPublicKey,
         denom: &Identifier,
     ) -> Result<Decimal> {
-        let mut query_client = get_bank_query_client(self.config.grpc_addr.clone()).await?;
+        self.get_balance_inner(signer, denom.to_string()).await
+    }
 
-        let denom = self.get_ibc_denom(denom)?;
+    /// Fetches channel details for given port ID
+    pub fn get_channel_details(&self, port_id: &PortId) -> Result<ChannelDetails> {
+        let connection_details = self
+            .connection_details
+            .as_ref()
+            .context("connection is not established with given chain")?;
+
+        let channel_details = connection_details.channels.get(port_id).ok_or_else(|| {
+            anyhow!(
+                "channel with port id {} is not created with given chain",
+                port_id
+            )
+        })?;
+
+        Ok(channel_details.clone())
+    }
+
+    /// Returns true if current chain has all the connection details set
+    pub fn is_connected(&self) -> bool {
+        self.connection_details.is_some()
+    }
+
+    /// Returns true if current chain has channel created with given port id
+    pub fn has_channel(&self, port_id: &PortId) -> bool {
+        self.connection_details
+            .as_ref()
+            .map(|connection_details| connection_details.channels.contains_key(port_id))
+            .unwrap_or(false)
+    }
+
+    async fn get_balance_inner(
+        &self,
+        signer: &impl GetPublicKey,
+        denom: String,
+    ) -> Result<Decimal> {
+        let mut query_client = get_bank_query_client(self.config.grpc_addr.clone()).await?;
 
         let request = QueryBalanceRequest {
             address: signer.to_account_address(&self.id).await?,
@@ -174,14 +230,6 @@ impl ChainState {
             .map(|coin| coin.amount.parse())
             .transpose()?
             .unwrap_or_default())
-    }
-
-    /// Returns true if current chain has all the connection details set
-    pub fn is_connected(&self) -> bool {
-        match self.connection_details {
-            None => false,
-            Some(ref connection_details) => connection_details.solo_machine_channel_id.is_some(),
-        }
     }
 }
 

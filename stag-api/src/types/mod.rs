@@ -1,4 +1,6 @@
+#![allow(missing_docs)]
 //! Types used in Stag API
+
 #[macro_use]
 pub mod proto_util;
 

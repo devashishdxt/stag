@@ -35,6 +35,7 @@ impl IndexedDb {
 #[cfg_attr(feature = "doc", doc(cfg(feature = "sqlite-storage")))]
 #[cfg(feature = "sqlite-storage")]
 #[derive(Debug, Clone, PartialEq, Eq)]
+/// Storage backend using SQLite database
 pub struct Sqlite {
     uri: String,
 }
