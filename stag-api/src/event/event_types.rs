@@ -70,13 +70,51 @@ pub enum Event {
         request_id: Option<String>,
         /// Address of account on IBC enabled chain
         to_address: String,
-        /// Amount of tokens minted
+        /// Amount of tokens sent
         #[serde(
             serialize_with = "serialize_u256",
             deserialize_with = "deserialize_u256"
         )]
         amount: U256,
-        /// Denom of tokens minted
+        /// Denom of tokens sent
+        denom: Identifier,
+        /// Hash of transaction on IBC enabled chain (in hex)
+        transaction_hash: String,
+    },
+    /// Tokens delegated from ICA (Interchain Account) to validator address
+    TokensDelegatedFromIca {
+        /// Chain ID of IBC enabled chain
+        chain_id: ChainId,
+        /// Optional request ID (for tracking purposes)
+        request_id: Option<String>,
+        /// Address of validator
+        validator_address: String,
+        /// Amount of tokens delegated
+        #[serde(
+            serialize_with = "serialize_u256",
+            deserialize_with = "deserialize_u256"
+        )]
+        amount: U256,
+        /// Denom of tokens delegated
+        denom: Identifier,
+        /// Hash of transaction on IBC enabled chain (in hex)
+        transaction_hash: String,
+    },
+    /// Tokens undelegated to ICA (Interchain Account) from validator address
+    TokensUndelegatedToIca {
+        /// Chain ID of IBC enabled chain
+        chain_id: ChainId,
+        /// Optional request ID (for tracking purposes)
+        request_id: Option<String>,
+        /// Address of validator
+        validator_address: String,
+        /// Amount of tokens undelegated
+        #[serde(
+            serialize_with = "serialize_u256",
+            deserialize_with = "deserialize_u256"
+        )]
+        amount: U256,
+        /// Denom of tokens undelegated
         denom: Identifier,
         /// Hash of transaction on IBC enabled chain (in hex)
         transaction_hash: String,

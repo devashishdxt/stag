@@ -4,12 +4,10 @@ use stag_api::{
 };
 use yew::{function_component, html, Properties, UseStateHandle};
 
-use crate::componenets::{
-    ica::{get_ica_address_form::GetIcaAddressForm, send_form::SendForm},
-    notification::NotificationData,
+use crate::{
+    componenets::{ica::bank::send_form::SendForm, notification::NotificationData},
+    routes::page::Page,
 };
-
-use super::page::Page;
 
 #[derive(PartialEq, Properties)]
 pub struct Props {
@@ -20,12 +18,11 @@ pub struct Props {
     pub event_handler: TracingEventHandler,
 }
 
-#[function_component(Ica)]
-pub fn ica(props: &Props) -> Html {
+#[function_component(Bank)]
+pub fn bank(props: &Props) -> Html {
     html! {
-        <Page name="Interchain Accounts">
+        <Page name="Bank">
             <SendForm notification={props.notification.clone()} signer={props.signer.clone()} storage={props.storage.clone()} rpc_client={props.rpc_client} event_handler={props.event_handler} />
-            <GetIcaAddressForm notification={props.notification.clone()} signer={props.signer.clone()} storage={props.storage.clone()} />
         </Page>
     }
 }

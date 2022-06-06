@@ -69,6 +69,32 @@ pub enum OperationType {
         )]
         amount: U256,
     },
+    /// Delegate some tokens from ICA account on host chain to validator address
+    IcaDelegate {
+        /// Address of the validator
+        validator_address: String,
+        /// Denom of tokens
+        denom: Identifier,
+        /// Amount of tokens
+        #[serde(
+            serialize_with = "serialize_u256",
+            deserialize_with = "deserialize_u256"
+        )]
+        amount: U256,
+    },
+    /// Undelegate some tokens to ICA account on host chain from validator address
+    IcaUndelegate {
+        /// Address of the validator
+        validator_address: String,
+        /// Denom of tokens
+        denom: Identifier,
+        /// Amount of tokens
+        #[serde(
+            serialize_with = "serialize_u256",
+            deserialize_with = "deserialize_u256"
+        )]
+        amount: U256,
+    },
 }
 
 fn serialize_u256<S>(value: &U256, serializer: S) -> Result<S::Ok, S::Error>

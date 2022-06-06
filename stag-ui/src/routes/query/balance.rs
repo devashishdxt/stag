@@ -1,9 +1,10 @@
 use stag_api::{signer::MnemonicSigner, storage::IndexedDb};
 use yew::{function_component, html, Properties, UseStateHandle};
 
-use crate::componenets::{chain::get_balance_form::GetBalanceForm, notification::NotificationData};
-
-use super::page::Page;
+use crate::{
+    componenets::{chain::get_balance_form::GetBalanceForm, notification::NotificationData},
+    routes::page::Page,
+};
 
 #[derive(PartialEq, Properties)]
 pub struct Props {

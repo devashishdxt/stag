@@ -4,12 +4,13 @@ use stag_api::{
 };
 use yew::{function_component, html, Properties, UseStateHandle};
 
-use crate::componenets::{
-    chain::{add_chain_form::AddChainForm, chain_list::ChainList},
-    notification::NotificationData,
+use crate::{
+    componenets::{
+        chain::{add_chain_form::AddChainForm, chain_list::ChainList},
+        notification::NotificationData,
+    },
+    routes::page::Page,
 };
-
-use super::page::Page;
 
 #[derive(PartialEq, Properties)]
 pub struct Props {

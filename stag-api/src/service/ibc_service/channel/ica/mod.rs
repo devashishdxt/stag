@@ -1,4 +1,5 @@
+pub mod bank;
 mod channel;
-mod send;
+pub mod staking;
 
-pub use self::{channel::open_channel, send::send_tokens};
+pub use self::channel::open_channel;

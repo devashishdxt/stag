@@ -4,9 +4,10 @@ use stag_api::{
 };
 use yew::{function_component, html, Properties, UseStateHandle};
 
-use crate::componenets::{notification::NotificationData, transfer::burn_form::BurnForm};
-
-use super::page::Page;
+use crate::{
+    componenets::{notification::NotificationData, transfer::mint_form::MintForm},
+    routes::page::Page,
+};
 
 #[derive(PartialEq, Properties)]
 pub struct Props {
@@ -17,11 +18,11 @@ pub struct Props {
     pub event_handler: TracingEventHandler,
 }
 
-#[function_component(Burn)]
-pub fn burn(props: &Props) -> Html {
+#[function_component(Mint)]
+pub fn mint(props: &Props) -> Html {
     html! {
-        <Page name="Burn">
-            <BurnForm notification={props.notification.clone()} signer={props.signer.clone()} storage={props.storage.clone()} rpc_client={props.rpc_client} event_handler={props.event_handler} />
+        <Page name="Mint">
+            <MintForm notification={props.notification.clone()} signer={props.signer.clone()} storage={props.storage.clone()} rpc_client={props.rpc_client} event_handler={props.event_handler} />
         </Page>
     }
 }

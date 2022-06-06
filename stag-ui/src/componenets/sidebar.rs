@@ -57,12 +57,22 @@ pub fn sidebar() -> Html {
                 </div>
             </Link<Route>>
             <fieldset class={classes!("border-t-2", "border-slate-700", "border-dotted", "my-2")}><legend class={classes!("text-sm", "text-slate-400", "mx-4", "px-2")}>{ "Interchain Accounts" }</legend></fieldset>
+            <Link<Route> to={Route::Bank}>
+                <div class={classes!(LINK_CLASSES, (current_route == Route::Bank).then(|| ["border-r-4", "bg-slate-800"].as_ref()))}>
+                    <i class={classes!("fa-solid", "fa-building-columns", "w-8", "text-center", "mr-4")}></i><span>{ "Bank" }</span>
+                </div>
+            </Link<Route>>
+            <Link<Route> to={Route::Staking}>
+                <div class={classes!(LINK_CLASSES, (current_route == Route::Staking).then(|| ["border-r-4", "bg-slate-800"].as_ref()))}>
+                    <i class={classes!("fa-solid", "fa-handshake-angle", "w-8", "text-center", "mr-4")}></i><span>{ "Staking" }</span>
+                </div>
+            </Link<Route>>
+            <fieldset class={classes!("border-t-2", "border-slate-700", "border-dotted", "my-2")}><legend class={classes!("text-sm", "text-slate-400", "mx-4", "px-2")}>{ "Query" }</legend></fieldset>
             <Link<Route> to={Route::Ica}>
                 <div class={classes!(LINK_CLASSES, (current_route == Route::Ica).then(|| ["border-r-4", "bg-slate-800"].as_ref()))}>
                     <i class={classes!("fa-solid", "fa-user-astronaut", "w-8", "text-center", "mr-4")}></i><span>{ "ICA" }</span>
                 </div>
             </Link<Route>>
-            <fieldset class={classes!("border-t-2", "border-slate-700", "border-dotted", "my-2")}><legend class={classes!("text-sm", "text-slate-400", "mx-4", "px-2")}>{ "Query" }</legend></fieldset>
             <Link<Route> to={Route::Balance}>
                 <div class={classes!(LINK_CLASSES, (current_route == Route::Balance).then(|| ["border-r-4", "bg-slate-800"].as_ref()))}>
                     <i class={classes!("fa-solid", "fa-sack-dollar", "w-8", "text-center", "mr-4")}></i><span>{ "Balance" }</span>

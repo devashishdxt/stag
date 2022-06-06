@@ -104,7 +104,7 @@ pub fn get_ica_address_form(props: &Props) -> Html {
     });
 
     html! {
-        <div class={classes!("border-t-2", "border-slate-400", "p-6", "mt-6")}>
+        <div class={classes!("p-6")}>
             <h2 class={classes!("text-2xl", "pb-6", "font-bold")}>{ "Get ICA Address" }</h2>
             <form class={classes!("pl-4")} onsubmit={on_submit}>
                 <TextInput class={classes!("mb-4")} placeholder="Chain ID" value={ state.chain_id.clone() } />
