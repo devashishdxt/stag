@@ -11,11 +11,12 @@ use crate::types::{
 
 /// Events emitted by IBC service
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "type")]
+#[serde(tag = "type", rename_all = "camelCase")]
 #[allow(clippy::large_enum_variant)]
 pub enum Event {
     // ----- IBC events ----- //
     /// Minted tokens on IBC enabled chain
+    #[serde(rename_all = "camelCase")]
     TokensMinted {
         /// Chain ID of IBC enabled chain
         chain_id: ChainId,
@@ -35,6 +36,7 @@ pub enum Event {
         transaction_hash: String,
     },
     /// Burnt tokens on IBC enabled chain
+    #[serde(rename_all = "camelCase")]
     TokensBurnt {
         /// Chain ID of IBC enabled chain
         chain_id: ChainId,
@@ -54,6 +56,7 @@ pub enum Event {
         transaction_hash: String,
     },
     /// Updated signer's public key on IBC enabled change for future messages from solo machine
+    #[serde(rename_all = "camelCase")]
     SignerUpdated {
         /// Chain ID of IBC enabled chain
         chain_id: ChainId,
@@ -63,6 +66,7 @@ pub enum Event {
         new_public_key: PublicKey,
     },
     /// Tokens sent from ICA (Interchain Account)
+    #[serde(rename_all = "camelCase")]
     TokensSentFromIca {
         /// Chain ID of IBC enabled chain
         chain_id: ChainId,
@@ -82,6 +86,7 @@ pub enum Event {
         transaction_hash: String,
     },
     /// Tokens delegated from ICA (Interchain Account) to validator address
+    #[serde(rename_all = "camelCase")]
     TokensDelegatedFromIca {
         /// Chain ID of IBC enabled chain
         chain_id: ChainId,
@@ -101,6 +106,7 @@ pub enum Event {
         transaction_hash: String,
     },
     /// Tokens undelegated to ICA (Interchain Account) from validator address
+    #[serde(rename_all = "camelCase")]
     TokensUndelegatedToIca {
         /// Chain ID of IBC enabled chain
         chain_id: ChainId,
@@ -122,36 +128,43 @@ pub enum Event {
 
     // ----- IBC connection handshake events ----- //
     /// Created solo machine client on IBC enabled chain
+    #[serde(rename_all = "camelCase")]
     CreatedSoloMachineClient {
         /// Client ID of solo machine client on IBC enabled chain
         client_id: ClientId,
     },
     /// Created tendermint client on solo machine
+    #[serde(rename_all = "camelCase")]
     CreatedTendermintClient {
         /// Client ID of IBC enabled chain on solo machine
         client_id: ClientId,
     },
     /// Initialized connection on IBC enabled chain
+    #[serde(rename_all = "camelCase")]
     InitializedConnectionOnTendermint {
         /// Connection ID of solo machine client on IBC enabled chain
         connection_id: ConnectionId,
     },
     /// Initialized connection on solo machine
+    #[serde(rename_all = "camelCase")]
     InitializedConnectionOnSoloMachine {
         /// Connection ID of IBC enabled chain on solo machine
         connection_id: ConnectionId,
     },
     /// Confirmed connection on IBC enabled chain
+    #[serde(rename_all = "camelCase")]
     ConfirmedConnectionOnTendermint {
         /// Connection ID of solo machine client on IBC enabled chain
         connection_id: ConnectionId,
     },
     /// Confirmed connection on solo machine
+    #[serde(rename_all = "camelCase")]
     ConfirmedConnectionOnSoloMachine {
         /// Connection ID of IBC enabled chain on solo machine
         connection_id: ConnectionId,
     },
     /// Initialized channel on IBC enabled chain
+    #[serde(rename_all = "camelCase")]
     InitializedChannelOnTendermint {
         /// Channel ID of solo machine client on IBC enabled chain
         channel_id: ChannelId,
@@ -159,6 +172,7 @@ pub enum Event {
         port_id: PortId,
     },
     /// Close channel on IBC enabled chain
+    #[serde(rename_all = "camelCase")]
     CloseChannelInitOnSoloMachine {
         /// Chain ID of IBC enabled chain
         chain_id: String,
@@ -166,6 +180,7 @@ pub enum Event {
         channel_id: ChannelId,
     },
     /// Initialized channel on solo machine
+    #[serde(rename_all = "camelCase")]
     InitializedChannelOnSoloMachine {
         /// Channel ID of IBC enabled chain on solo machine
         channel_id: ChannelId,
@@ -173,6 +188,7 @@ pub enum Event {
         port_id: PortId,
     },
     /// Confirmed channel on IBC enabled chain
+    #[serde(rename_all = "camelCase")]
     ConfirmedChannelOnTendermint {
         /// Channel ID of solo machine client on IBC enabled chain
         channel_id: ChannelId,
@@ -180,6 +196,7 @@ pub enum Event {
         port_id: PortId,
     },
     /// Confirmed channel on solo machine
+    #[serde(rename_all = "camelCase")]
     ConfirmedChannelOnSoloMachine {
         /// Channel ID of IBC enabled chain on solo machine
         channel_id: ChannelId,
@@ -187,6 +204,7 @@ pub enum Event {
         port_id: PortId,
     },
     /// Connection successfully established
+    #[serde(rename_all = "camelCase")]
     ConnectionEstablished {
         /// Chain ID of IBC enabled chain
         chain_id: ChainId,
@@ -194,6 +212,7 @@ pub enum Event {
         connection_details: ConnectionDetails,
     },
     /// Channel successfully created
+    #[serde(rename_all = "camelCase")]
     ChannelCreated {
         /// Chain ID of IBC enabled chain
         chain_id: ChainId,
@@ -203,6 +222,7 @@ pub enum Event {
 
     // ----- Chain events ----- //
     /// Added new chain metadata to solo machine
+    #[serde(rename_all = "camelCase")]
     ChainAdded {
         /// Chain ID
         chain_id: ChainId,
@@ -210,6 +230,7 @@ pub enum Event {
 
     // ----- Other events ----- //
     /// Warning
+    #[serde(rename_all = "camelCase")]
     Warning {
         /// Warning message
         message: String,
