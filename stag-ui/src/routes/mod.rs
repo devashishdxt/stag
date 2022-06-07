@@ -1,15 +1,10 @@
-mod balance;
-mod burn;
-mod chains;
-mod channels;
-mod connections;
-mod history;
+mod core;
 mod home;
 mod ica;
-mod mint;
 mod not_found;
 mod page;
-mod signers;
+mod query;
+mod transfer;
 
 use yew::{html, Html};
 use yew_router::Routable;
@@ -17,31 +12,39 @@ use yew_router::Routable;
 use crate::AppState;
 
 use self::{
-    balance::Balance, burn::Burn, chains::Chains, channels::Channels, connections::Connections,
-    history::History, home::Home, ica::Ica, mint::Mint, not_found::NotFound, signers::Signers,
+    core::{chains::Chains, channels::Channels, connections::Connections, signers::Signers},
+    home::Home,
+    ica::{bank::Bank, staking::Staking},
+    not_found::NotFound,
+    query::{balance::Balance, history::History, ica::Ica},
+    transfer::{burn::Burn, mint::Mint},
 };
 
 #[derive(Clone, PartialEq, Routable)]
 pub enum Route {
     #[at("/")]
     Home,
-    #[at("/signers")]
+    #[at("/core/signers")]
     Signers,
-    #[at("/chains")]
+    #[at("/core/chains")]
     Chains,
-    #[at("/connections")]
+    #[at("/core/connections")]
     Connections,
-    #[at("/channels")]
+    #[at("/core/channels")]
     Channels,
-    #[at("/mint")]
+    #[at("/transfer/mint")]
     Mint,
-    #[at("/burn")]
+    #[at("/transfer/burn")]
     Burn,
-    #[at("/ica")]
+    #[at("/ica/bank")]
+    Bank,
+    #[at("/ica/staking")]
+    Staking,
+    #[at("/query/ica")]
     Ica,
-    #[at("/balance")]
+    #[at("/query/balance")]
     Balance,
-    #[at("/history")]
+    #[at("/query/history")]
     History,
     #[not_found]
     #[at("/not-found")]
@@ -71,8 +74,14 @@ pub fn switch(route: &Route, state: AppState) -> Html {
         Route::Burn => html! {
             <Burn notification={state.notification} signer={state.signer} storage={state.storage} rpc_client={state.rpc} event_handler={state.event_handler} />
         },
+        Route::Bank => html! {
+            <Bank notification={state.notification} signer={state.signer} storage={state.storage} rpc_client={state.rpc} event_handler={state.event_handler} />
+        },
+        Route::Staking => html! {
+            <Staking notification={state.notification} signer={state.signer} storage={state.storage} rpc_client={state.rpc} event_handler={state.event_handler} />
+        },
         Route::Ica => html! {
-            <Ica notification={state.notification} signer={state.signer} storage={state.storage} rpc_client={state.rpc} event_handler={state.event_handler} />
+            <Ica notification={state.notification} signer={state.signer} storage={state.storage} />
         },
         Route::Balance => html! {
             <Balance notification={state.notification} signer={state.signer} storage={state.storage} />

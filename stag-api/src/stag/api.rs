@@ -234,11 +234,55 @@ where
         denom: Identifier,
         memo: String,
     ) -> Result<String> {
-        ica::send_tokens(
+        ica::bank::send(
             &self.context,
             chain_id,
             request_id,
             to_address,
+            amount,
+            denom,
+            memo,
+        )
+        .await
+    }
+
+    /// Delegate tokens from ICA (Interchain Account) on host chain to given validator address
+    pub async fn ica_delegate(
+        &self,
+        chain_id: ChainId,
+        request_id: Option<String>,
+        validator_address: String,
+        amount: U256,
+        denom: Identifier,
+        memo: String,
+    ) -> Result<String> {
+        ica::staking::delegate(
+            &self.context,
+            chain_id,
+            request_id,
+            validator_address,
+            amount,
+            denom,
+            memo,
+        )
+        .await
+    }
+
+    /// Un-delegate tokens to ICA (Interchain Account) on host chain from given validator address
+    pub async fn ica_undelegate(
+        &self,
+        chain_id: ChainId,
+        request_id: Option<String>,
+        validator_address: String,
+        amount: U256,
+        denom: Identifier,
+        memo: String,
+    ) -> Result<String> {
+        ica::staking::undelegate(
+            &self.context,
+            chain_id,
+            request_id,
+            validator_address,
             amount,
             denom,
             memo,

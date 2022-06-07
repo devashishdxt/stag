@@ -31,6 +31,7 @@ pub struct Operation {
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum OperationType {
     /// Mint some tokens on IBC enabled chain
+    #[serde(rename_all = "camelCase")]
     Mint {
         /// Address of the account
         to: String,
@@ -44,6 +45,7 @@ pub enum OperationType {
         amount: U256,
     },
     /// Burn some tokens on IBC enabled chain
+    #[serde(rename_all = "camelCase")]
     Burn {
         /// Address of the account
         from: String,
@@ -57,9 +59,38 @@ pub enum OperationType {
         amount: U256,
     },
     /// Send some tokens from ICA account on host chain
+    #[serde(rename_all = "camelCase")]
     IcaSend {
         /// Address of the account
         to: String,
+        /// Denom of tokens
+        denom: Identifier,
+        /// Amount of tokens
+        #[serde(
+            serialize_with = "serialize_u256",
+            deserialize_with = "deserialize_u256"
+        )]
+        amount: U256,
+    },
+    /// Delegate some tokens from ICA account on host chain to validator address
+    #[serde(rename_all = "camelCase")]
+    IcaDelegate {
+        /// Address of the validator
+        validator_address: String,
+        /// Denom of tokens
+        denom: Identifier,
+        /// Amount of tokens
+        #[serde(
+            serialize_with = "serialize_u256",
+            deserialize_with = "deserialize_u256"
+        )]
+        amount: U256,
+    },
+    /// Undelegate some tokens to ICA account on host chain from validator address
+    #[serde(rename_all = "camelCase")]
+    IcaUndelegate {
+        /// Address of the validator
+        validator_address: String,
         /// Denom of tokens
         denom: Identifier,
         /// Amount of tokens

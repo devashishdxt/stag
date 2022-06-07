@@ -7,14 +7,13 @@ use crate::{
     stag::StagContext,
     storage::Storage,
     tendermint::TendermintClient,
+    transaction_builder::ica::submit::msg_submit,
     types::{
         chain_state::ChainState,
         ics::core::ics24_host::identifier::{Identifier, PortId},
         proto_util::AnyConvert,
     },
 };
-
-use super::submit::msg_submit;
 
 /// Creates and signs a `MsgRecvPacket` transaction.
 #[allow(clippy::too_many_arguments)]

@@ -17,12 +17,12 @@ use crate::{
     },
 };
 
-/// Sends token from ICA account on host chain to given address
-pub async fn send_tokens<C>(
+/// Delegates some tokens from ICA account on host chain to given validator address
+pub async fn delegate<C>(
     context: &C,
     chain_id: ChainId,
     request_id: Option<String>,
-    to_address: String,
+    validator_address: String,
     amount: U256,
     denom: Identifier,
     memo: String,
@@ -44,11 +44,11 @@ where
     let solo_machine_port_id =
         PortId::ica_controller(transaction_context.signer(), &chain_id).await?;
 
-    let msg = transaction_builder::ica::msg_send(
+    let msg = transaction_builder::ica::staking::msg_delegate(
         context,
         &mut chain_state,
         &solo_machine_port_id,
-        to_address.clone(),
+        validator_address.clone(),
         amount,
         &denom,
         memo.clone(),
@@ -81,9 +81,9 @@ where
         .add_operation(
             request_id.as_deref(),
             &chain_state.id,
-            &PortId::transfer(),
-            &OperationType::IcaSend {
-                to: to_address.clone(),
+            &solo_machine_port_id,
+            &OperationType::IcaDelegate {
+                validator_address: validator_address.clone(),
                 denom: denom.clone(),
                 amount,
             },
@@ -92,10 +92,10 @@ where
         .await?;
 
     context
-        .handle_event(Event::TokensSentFromIca {
+        .handle_event(Event::TokensDelegatedFromIca {
             chain_id,
             request_id,
-            to_address,
+            validator_address,
             amount,
             denom,
             transaction_hash: transaction_hash.clone(),

@@ -4,15 +4,16 @@ use stag_api::{
 };
 use yew::{function_component, html, Properties, UseStateHandle};
 
-use crate::componenets::{
-    notification::NotificationData,
-    signer::{
-        add_signer_form::AddSignerForm, signer_list::SignerList,
-        update_signer_form::UpdateSignerForm,
+use crate::{
+    componenets::{
+        notification::NotificationData,
+        signer::{
+            add_signer_form::AddSignerForm, signer_list::SignerList,
+            update_signer_form::UpdateSignerForm,
+        },
     },
+    routes::page::Page,
 };
-
-use super::page::Page;
 
 #[derive(PartialEq, Properties)]
 pub struct Props {

@@ -59,9 +59,11 @@ fn app() -> Html {
     html! {
         <BrowserRouter>
             <Notification data={state.notification.clone()} />
-            <Sidebar />
-            <div class={classes!("ml-60")}>
-                <Switch<Route> render={Switch::render(move |route| switch(route, state.clone()))} />
+            <div class={classes!("flex")}>
+                <Sidebar />
+                <div class={classes!("w-full")}>
+                    <Switch<Route> render={Switch::render(move |route| switch(route, state.clone()))} />
+                </div>
             </div>
         </BrowserRouter>
     }
