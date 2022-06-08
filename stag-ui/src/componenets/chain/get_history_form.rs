@@ -146,7 +146,7 @@ fn get_channel(port_id: &PortId) -> String {
 
     if port_id == "transfer" {
         "Transfer".to_string()
-    } else if port_id.starts_with("icacontroller") {
+    } else if port_id.starts_with("icacontroller-") {
         "ICA".to_string()
     } else {
         "Unknown".to_string()

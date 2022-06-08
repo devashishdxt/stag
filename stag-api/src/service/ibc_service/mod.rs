@@ -8,6 +8,6 @@ mod update_signer;
 
 pub use self::{
     channel::{ica, transfer},
-    handshake::{connect, create_ica_channel, create_transfer_channel},
+    handshake::{close_channel, connect, create_ica_channel, create_transfer_channel},
     update_signer::update_signer,
 };

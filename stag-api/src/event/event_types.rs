@@ -171,14 +171,6 @@ pub enum Event {
         /// Port ID of channel
         port_id: PortId,
     },
-    /// Close channel on IBC enabled chain
-    #[serde(rename_all = "camelCase")]
-    CloseChannelInitOnSoloMachine {
-        /// Chain ID of IBC enabled chain
-        chain_id: String,
-        /// Channel ID of IBC enabled chain on solo machine
-        channel_id: ChannelId,
-    },
     /// Initialized channel on solo machine
     #[serde(rename_all = "camelCase")]
     InitializedChannelOnSoloMachine {
@@ -214,6 +206,30 @@ pub enum Event {
     /// Channel successfully created
     #[serde(rename_all = "camelCase")]
     ChannelCreated {
+        /// Chain ID of IBC enabled chain
+        chain_id: ChainId,
+        /// Channel details
+        channel_details: ChannelDetails,
+    },
+    /// Close channel on IBC enabled chain
+    #[serde(rename_all = "camelCase")]
+    CloseChannelOnTendermint {
+        /// Chain ID of IBC enabled chain
+        chain_id: ChainId,
+        /// Port ID of channel
+        port_id: PortId,
+    },
+    /// Close channel on IBC enabled chain
+    #[serde(rename_all = "camelCase")]
+    CloseChannelOnSoloMachine {
+        /// Chain ID of IBC enabled chain
+        chain_id: ChainId,
+        /// Port ID of channel
+        port_id: PortId,
+    },
+    /// Channel successfully closed
+    #[serde(rename_all = "camelCase")]
+    ChannelClosed {
         /// Chain ID of IBC enabled chain
         chain_id: ChainId,
         /// Channel details

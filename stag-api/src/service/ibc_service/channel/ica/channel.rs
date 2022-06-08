@@ -39,7 +39,7 @@ where
     C::Storage: Transaction,
     C::RpcClient: TendermintClient,
 {
-    let solo_machine_port_id = PortId::ica_controller(context.signer(), &chain_state.id).await?;
+    let solo_machine_port_id = PortId::ica_controller();
     let tendermint_port_id = PortId::ica_host();
 
     let solo_machine_version = serde_json::to_string(&json!({

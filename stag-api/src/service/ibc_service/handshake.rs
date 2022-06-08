@@ -6,11 +6,14 @@ use crate::{
     stag::{StagContext, WithTransaction},
     storage::{Storage, Transaction, TransactionProvider},
     tendermint::TendermintClient,
-    types::{chain_state::ConnectionDetails, ics::core::ics24_host::identifier::ChainId},
+    types::{
+        chain_state::ConnectionDetails,
+        ics::core::ics24_host::identifier::{ChainId, PortId},
+    },
 };
 
 use super::{
-    channel::{ica, transfer},
+    channel::{self, ica, transfer},
     client::create_client,
     connection::establish_connection,
 };
@@ -201,6 +204,60 @@ where
 
     event_handler
         .handle_event(Event::ChannelCreated {
+            chain_id,
+            channel_details,
+        })
+        .await
+}
+
+pub async fn close_channel<C>(
+    context: &C,
+    chain_id: ChainId,
+    port_id: &PortId,
+    request_id: Option<String>,
+    memo: String,
+) -> Result<()>
+where
+    C: StagContext + WithTransaction,
+    C::Signer: Signer,
+    C::Storage: TransactionProvider,
+    C::RpcClient: TendermintClient,
+{
+    let context = context.with_transaction().await?;
+
+    let mut chain_state = context
+        .storage()
+        .get_chain_state(&chain_id)
+        .await?
+        .ok_or_else(|| anyhow!("chain details for {} not found", chain_id))?;
+
+    if !chain_state.is_connected() {
+        bail!("chain {} is not connected", chain_id);
+    }
+
+    if !chain_state.has_channel(port_id) {
+        bail!("channel with port id {} is not created", port_id);
+    }
+
+    channel::close_channel(
+        &context,
+        &mut chain_state,
+        port_id,
+        memo,
+        request_id.as_deref(),
+    )
+    .await?;
+
+    let connection_details = chain_state.connection_details.as_mut().unwrap();
+    let channel_details = connection_details.channels.remove(port_id).unwrap();
+
+    context.storage().update_chain_state(&chain_state).await?;
+
+    let (_, transaction, _, event_handler) = context.unwrap();
+    transaction.done().await?;
+
+    event_handler
+        .handle_event(Event::ChannelClosed {
             chain_id,
             channel_details,
         })

@@ -5,9 +5,9 @@ use rust_decimal::Decimal;
 use crate::{
     event::NoopEventHandler,
     service::{
-        add_chain, connect, create_ica_channel, create_transfer_channel, get_all_chains,
-        get_balance, get_chain, get_history, get_ibc_balance, get_ibc_denom, get_ica_address,
-        get_public_keys, ica, transfer, update_signer,
+        add_chain, close_channel, connect, create_ica_channel, create_transfer_channel,
+        get_all_chains, get_balance, get_chain, get_history, get_ibc_balance, get_ibc_denom,
+        get_ica_address, get_public_keys, ica, transfer, update_signer,
     },
     signer::{NoopSigner, Signer, SignerConfig},
     storage::{NoopStorage, Storage, TransactionProvider},
@@ -177,6 +177,17 @@ where
         memo: String,
     ) -> Result<()> {
         create_ica_channel(&self.context, chain_id, request_id, memo).await
+    }
+
+    /// Closes the channel with given port id
+    pub async fn close_channel(
+        &self,
+        chain_id: ChainId,
+        port_id: &PortId,
+        request_id: Option<String>,
+        memo: String,
+    ) -> Result<()> {
+        close_channel(&self.context, chain_id, port_id, request_id, memo).await
     }
 
     /// Updates signer for future IBC transactions

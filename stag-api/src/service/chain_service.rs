@@ -161,7 +161,7 @@ where
         None => bail!("chain is not connected"),
     };
 
-    let solo_machine_port_id = PortId::ica_controller(context.signer(), chain_id).await?;
+    let solo_machine_port_id = PortId::ica_controller();
 
     context
         .storage()
