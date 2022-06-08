@@ -41,8 +41,7 @@ where
         .await?
         .ok_or_else(|| anyhow!("chain details for {} not found", chain_id))?;
 
-    let solo_machine_port_id =
-        PortId::ica_controller(transaction_context.signer(), &chain_id).await?;
+    let solo_machine_port_id = PortId::ica_controller();
 
     let msg = transaction_builder::ica::staking::msg_delegate(
         context,

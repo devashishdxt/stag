@@ -3,8 +3,9 @@ use cosmos_sdk_proto::{
     cosmos::tx::v1beta1::TxRaw,
     ibc::core::{
         channel::v1::{
-            Channel, Counterparty as ChannelCounterparty, MsgChannelOpenAck, MsgChannelOpenConfirm,
-            MsgChannelOpenInit, MsgChannelOpenTry, Order as ChannelOrder, State as ChannelState,
+            Channel, Counterparty as ChannelCounterparty, MsgChannelCloseConfirm,
+            MsgChannelCloseInit, MsgChannelOpenAck, MsgChannelOpenConfirm, MsgChannelOpenInit,
+            MsgChannelOpenTry, Order as ChannelOrder, State as ChannelState,
         },
         client::v1::Height,
     },
@@ -191,6 +192,69 @@ where
         port_id: port_id.to_string(),
         channel_id: channel_id.to_string(),
         proof_ack,
+        proof_height: Some(proof_height),
+        signer: context.signer().to_account_address(&chain_state.id).await?,
+    };
+
+    build(context, chain_state, &[message], memo, request_id).await
+}
+
+/// Creates a message for initiating closing of channel
+pub async fn msg_channel_close_init<C>(
+    context: &C,
+    chain_state: &ChainState,
+    port_id: &PortId,
+    channel_id: &ChannelId,
+    memo: String,
+    request_id: Option<&str>,
+) -> Result<TxRaw>
+where
+    C: StagContext,
+    C::Signer: Signer,
+{
+    let message = MsgChannelCloseInit {
+        port_id: port_id.to_string(),
+        channel_id: channel_id.to_string(),
+        signer: context.signer().to_account_address(&chain_state.id).await?,
+    };
+
+    build(context, chain_state, &[message], memo, request_id).await
+}
+
+/// Creates a message for confirming closing on channel
+#[allow(clippy::too_many_arguments)]
+pub async fn msg_channel_close_confirm<C>(
+    context: &C,
+    chain_state: &mut ChainState,
+    port_id: &PortId,
+    channel_id: &ChannelId,
+    counterparty_port_id: &PortId,
+    counterparty_channel_id: &ChannelId,
+    memo: String,
+    request_id: Option<&str>,
+) -> Result<TxRaw>
+where
+    C: StagContext,
+    C::Signer: Signer,
+    C::Storage: Storage,
+{
+    let proof_height = Height::new(0, chain_state.sequence.into());
+
+    let proof_init = get_channel_proof(
+        context,
+        chain_state,
+        counterparty_channel_id,
+        counterparty_port_id,
+        request_id,
+    )
+    .await?;
+
+    chain_state.sequence += 1;
+
+    let message = MsgChannelCloseConfirm {
+        port_id: port_id.to_string(),
+        channel_id: channel_id.to_string(),
+        proof_init,
         proof_height: Some(proof_height),
         signer: context.signer().to_account_address(&chain_state.id).await?,
     };

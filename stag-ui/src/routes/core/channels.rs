@@ -6,7 +6,10 @@ use yew::{function_component, html, Properties, UseStateHandle};
 
 use crate::{
     componenets::{
-        channel::{channel_list::ChannelList, create_channel_form::CreateChannelForm},
+        channel::{
+            channel_list::ChannelList, close_channel_form::CloseChannelForm,
+            create_channel_form::CreateChannelForm,
+        },
         notification::NotificationData,
     },
     routes::page::Page,
@@ -27,6 +30,7 @@ pub fn channels(props: &Props) -> Html {
         <Page name="Channels">
             <ChannelList storage={props.storage.clone()} />
             <CreateChannelForm notification={props.notification.clone()} signer={props.signer.clone()} storage={props.storage.clone()} rpc_client={props.rpc_client} event_handler={props.event_handler} />
+            <CloseChannelForm notification={props.notification.clone()} signer={props.signer.clone()} storage={props.storage.clone()} rpc_client={props.rpc_client} event_handler={props.event_handler} />
         </Page>
     }
 }
