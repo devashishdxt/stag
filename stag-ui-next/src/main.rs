@@ -1,6 +1,8 @@
 mod components;
+mod store;
 
-use components::notification::{NotificationData, NotificationSender};
+use components::notification::NotificationData;
+use store::StoreWriter;
 use yew::{html, Component, Context, Html};
 
 use self::components::{html::Button, notification::Notification};
@@ -10,7 +12,7 @@ fn main() {
 }
 
 struct App {
-    notification_sender: NotificationSender,
+    store_writer: StoreWriter<Option<NotificationData>>,
 }
 
 impl Component for App {
@@ -20,7 +22,7 @@ impl Component for App {
 
     fn create(_: &Context<Self>) -> Self {
         Self {
-            notification_sender: NotificationSender::new(),
+            store_writer: StoreWriter::new(),
         }
     }
 
@@ -39,7 +41,7 @@ impl Component for App {
     }
 
     fn update(&mut self, _: &Context<Self>, msg: Self::Message) -> bool {
-        self.notification_sender.send(msg);
+        self.store_writer.set(Some(msg));
         false
     }
 }

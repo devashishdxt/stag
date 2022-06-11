@@ -1,35 +1,40 @@
+use std::rc::Rc;
+
 use yew::{classes, html, Component, Context, Html};
-use yew_agent::{
-    utils::store::{ReadOnly, StoreWrapper},
-    Bridge, Bridged,
+
+use crate::{
+    components::html::Button,
+    store::{StoreReader, StoreWriter},
 };
 
-use crate::components::html::Button;
+use super::NotificationData;
 
-use super::{store::NotificationStore, NotificationData};
+pub enum NotificationMsg {
+    NewNotification(Rc<Option<NotificationData>>),
+    Clear,
+}
 
 pub struct Notification {
-    data: Option<NotificationData>,
-    _bridge: Box<dyn Bridge<StoreWrapper<NotificationStore>>>,
+    data: Rc<Option<NotificationData>>,
+    writer: StoreWriter<Option<NotificationData>>,
+    _reader: StoreReader<Option<NotificationData>>,
 }
 
 impl Component for Notification {
-    type Message = Option<NotificationData>;
+    type Message = NotificationMsg;
 
     type Properties = ();
 
     fn create(ctx: &Context<Self>) -> Self {
         Self {
-            data: None,
-            _bridge: StoreWrapper::bridge(
-                ctx.link()
-                    .callback(|store: ReadOnly<NotificationStore>| store.borrow().data.clone()),
-            ),
+            data: Default::default(),
+            writer: StoreWriter::new(),
+            _reader: StoreReader::new(ctx.link().callback(NotificationMsg::NewNotification)),
         }
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        let on_click = ctx.link().callback(|()| None);
+        let on_click = ctx.link().callback(|()| NotificationMsg::Clear);
 
         match self.data.as_ref() {
             None => html! {
@@ -67,7 +72,15 @@ impl Component for Notification {
     }
 
     fn update(&mut self, _: &Context<Self>, msg: Self::Message) -> bool {
-        self.data = msg;
-        true
+        match msg {
+            NotificationMsg::NewNotification(data) => {
+                self.data = data;
+                true
+            }
+            NotificationMsg::Clear => {
+                self.writer.set(None);
+                false
+            }
+        }
     }
 }
