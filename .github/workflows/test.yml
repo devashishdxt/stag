@@ -12,11 +12,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
-          go-version: '1.17.8'
+          go-version: '1.18.3'
       - name: Test go installation
         run: go version
       - name: Install Rust
@@ -27,10 +27,8 @@ jobs:
             components: llvm-tools-preview, rustfmt
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
-      - name: Install cargo-make
-        uses: davidB/rust-cargo-make@v1
-        with:
-          version: latest
+      - name: Install just
+        uses: extractions/setup-just@v1
       - name: Install ignite
         run: curl https://get.ignite.com/cli! | bash
       - name: Test ignite installation
@@ -51,10 +49,8 @@ jobs:
       - name: Verify test blockchain
         run: curl http://0.0.0.0:26657/status
       - name: Run tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: make
-          args: coverage
+        run: |
+          just coverage
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
         with:
@@ -65,11 +61,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
-          go-version: '1.17.8'
+          go-version: '1.18.3'
       - name: Test go installation
         run: go version
       - name: Install Rust
@@ -81,10 +77,8 @@ jobs:
             target: wasm32-unknown-unknown
       - name: Install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-      - name: Install cargo-make
-        uses: davidB/rust-cargo-make@v1
-        with:
-          version: latest
+      - name: Install just
+        uses: extractions/setup-just@v1
       - name: Install ignite
         run: curl https://get.ignite.com/cli! | bash
       - name: Test ignite installation
@@ -105,9 +99,7 @@ jobs:
       - name: Verify test blockchain
         run: curl http://0.0.0.0:26657/status
       - name: Run tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: make
-          args: browser-test
+        run: |
+          just browser-test
         env:
           WASM_BINDGEN_TEST_TIMEOUT: 300
