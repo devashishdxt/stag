@@ -18,7 +18,7 @@ stag-api = { path = "../stag-api", default-features = false, features = [
     "reqwest-client",
     "tracing-event-handler",
 ] }
-tracing = "0.1.34"
+tracing = "0.1.35"
 tracing-wasm = "0.2.1"
 wasm-bindgen = "0.2.80"
 wasm-bindgen-futures = "0.4.30"

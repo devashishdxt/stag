@@ -17,6 +17,7 @@ pub struct RadioInput;
 
 #[derive(PartialEq, Properties)]
 pub struct RadioInputProps {
+    pub id: Option<String>,
     pub name: &'static str,
     pub placeholders: &'static [&'static str],
     pub on_change: Callback<usize>,
@@ -37,7 +38,7 @@ impl Component for RadioInput {
         let props = ctx.props();
 
         html! {
-            <div class={props.class.clone()}>
+            <div id={props.id.clone().unwrap_or_default()} class={props.class.clone()}>
                 {
                     for props.placeholders.iter().enumerate().map(|(i, placeholder)| {
                         html! {

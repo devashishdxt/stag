@@ -1,47 +1,36 @@
 mod components;
+mod routes;
 mod store;
 
-use components::notification::NotificationData;
-use store::StoreWriter;
 use yew::{html, Component, Context, Html};
+use yew_router::{BrowserRouter, Switch};
 
-use self::components::{html::Button, notification::Notification};
+use self::{
+    components::notification::Notification,
+    routes::{switch, Route},
+};
 
 fn main() {
     yew::start_app::<App>();
 }
 
-struct App {
-    store_writer: StoreWriter<Option<NotificationData>>,
-}
+struct App;
 
 impl Component for App {
-    type Message = NotificationData;
+    type Message = ();
 
     type Properties = ();
 
     fn create(_: &Context<Self>) -> Self {
-        Self {
-            store_writer: StoreWriter::new(),
-        }
+        Self
     }
 
-    fn view(&self, ctx: &Context<Self>) -> Html {
-        let on_click = ctx.link().callback(|()| NotificationData::Error {
-            message: "Error",
-            details: Some("Error".to_string()),
-        });
-
+    fn view(&self, _: &Context<Self>) -> Html {
         html! {
-            <div>
+            <BrowserRouter>
                 <Notification />
-                <Button text="Click for notification" ty="button" {on_click} />
-            </div>
+                <Switch<Route> render={Switch::render(switch)} />
+            </BrowserRouter>
         }
-    }
-
-    fn update(&mut self, _: &Context<Self>, msg: Self::Message) -> bool {
-        self.store_writer.set(Some(msg));
-        false
     }
 }

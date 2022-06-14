@@ -17,6 +17,7 @@ pub struct TextInput;
 
 #[derive(PartialEq, Properties)]
 pub struct TextInputProps {
+    pub id: Option<String>,
     pub placeholder: &'static str,
     pub on_change: Callback<String>,
     #[prop_or_default]
@@ -42,7 +43,7 @@ impl Component for TextInput {
         let class = classes!(INPUT_CLASSES, ctx.props().class.clone());
 
         html! {
-            <input type="text" {class} {oninput} {placeholder} />
+            <input id={ctx.props().id.clone().unwrap_or_default()} type="text" {class} {oninput} {placeholder} />
         }
     }
 

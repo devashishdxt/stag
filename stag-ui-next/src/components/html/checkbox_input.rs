@@ -17,6 +17,7 @@ pub struct CheckboxInput;
 
 #[derive(PartialEq, Properties)]
 pub struct CheckboxInputProps {
+    pub id: Option<String>,
     pub placeholder: &'static str,
     pub on_change: Callback<bool>,
     #[prop_or_default]
@@ -41,7 +42,7 @@ impl Component for CheckboxInput {
         let props = ctx.props();
 
         html! {
-            <div class={classes!("flex", "items-center", props.class.clone())}>
+            <div id={props.id.clone().unwrap_or_default()} class={classes!("flex", "items-center", props.class.clone())}>
                 <input type="checkbox" class={classes!(CHECKBOX_CLASSES)} {onchange} />
                 <label for={ props.placeholder } class={classes!("text-slate-600")}>{ props.placeholder }</label>
             </div>
