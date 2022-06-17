@@ -20,8 +20,8 @@ stag-api = { path = "../stag-api", default-features = false, features = [
 ] }
 tracing = "0.1.35"
 tracing-wasm = "0.2.1"
-wasm-bindgen = "0.2.80"
-wasm-bindgen-futures = "0.4.30"
-web-sys = { version = "0.3.57", features = ["HtmlInputElement"] }
+wasm-bindgen = "0.2.81"
+wasm-bindgen-futures = "0.4.31"
+web-sys = { version = "0.3.58", features = ["HtmlInputElement"] }
 yew = "0.19.3"
 yew-router = "0.16.0"
