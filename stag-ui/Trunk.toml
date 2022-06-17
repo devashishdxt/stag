@@ -1,0 +1,14 @@
+[[hooks]]
+stage = "pre_build"
+command = "npx"
+command_arguments = [
+    "--yes",
+    "tailwindcss",
+    "--config",
+    "tailwind.config.js",
+    "--input",
+    "main.css",
+    "--output",
+    "tailwind.css",
+    "--minify",
+]
