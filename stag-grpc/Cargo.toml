@@ -1,0 +1,43 @@
+[package]
+name = "stag-grpc"
+version = "0.1.0"
+authors = ["Devashish Dixit <devashishdxt@gmail.com>"]
+license = "MIT/Apache-2.0"
+description = "IBC Solo Machine gRPC server that interacts interface with other machines & replicated ledgers which speak IBC"
+homepage = "https://github.com/devashishdxt/stag"
+repository = "https://github.com/devashishdxt/stag"
+categories = ["asynchronous", "ibc", "blockchain", "web-programming"]
+keywords = ["ibc", "blockchain", "ibc-solo-machine"]
+readme = "README.md"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+default = ["mnemonic-signer", "sqlite-storage"]
+ethermint = ["stag-api/ethermint"]
+mnemonic-signer = ["stag-api/mnemonic-signer"]
+sqlite-storage = ["stag-api/sqlite-storage"]
+
+[dependencies]
+anyhow = "1.0.57"
+clap = { version = "3.2.5", features = ["derive"] }
+hex = "0.4.3"
+k256 = "0.11.2"
+num-rational = "0.4.0"
+prost = "0.10.4"
+prost-types = "0.10.1"
+rust_decimal = "1.25.0"
+stag-api = { version = "0.1.0", path = "../stag-api", default-features = false, features = [
+  "reqwest-client",
+  "tracing-event-handler",
+] }
+tokio = { version = "1.19.2", features = ["macros", "rt-multi-thread"] }
+tonic = "0.7.2"
+tracing = "0.1.35"
+tracing-subscriber = "0.3.11"
+url = "2.2.2"
+
+[build-dependencies]
+prost-build = "0.10.4"
+tonic-build = "0.7.2"

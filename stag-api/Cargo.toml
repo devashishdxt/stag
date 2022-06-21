@@ -2,20 +2,20 @@
 name = "stag-api"
 version = "0.1.0"
 authors = ["Devashish Dixit <devashishdxt@gmail.com>"]
+license = "MIT/Apache-2.0"
+description = "High level API for creating applications that interact interface with other machines & replicated ledgers which speak IBC"
+homepage = "https://github.com/devashishdxt/stag"
+repository = "https://github.com/devashishdxt/stag"
+categories = ["asynchronous", "ibc", "blockchain", "web-programming"]
+keywords = ["ibc", "blockchain", "ibc-solo-machine"]
+readme = "README.md"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
 [features]
-default = [
-    "ethermint",
-    "indexed-db-storage",
-    "mnemonic-signer",
-    "reqwest-client",
-    # "sqlite-storage",
-    "tracing-event-handler",
-]
+default = []
 
 # Enables feature indicators in documentation
 doc = []
@@ -35,9 +35,9 @@ mnemonic-signer = ["bip32"]
 
 # Enables all the required dependencies for non-wasm environments
 non-wasm = [
-    "cosmos-sdk-proto/grpc-transport",
-    "tonic/transport",
-    "tonic-build/transport",
+  "cosmos-sdk-proto/grpc-transport",
+  "tonic/transport",
+  "tonic-build/transport",
 ]
 
 # Enables support for HTTP client using `reqwest` crate
@@ -60,10 +60,10 @@ bech32 = "0.9.0"
 bip32 = { version = "0.4.0", features = ["bip39"], optional = true }
 chrono = { version = "0.4.19", features = ["serde"] }
 cosmos-sdk-proto = { version = "0.12.3", default-features = false, features = [
-    "grpc",
+  "grpc",
 ] }
 getrandom = { version = "0.2.7", default-features = false, features = [
-    "js",
+  "js",
 ], optional = true }
 hex = { version = "0.4.3", features = ["serde"] }
 js-sys = { version = "0.3.58", optional = true }
@@ -85,17 +85,17 @@ serde_json = "1.0.81"
 sha2 = "0.10.2"
 sha3 = { version = "0.10.1", optional = true }
 sqlx = { version = "0.6.0", features = [
-    "chrono",
-    "json",
-    "runtime-tokio-rustls",
+  "chrono",
+  "json",
+  "runtime-tokio-rustls",
 ], optional = true }
 tendermint = "0.23.7"
 tendermint-light-client = { version = "0.23.7", default-features = false }
 tendermint-rpc = "0.23.7"
 tokio = { version = "1.19.2", features = ["sync"] }
 tonic = { version = "0.7.2", default-features = false, features = [
-    "codegen",
-    "prost",
+  "codegen",
+  "prost",
 ] }
 tonic-web-wasm-client = { version = "0.1.1", optional = true }
 tracing = { version = "0.1.35", optional = true }
@@ -112,5 +112,5 @@ wasm-bindgen-test = "0.3.31"
 
 [build-dependencies]
 tonic-build = { version = "0.7.2", default-features = false, features = [
-    "prost",
+  "prost",
 ] }

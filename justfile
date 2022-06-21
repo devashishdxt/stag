@@ -8,6 +8,16 @@ build-ui-release:
   @echo 'Building Stag UI in release mode...'
   cd stag-ui && RUSTFLAGS='-C link-arg=-s' trunk build --release
 
+# Builds Stag gRPC server
+build-grpc:
+  @echo 'Building Stag GRPC...'
+  cd stag-grpc && cargo build
+
+# Builds Stag gRPC server in release mode
+build-grpc-release:
+  @echo 'Building Stag GRPC in release mode...'
+  cd stag-grpc && cargo build --release
+
 # Starts auto-reloading Stag UI server for development
 serve-ui:
   @echo 'Serving Stag UI...'
