@@ -21,6 +21,11 @@ test:
 # Run browser tests
 browser-test:
   @echo 'Running browser tests...'
+  cd stag-api && wasm-pack test --chrome --no-default-features --features ethermint,indexed-db-storage,mnemonic-signer,reqwest-client,tracing-event-handler
+
+# Run browser tests (in headless mode)
+browser-test-headless:
+  @echo 'Running browser tests...'
   cd stag-api && wasm-pack test --chrome --headless --no-default-features --features ethermint,indexed-db-storage,mnemonic-signer,reqwest-client,tracing-event-handler
 
 # Run unit and integration tests (with instrumentation with lcov output)

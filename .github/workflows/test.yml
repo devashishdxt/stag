@@ -100,6 +100,6 @@ jobs:
         run: curl http://0.0.0.0:26657/status
       - name: Run tests
         run: |
-          just browser-test
+          just browser-test-headless
         env:
           WASM_BINDGEN_TEST_TIMEOUT: 300
