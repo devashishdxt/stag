@@ -1,0 +1,27 @@
+[package]
+name = "stag-grpc"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default = ["ethermint", "mnemonic-signer", "sqlite-storage"]
+ethermint = ["stag-api/ethermint"]
+mnemonic-signer = ["stag-api/mnemonic-signer"]
+sqlite-storage = ["stag-api/sqlite-storage"]
+
+[dependencies]
+anyhow = "1.0.60"
+cfg-if = "1.0.0"
+hex = "0.4.3"
+primitive-types = "0.11.1"
+prost = "0.11.0"
+prost-types = "0.11.1"
+stag-api = { path = "../stag-api", default-features = false, features = [
+    "reqwest-client",
+    "tracing-event-handler",
+] }
+tokio = { version = "1.20.1", features = ["sync"] }
+tonic = "0.8.0"
+
+[build-dependencies]
+tonic-build = "0.8.0"

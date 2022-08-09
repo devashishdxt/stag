@@ -1,0 +1,99 @@
+syntax = "proto3";
+
+import "google/protobuf/duration.proto";
+
+package core;
+
+service Core {
+    // Adds an IBC enabled chain to the solo machine
+    rpc AddChain (AddChainRequest) returns (AddChainResponse);
+
+    // Establishes an IBC connection with given chain
+    rpc ConnectChain (ConnectChainRequest) returns (ConnectChainResponse);
+
+    // Creates a transfer channel between solo machine and IBC enabled chain
+    rpc CreateTransferChannel (CreateChannelRequest) returns (CreateChannelResponse);
+
+    // Creates an ICA channel between solo machine and IBC enabled chain
+    rpc CreateIcaChannel (CreateChannelRequest) returns (CreateChannelResponse);
+
+    // Closes a transfer channel between solo machine and IBC enabled chain
+    rpc CloseTransferChannel (CloseChannelRequest) returns (CloseChannelResponse);
+
+    // Closes an ICA channel between solo machine and IBC enabled chain
+    rpc CloseIcaChannel (CloseChannelRequest) returns (CloseChannelResponse);
+}
+
+message AddChainRequest {
+    // gRPC address of IBC enabled chain
+    optional string grpc_addr = 1;
+    // RPC address of IBC enabled chain
+    optional string rpc_addr = 2;
+    // Fee configuration of chain
+    FeeConfig fee_config = 3;
+    // Trust level of IBC enabled chain
+    optional string trust_level = 4;
+    // Duration of the period since the LastestTimestamp during which the submitted headers are valid for upgrade
+    google.protobuf.Duration trusting_period = 5;
+    // Defines how much new (untrusted) header's time can drift into the future.
+    google.protobuf.Duration max_clock_drift = 6;
+    // Light client RPC timeout
+    google.protobuf.Duration rpc_timeout = 7;
+    // Diversifier for solo machine
+    optional string diversifier = 8;
+    // Trusted height of chain for light client
+    uint32 trusted_height = 9;
+    // Trusted hash of chain for light client
+    string trusted_hash = 10;
+    // Number of blocks after which a packet times out
+    optional uint64 packet_timeout_height_offset = 11;
+}
+
+message AddChainResponse {
+    // Chain ID of added chain
+    string chain_id = 1;
+}
+
+message ConnectChainRequest {
+    // Chain ID of IBC enabled chain to connect to
+    string chain_id = 1;
+    // An optional request ID for tracking purposes
+    optional string request_id = 2;
+    // Memo value to be used in cosmos sdk transaction
+    optional string memo = 3;
+    // Force create a new connection even if one already exists
+    bool force = 4;
+}
+
+message ConnectChainResponse {}
+
+message CreateChannelRequest {
+    // Chain ID of IBC enabled chain to connect to
+    string chain_id = 1;
+    // An optional request ID for tracking purposes
+    optional string request_id = 2;
+    // Memo value to be used in cosmos sdk transaction
+    optional string memo = 3;
+}
+
+message CreateChannelResponse {}
+
+message CloseChannelRequest {
+    // Chain ID of IBC enabled chain to connect to
+    string chain_id = 1;
+    // An optional request ID for tracking purposes
+    optional string request_id = 2;
+    // Memo value to be used in cosmos sdk transaction
+    optional string memo = 3;
+}
+
+message CloseChannelResponse {}
+
+message FeeConfig {
+    // Fee amount to be used in each cosmos sdk transaction
+    optional string fee_amount = 1;
+    // Fee denom to be used in each cosmos sdk transaction
+    optional string fee_denom = 2;
+    // Gas limit to be used in each cosmos sdk transaction
+    optional uint64 gas_limit = 3;
+}

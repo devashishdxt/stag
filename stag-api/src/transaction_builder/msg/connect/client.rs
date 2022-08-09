@@ -101,9 +101,9 @@ where
     let client_state = TendermintClientState {
         chain_id: chain_state.id.to_string(),
         trust_level,
-        trusting_period: Some(chain_state.config.trusting_period.into()),
+        trusting_period: Some(chain_state.config.trusting_period.try_into()?),
         unbonding_period,
-        max_clock_drift: Some(chain_state.config.max_clock_drift.into()),
+        max_clock_drift: Some(chain_state.config.max_clock_drift.try_into()?),
         frozen_height: Some(Height::zero()),
         latest_height: Some(latest_height),
         proof_specs: proof_specs(),
