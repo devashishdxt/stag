@@ -21,8 +21,8 @@ use self::{op::OpType, query_server::Query};
 pub struct QueryService<C>
 where
     C: StagContext + 'static,
-    C::Signer: Signer + 'static,
-    C::Storage: Storage + 'static,
+    C::Signer: Signer,
+    C::Storage: Storage,
 {
     stag: Arc<RwLock<Stag<C>>>,
 }
@@ -30,8 +30,8 @@ where
 impl<C> QueryService<C>
 where
     C: StagContext + 'static,
-    C::Signer: Signer + 'static,
-    C::Storage: Storage + 'static,
+    C::Signer: Signer,
+    C::Storage: Storage,
 {
     pub fn new(stag: Arc<RwLock<Stag<C>>>) -> Self {
         Self { stag }
@@ -42,8 +42,8 @@ where
 impl<C> Query for QueryService<C>
 where
     C: StagContext + 'static,
-    C::Signer: Signer + 'static,
-    C::Storage: Storage + 'static,
+    C::Signer: Signer,
+    C::Storage: Storage,
 {
     async fn get_balance(
         &self,

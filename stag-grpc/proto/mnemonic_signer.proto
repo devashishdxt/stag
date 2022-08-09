@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package mnemonic_signer;
+
+service MnemonicSigner {
+    rpc AddChainConfig (AddChainConfigRequest) returns (AddChainConfigResponse);
+}
+
+message AddChainConfigRequest {
+    // Chain ID
+    string chain_id = 1;
+    // Mnemonic phrase
+    string mnemonic = 2;
+    // HD path of signer (default: `m/44'/118'/0'/0/0`)
+    optional string hd_path = 3;
+    // Bech32 account prefix (default: `cosmos`)
+    optional string account_prefix = 4;
+    // Algorithm used for address generation (default: `secp256k1`)
+    optional string algo = 5;
+}
+
+message AddChainConfigResponse {}

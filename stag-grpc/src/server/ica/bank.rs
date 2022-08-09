@@ -19,10 +19,10 @@ use self::ica_bank_server::IcaBank;
 pub struct IcaBankService<C>
 where
     C: StagContext + WithTransaction + 'static,
-    C::Signer: Signer + Clone + 'static,
-    C::Storage: TransactionProvider + 'static,
-    C::RpcClient: JsonRpcClient + Clone + 'static,
-    C::EventHandler: Clone + 'static,
+    C::Signer: Signer + Clone,
+    C::Storage: TransactionProvider,
+    C::RpcClient: JsonRpcClient + Clone,
+    C::EventHandler: Clone,
 {
     stag: Arc<RwLock<Stag<C>>>,
 }
@@ -30,10 +30,10 @@ where
 impl<C> IcaBankService<C>
 where
     C: StagContext + WithTransaction + 'static,
-    C::Signer: Signer + Clone + 'static,
-    C::Storage: TransactionProvider + 'static,
-    C::RpcClient: JsonRpcClient + Clone + 'static,
-    C::EventHandler: Clone + 'static,
+    C::Signer: Signer + Clone,
+    C::Storage: TransactionProvider,
+    C::RpcClient: JsonRpcClient + Clone,
+    C::EventHandler: Clone,
 {
     pub fn new(stag: Arc<RwLock<Stag<C>>>) -> Self {
         Self { stag }
@@ -43,7 +43,7 @@ where
 #[async_trait]
 impl<C> IcaBank for IcaBankService<C>
 where
-    C: StagContext + WithTransaction,
+    C: StagContext + WithTransaction + 'static,
     C::Signer: Signer + Clone,
     C::Storage: TransactionProvider,
     C::RpcClient: JsonRpcClient + Clone,
