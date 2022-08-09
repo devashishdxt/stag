@@ -21,8 +21,6 @@ use tokio::task::JoinHandle;
 const SERVER_ADDR: &str = "[::1]:8000";
 const SERVER_URL: &str = "http://[::1]:8000";
 
-const DB_FOLDER: &str = "./test-db";
-
 pub const CHAIN_ID: &str = "mars-1";
 pub const MNEMONIC_1: &str = "practice empty client sauce pistol work ticket casual romance appear army fault palace coyote fox super salute slim catch kite wrist three hedgehog sign";
 pub const MNEMONIC_2: &str = "setup chicken slogan define emerge original sugar bitter suggest bicycle increase eager rather end predict relief moment burden lonely ginger umbrella secret toy trash";
@@ -33,13 +31,7 @@ struct TestServer {
 
 impl TestServer {
     pub async fn spawn() -> Self {
-        let _ = tokio::fs::remove_dir_all(DB_FOLDER).await;
-        tokio::fs::create_dir_all(DB_FOLDER).await.unwrap();
-
-        let server = Server::new(
-            SERVER_ADDR.parse().unwrap(),
-            format!("{}/test.db", DB_FOLDER),
-        );
+        let server = Server::new(SERVER_ADDR.parse().unwrap(), "sqlite::memory:".to_string());
         let handle = tokio::spawn(async move { server.run().await });
 
         tokio::time::sleep(Duration::from_secs(1)).await; // Let the server start
@@ -49,7 +41,6 @@ impl TestServer {
 
     pub async fn stop(self) {
         self.handle.abort();
-        tokio::fs::remove_dir_all(DB_FOLDER).await.unwrap();
     }
 }
 
