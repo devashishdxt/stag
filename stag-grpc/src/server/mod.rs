@@ -14,14 +14,21 @@ use stag_api::{
 };
 use tokio::sync::RwLock;
 
+#[cfg(feature = "mnemonic-signer")]
+use self::mnemonic_signer::MnemonicSignerService;
 use self::{
-    core::{core_server::CoreServer, CoreService},
-    ica::{
-        bank::{ica_bank_server::IcaBankServer, IcaBankService},
-        staking::{ica_staking_server::IcaStakingServer, IcaStakingService},
-    },
-    mnemonic_signer::{mnemonic_signer_server::MnemonicSignerServer, MnemonicSignerService},
-    transfer::{transfer_server::TransferServer, TransferService},
+    core::CoreService,
+    ica::{bank::IcaBankService, staking::IcaStakingService},
+    query::QueryService,
+    transfer::TransferService,
+};
+#[cfg(feature = "mnemonic-signer")]
+use crate::proto::mnemonic_signer::mnemonic_signer_server::MnemonicSignerServer;
+use crate::proto::{
+    core::core_server::CoreServer,
+    ica::{bank::ica_bank_server::IcaBankServer, staking::ica_staking_server::IcaStakingServer},
+    query::query_server::QueryServer,
+    transfer::transfer_server::TransferServer,
 };
 
 pub struct Server {
@@ -65,7 +72,8 @@ impl Server {
             .add_service(CoreServer::new(CoreService::new(stag.clone())))
             .add_service(TransferServer::new(TransferService::new(stag.clone())))
             .add_service(IcaBankServer::new(IcaBankService::new(stag.clone())))
-            .add_service(IcaStakingServer::new(IcaStakingService::new(stag.clone())));
+            .add_service(IcaStakingServer::new(IcaStakingService::new(stag.clone())))
+            .add_service(QueryServer::new(QueryService::new(stag.clone())));
 
         cfg_if::cfg_if! {
             if #[cfg(feature = "mnemonic-signer")] {

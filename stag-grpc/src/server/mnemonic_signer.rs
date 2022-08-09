@@ -1,5 +1,3 @@
-tonic::include_proto!("mnemonic_signer");
-
 use std::sync::Arc;
 
 use anyhow::{Context, Error};
@@ -9,6 +7,10 @@ use stag_api::{
 };
 use tokio::sync::{Mutex, RwLock};
 use tonic::{async_trait, Request, Response, Status};
+
+use crate::proto::mnemonic_signer::{
+    mnemonic_signer_server, AddChainConfigRequest, AddChainConfigResponse,
+};
 
 pub struct MnemonicSignerService<C>
 where
@@ -33,7 +35,7 @@ where
 }
 
 #[async_trait]
-impl<C> self::mnemonic_signer_server::MnemonicSigner for MnemonicSignerService<C>
+impl<C> mnemonic_signer_server::MnemonicSigner for MnemonicSignerService<C>
 where
     C: StagContext + 'static,
     C::Signer: From<<stag_api::signer::MnemonicSigner as SignerConfig>::Signer>,

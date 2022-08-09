@@ -2,7 +2,7 @@
 **/dist
 **/*.rs.bk
 Cargo.lock
-**/bin/
+stag-ui/bin/
 **/pkg/
 wasm-pack.log
 .cargo-ok
@@ -12,3 +12,4 @@ mars
 **/lcov.info
 **/node_modules
 **/tailwind.css
+test.db*

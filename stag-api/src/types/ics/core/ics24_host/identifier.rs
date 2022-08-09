@@ -194,17 +194,30 @@ impl FromStr for Identifier {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         ensure!(!s.trim().is_empty(), "identifier cannot be blank");
 
-        ensure!(
-            !s.contains('/'),
-            "identifier {} cannot contain separator '/'",
+        let mut ibc_denom = false;
+
+        let s = if s.starts_with("ibc/") {
+            ibc_denom = true;
+            s.strip_prefix("ibc/").unwrap()
+        } else {
+            ensure!(
+                !s.contains('/'),
+                "identifier {} cannot contain separator '/'",
+                s
+            );
             s
-        );
+        };
 
         let regex = Regex::new(VALID_ID_PATTERN).unwrap();
 
         ensure!(regex.is_match(s), "identifier {} must contain only alphanumeric or the following characters: '.', '_', '+', '-', '#', '[', ']', '<', '>'", s);
 
-        let id = Self(s.into());
+        let id = if ibc_denom {
+            Self(format!("ibc/{s}"))
+        } else {
+            Self(s.into())
+        };
+
         id.validate_length(1, MAX_IDENTIFIER_LEN)?;
 
         Ok(id)
