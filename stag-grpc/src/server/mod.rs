@@ -1,5 +1,7 @@
 pub mod core;
 pub mod ica;
+#[cfg(feature = "mnemonic-signer")]
+pub mod mnemonic_signer;
 pub mod query;
 pub mod transfer;
 
@@ -18,6 +20,7 @@ use self::{
         bank::{ica_bank_server::IcaBankServer, IcaBankService},
         staking::{ica_staking_server::IcaStakingServer, IcaStakingService},
     },
+    mnemonic_signer::{mnemonic_signer_server::MnemonicSignerServer, MnemonicSignerService},
     transfer::{transfer_server::TransferServer, TransferService},
 };
 
@@ -58,13 +61,19 @@ impl Server {
                 .build(),
         ));
 
-        tonic::transport::Server::builder()
+        let mut service = tonic::transport::Server::builder()
             .add_service(CoreServer::new(CoreService::new(stag.clone())))
             .add_service(TransferServer::new(TransferService::new(stag.clone())))
             .add_service(IcaBankServer::new(IcaBankService::new(stag.clone())))
-            .add_service(IcaStakingServer::new(IcaStakingService::new(stag.clone())))
-            .serve(self.addr)
-            .await?;
+            .add_service(IcaStakingServer::new(IcaStakingService::new(stag.clone())));
+
+        cfg_if::cfg_if! {
+            if #[cfg(feature = "mnemonic-signer")] {
+                service = service.add_service(MnemonicSignerServer::new(MnemonicSignerService::new(signer, stag)));
+            }
+        }
+
+        service.serve(self.addr).await?;
 
         Ok(())
     }
