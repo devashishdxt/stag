@@ -104,7 +104,7 @@ jobs:
         env:
           WASM_BINDGEN_TEST_TIMEOUT: 300
   grpc-test:
-    name: Integration tests
+    name: gRPC tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
