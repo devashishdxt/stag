@@ -1,3 +1,3 @@
 [workspace]
-members = ["stag-api", "stag-grpc"]
+members = ["stag-api", "stag-grpc", "stag-ui"]
 resolver = "2"

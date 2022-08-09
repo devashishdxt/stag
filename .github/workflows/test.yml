@@ -103,3 +103,45 @@ jobs:
           just browser-test
         env:
           WASM_BINDGEN_TEST_TIMEOUT: 300
+  grpc-test:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v3
+      - name: Install go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.18.3'
+      - name: Test go installation
+        run: go version
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+            toolchain: nightly
+            override: true
+            components: rustfmt
+      - name: Install just
+        uses: extractions/setup-just@v1
+      - name: Install ignite
+        run: curl https://get.ignite.com/cli! | bash
+      - name: Test ignite installation
+        run: ignite version
+      - name: Scaffold test blockchain
+        run: ignite scaffold chain github.com/devashish/mars --no-module
+      - name: Apply custom configuration
+        run: cp mars-config.yml ./mars/config.yml
+      - name: Start test blockchain
+        run: |
+          cd mars
+          ignite chain serve &
+          cd ..
+      - name: Wait for test blockchain to start
+        uses: ifaxity/wait-on-action@v1
+        with:
+          resource: http://0.0.0.0:26657/status
+      - name: Verify test blockchain
+        run: curl http://0.0.0.0:26657/status
+      - name: Run tests
+        run: |
+          just grpc-test
