@@ -27,6 +27,8 @@ jobs:
             components: llvm-tools-preview, rustfmt
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
       - name: Install just
         uses: extractions/setup-just@v1
       - name: Install ignite
@@ -77,6 +79,8 @@ jobs:
             target: wasm32-unknown-unknown
       - name: Install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
       - name: Install just
         uses: extractions/setup-just@v1
       - name: Install ignite
@@ -121,6 +125,8 @@ jobs:
             toolchain: nightly
             override: true
             components: rustfmt
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
       - name: Install just
         uses: extractions/setup-just@v1
       - name: Install ignite
