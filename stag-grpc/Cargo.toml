@@ -3,6 +3,10 @@ name = "stag-grpc"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "stag-grpc"
+path = "./src/bin/stag_grpc.rs"
+
 [features]
 default = ["ethermint", "mnemonic-signer", "sqlite-storage"]
 ethermint = ["stag-api/ethermint"]
@@ -26,3 +30,6 @@ tonic = "0.8.0"
 [build-dependencies]
 cfg-if = "1.0.0"
 tonic-build = "0.8.0"
+
+[dev-dependencies]
+tokio = { version = "1.20.1", features = ["fs", "macros", "rt", "time"] }

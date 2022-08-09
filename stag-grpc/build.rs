@@ -3,7 +3,7 @@ use std::error::Error;
 fn main() -> Result<(), Box<dyn Error>> {
     cfg_if::cfg_if! {
         if #[cfg(feature = "mnemonic-signer")] {
-            tonic_build::configure().build_client(false).compile(
+            tonic_build::configure().compile(
                 &[
                     "./proto/core.proto",
                     "./proto/transfer.proto",
@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 &["proto"],
             )?;
         } else {
-            tonic_build::configure().build_client(false).compile(
+            tonic_build::configure().compile(
                 &[
                     "./proto/core.proto",
                     "./proto/transfer.proto",

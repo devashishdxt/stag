@@ -1,5 +1,3 @@
-tonic::include_proto!("transfer");
-
 use std::sync::Arc;
 
 use anyhow::Context;
@@ -13,7 +11,9 @@ use stag_api::{
 use tokio::sync::RwLock;
 use tonic::{async_trait, Request, Response, Status};
 
-use self::transfer_server::Transfer;
+use crate::proto::transfer::{
+    transfer_server::Transfer, BurnRequest, BurnResponse, MintRequest, MintResponse,
+};
 
 pub struct TransferService<C>
 where

@@ -1,5 +1,3 @@
-tonic::include_proto!("ica.bank");
-
 use std::sync::Arc;
 
 use anyhow::{Context, Error};
@@ -14,7 +12,7 @@ use stag_api::{
 use tokio::sync::RwLock;
 use tonic::{async_trait, Request, Response, Status};
 
-use self::ica_bank_server::IcaBank;
+use crate::proto::ica::bank::{ica_bank_server::IcaBank, SendRequest, SendResponse};
 
 pub struct IcaBankService<C>
 where

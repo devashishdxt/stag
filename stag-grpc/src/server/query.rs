@@ -1,5 +1,3 @@
-tonic::include_proto!("query");
-
 use std::{str::FromStr, sync::Arc};
 
 use anyhow::{Context, Error};
@@ -16,7 +14,11 @@ use stag_api::{
 use tokio::sync::RwLock;
 use tonic::{async_trait, Request, Response, Status};
 
-use self::{op::OpType, query_server::Query};
+use crate::proto::query::{
+    op::OpType, query_server::Query, BurnOperation, GetBalanceRequest, GetBalanceResponse,
+    GetHistoryRequest, GetHistoryResponse, IcaDelegateOperation, IcaSendOperation,
+    IcaUndelegateOperation, MintOperation, Op,
+};
 
 pub struct QueryService<C>
 where

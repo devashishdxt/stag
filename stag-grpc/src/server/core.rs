@@ -1,5 +1,3 @@
-tonic::include_proto!("core");
-
 use std::{sync::Arc, time::Duration};
 
 use anyhow::{ensure, Context, Error, Result};
@@ -16,7 +14,11 @@ use stag_api::{
 use tokio::sync::RwLock;
 use tonic::{async_trait, Request, Response, Status};
 
-use self::core_server::Core;
+use crate::proto::core::{
+    core_server::Core, AddChainRequest, AddChainResponse, CloseChannelRequest,
+    CloseChannelResponse, ConnectChainRequest, ConnectChainResponse, CreateChannelRequest,
+    CreateChannelResponse, FeeConfig,
+};
 
 const DEFAULT_GRPC_ADDR: &str = "http://0.0.0.0:9090";
 const DEFAULT_RPC_ADDR: &str = "http://0.0.0.0:26657";

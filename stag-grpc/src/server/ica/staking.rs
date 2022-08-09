@@ -1,5 +1,3 @@
-tonic::include_proto!("ica.staking");
-
 use std::sync::Arc;
 
 use anyhow::Context;
@@ -13,7 +11,10 @@ use stag_api::{
 use tokio::sync::RwLock;
 use tonic::{async_trait, Request, Response, Status};
 
-use self::ica_staking_server::IcaStaking;
+use crate::proto::ica::staking::{
+    ica_staking_server::IcaStaking, DelegateRequest, DelegateResponse, UndelegateRequest,
+    UndelegateResponse,
+};
 
 pub struct IcaStakingService<C>
 where
