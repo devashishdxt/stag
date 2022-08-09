@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package ica.staking;
+
+service IcaStaking {
+    // Delegate tokens from ICA (Interchain Account) on host chain to given validator address
+    rpc Delegate (DelegateRequest) returns (DelegateResponse);
+
+    // Un-delegate tokens to ICA (Interchain Account) on host chain from given validator address
+    rpc Undelegate (UndelegateRequest) returns (UndelegateResponse);
+}
+
+message DelegateRequest {
+    // Chain ID of IBC enabled chain to connect to
+    string chain_id = 1;
+    // An optional request ID for tracking purposes
+    optional string request_id = 2;
+    // Validator address on IBC enabled chain
+    string validator_address = 3;
+    // Amount of tokens to be sent
+    string amount = 4;
+    // Denom of tokens to be sent
+    string denom = 5;
+    // Memo value to be used in cosmos sdk transaction
+    optional string memo = 6;
+}
+
+message DelegateResponse {
+    // Hash of transaction on IBC enabled chain (in hex)
+    string transaction_hash = 1;
+}
+
+message UndelegateRequest {
+    // Chain ID of IBC enabled chain to connect to
+    string chain_id = 1;
+    // An optional request ID for tracking purposes
+    optional string request_id = 2;
+    // Validator address on IBC enabled chain
+    string validator_address = 3;
+    // Amount of tokens to be sent
+    string amount = 4;
+    // Denom of tokens to be sent
+    string denom = 5;
+    // Memo value to be used in cosmos sdk transaction
+    optional string memo = 6;
+}
+
+message UndelegateResponse {
+    // Hash of transaction on IBC enabled chain (in hex)
+    string transaction_hash = 1;
+}

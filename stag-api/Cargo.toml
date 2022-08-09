@@ -10,10 +10,10 @@ crate-type = ["cdylib", "rlib"]
 [features]
 default = [
     "ethermint",
-    "indexed-db-storage",
+    # "indexed-db-storage",
     "mnemonic-signer",
     "reqwest-client",
-    # "sqlite-storage",
+    "sqlite-storage",
     "tracing-event-handler",
 ]
 
@@ -53,64 +53,64 @@ tracing-event-handler = ["tracing"]
 wasm = ["getrandom", "js-sys", "tonic-web-wasm-client"]
 
 [dependencies]
-anyhow = "1.0.57"
-async-trait = "0.1.56"
+anyhow = "1.0.60"
+async-trait = "0.1.57"
 base64 = "0.13.0"
 bech32 = "0.9.0"
 bip32 = { version = "0.4.0", features = ["bip39"], optional = true }
-chrono = { version = "0.4.19", features = ["serde"] }
-cosmos-sdk-proto = { version = "0.12.3", default-features = false, features = [
+chrono = { version = "0.4.20", features = ["serde"] }
+cosmos-sdk-proto = { version = "0.14.0", default-features = false, features = [
     "grpc",
 ] }
 getrandom = { version = "0.2.7", default-features = false, features = [
     "js",
 ], optional = true }
 hex = { version = "0.4.3", features = ["serde"] }
-js-sys = { version = "0.3.58", optional = true }
-k256 = { version = "0.11.2", features = ["keccak256", "pem", "serde"] }
-num-rational = { version = "0.4.0", features = ["serde"] }
+js-sys = { version = "0.3.59", optional = true }
+k256 = { version = "0.11.3", features = ["keccak256", "pem", "serde"] }
+num-rational = { version = "0.4.1", features = ["serde"] }
 primitive-types = { version = "0.11.1", features = ["serde"] }
-prost = "0.10.4"
-prost-types = "0.10.1"
+prost = "0.11.0"
+prost-types = "0.11.1"
 rand = "0.8.5"
-regex = "1.5.6"
+regex = "1.6.0"
 reqwest = { version = "0.11.11", optional = true }
 rexie = { version = "0.4.2", default-features = false, optional = true }
 ripemd = "0.1.1"
-rust_decimal = "1.25.0"
+rust_decimal = "1.26.1"
 sealed = "0.4.0"
-serde = { version = "1.0.137", features = ["derive"] }
+serde = { version = "1.0.142", features = ["derive"] }
 serde-wasm-bindgen = { version = "0.4.3", optional = true }
-serde_json = "1.0.81"
+serde_json = "1.0.83"
 sha2 = "0.10.2"
-sha3 = { version = "0.10.1", optional = true }
-sqlx = { version = "0.6.0", features = [
+sha3 = { version = "0.10.2", optional = true }
+sqlx = { version = "0.6.1", features = [
     "chrono",
     "json",
     "runtime-tokio-rustls",
 ], optional = true }
-tendermint = "0.23.7"
-tendermint-light-client = { version = "0.23.7", default-features = false }
-tendermint-rpc = "0.23.7"
-tokio = { version = "1.19.2", features = ["sync"] }
-tonic = { version = "0.7.2", default-features = false, features = [
+tendermint = "0.23.9"
+tendermint-light-client = { version = "0.23.9", default-features = false }
+tendermint-rpc = "0.23.9"
+tokio = { version = "1.20.1", features = ["sync"] }
+tonic = { version = "0.8.0", default-features = false, features = [
     "codegen",
     "prost",
 ] }
-tonic-web-wasm-client = { version = "0.1.1", optional = true }
-tracing = { version = "0.1.35", optional = true }
+tonic-web-wasm-client = { version = "0.2.1", optional = true }
+tracing = { version = "0.1.36", optional = true }
 url = { version = "2.2.2", features = ["serde"] }
 urlencoding = "2.1.0"
-wasm-bindgen = { version = "0.2.81", optional = true }
-web-sys = { version = "0.3.58", optional = true, features = ["Window"] }
+wasm-bindgen = { version = "0.2.82", optional = true }
+web-sys = { version = "0.3.59", optional = true, features = ["Window"] }
 wee_alloc = { version = "0.4.5", optional = true }
 
 [dev-dependencies]
 humantime = "2.1.0"
-tokio = { version = "1.19.2", features = ["rt", "macros"] }
-wasm-bindgen-test = "0.3.31"
+tokio = { version = "1.20.1", features = ["rt", "macros"] }
+wasm-bindgen-test = "0.3.32"
 
 [build-dependencies]
-tonic-build = { version = "0.7.2", default-features = false, features = [
+tonic-build = { version = "0.8.0", default-features = false, features = [
     "prost",
 ] }

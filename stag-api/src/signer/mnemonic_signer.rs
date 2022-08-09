@@ -16,7 +16,7 @@ const DEFAULT_HD_PATH: &str = "m/44'/118'/0'/0/0";
 const DEFAULT_ACCOUNT_PREFIX: &str = "cosmos";
 const DEFAULT_ADDRESS_ALGO: &str = "secp256k1";
 
-#[cfg_attr(test, derive(Debug, PartialEq))]
+#[cfg_attr(test, derive(Debug, PartialEq, Eq))]
 #[derive(Clone)]
 /// Signer implementation using mnemonic
 pub struct MnemonicSigner {

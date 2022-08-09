@@ -1,3 +1,13 @@
+# Builds Stag gRPC server
+build-grpc:
+  @echo 'Building Stag gRPC server...'
+  cd stag-grpc && cargo build
+
+# Builds Stag gRPC server in release mode
+build-grpc-release:
+  @echo 'Building Stag gRPC server in release mode...'
+  cd stag-grpc && cargo build --release
+
 # Builds Stag UI
 build-ui:
   @echo 'Building Stag UI...'

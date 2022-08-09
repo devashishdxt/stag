@@ -3,7 +3,7 @@ use async_trait::async_trait;
 
 use super::{Event, EventHandler};
 
-#[cfg_attr(test, derive(Debug, PartialEq))]
+#[cfg_attr(test, derive(Debug, PartialEq, Eq))]
 #[derive(Clone)]
 pub struct TracingEventHandler;
 
