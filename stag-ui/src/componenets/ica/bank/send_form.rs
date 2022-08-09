@@ -193,7 +193,7 @@ async fn send(
             .get_ibc_denom(&chain_id, &PortId::transfer(), &denom)
             .await?;
 
-        Ok(Identifier::from_str_unchecked(denom))
+        denom.parse()
     } else {
         Ok(denom)
     };

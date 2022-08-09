@@ -167,11 +167,6 @@ impl Identifier {
         format!("{}-{}", prefix, suffix).parse()
     }
 
-    /// Creates a new unchecked identifier from string
-    pub fn from_str_unchecked(s: String) -> Self {
-        Self(s)
-    }
-
     fn validate_length(&self, min: usize, max: usize) -> Result<(), Error> {
         let id_len = self.0.len();
 
