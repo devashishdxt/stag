@@ -12,6 +12,7 @@ default = [
     "ethermint",
     # "indexed-db-storage",
     "mnemonic-signer",
+    # "postgres-storage",
     "reqwest-client",
     "sqlite-storage",
     "tracing-event-handler",
@@ -40,6 +41,9 @@ non-wasm = [
     "tonic-build/transport",
 ]
 
+# Enables support for storage backend using Postgres. Enables `non-wasm` feature automatically.
+postgres-storage = ["non-wasm", "sqlx/postgres"]
+
 # Enables support for HTTP client using `reqwest` crate
 reqwest-client = ["reqwest"]
 
@@ -58,6 +62,7 @@ async-trait = "0.1.57"
 base64 = "0.13.0"
 bech32 = "0.9.1"
 bip32 = { version = "0.4.0", features = ["bip39"], optional = true }
+cfg-if = "1.0.0"
 chrono = { version = "0.4.22", features = ["serde"] }
 cosmos-sdk-proto = { version = "0.14.0", default-features = false, features = [
     "grpc",

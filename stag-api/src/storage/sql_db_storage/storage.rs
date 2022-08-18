@@ -26,6 +26,9 @@ use super::{executor, Db, SqlDbTransaction};
 #[cfg(feature = "sqlite-storage")]
 const MIGRATOR: Migrator = sqlx::migrate!("./migrations/sqlite");
 
+#[cfg(feature = "postgres-storage")]
+const MIGRATOR: Migrator = sqlx::migrate!("./migrations/postgres");
+
 pub struct SqlDbStorage {
     uri: String,
     pool: Pool<Db>,

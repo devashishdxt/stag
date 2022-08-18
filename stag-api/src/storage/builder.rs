@@ -6,7 +6,7 @@ use crate::trait_util::Base;
 
 #[cfg(feature = "indexed-db-storage")]
 use super::indexed_db_storage::IndexedDbStorage;
-#[cfg(feature = "sqlite-storage")]
+#[cfg(any(feature = "sqlite-storage", feature = "postgres-storage"))]
 use super::sql_db_storage::SqlDbStorage;
 use super::TransactionProvider;
 
@@ -54,6 +54,28 @@ impl Sqlite {
     }
 }
 
+#[cfg_attr(feature = "doc", doc(cfg(feature = "postgres-storage")))]
+#[cfg(feature = "postgres-storage")]
+#[derive(Debug, Clone, PartialEq, Eq)]
+/// Storage backend using Postgres database
+pub struct Postgres {
+    uri: String,
+}
+
+#[cfg(feature = "postgres-storage")]
+impl Postgres {
+    /// Creates a new instance of Postgres
+    pub fn new(uri: &str) -> Self {
+        Self {
+            uri: uri.to_string(),
+        }
+    }
+
+    async fn get_postgres_storage(self) -> Result<SqlDbStorage> {
+        SqlDbStorage::new(self.uri).await
+    }
+}
+
 #[cfg_attr(all(not(feature = "wasm"), feature = "non-wasm"), async_trait)]
 #[cfg_attr(feature = "wasm", async_trait(?Send))]
 #[sealed]
@@ -87,6 +109,18 @@ impl StorageConfig for Sqlite {
 
     async fn into_storage(self) -> Result<Self::Storage> {
         self.get_sqlite_storage().await
+    }
+}
+
+#[cfg_attr(feature = "doc", doc(cfg(feature = "postgres-storage")))]
+#[cfg(feature = "postgres-storage")]
+#[async_trait]
+#[sealed]
+impl StorageConfig for Postgres {
+    type Storage = SqlDbStorage;
+
+    async fn into_storage(self) -> Result<Self::Storage> {
+        self.get_postgres_storage().await
     }
 }
 

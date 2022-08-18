@@ -42,7 +42,15 @@ impl TryFrom<DbRow> for ChainState {
         let node_id: String = row.try_get("node_id")?;
         let config: Json<ChainConfig> = row.try_get("config")?;
         let consensus_timestamp: DateTime<Utc> = row.try_get("consensus_timestamp")?;
-        let sequence: u32 = row.try_get("sequence")?;
+
+        cfg_if::cfg_if! {
+            if #[cfg(feature = "postgres-storage")] {
+                let sequence: u32 = row.try_get::<i64, _>("sequence")?.try_into()?;
+            } else if #[cfg(feature = "sqlite-storage")] {
+                let sequence: u32 = row.try_get("sequence")?;
+            }
+        }
+
         let connection_details: Option<Json<ConnectionDetails>> =
             row.try_get("connection_details")?;
         let created_at: DateTime<Utc> = row.try_get("created_at")?;
