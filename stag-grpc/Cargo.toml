@@ -11,6 +11,7 @@ path = "./src/bin/stag_grpc.rs"
 default = ["ethermint", "mnemonic-signer", "sqlite-storage"]
 ethermint = ["stag-api/ethermint"]
 mnemonic-signer = ["stag-api/mnemonic-signer"]
+postgres-storage = ["stag-api/postgres-storage"]
 sqlite-storage = ["stag-api/sqlite-storage"]
 
 [dependencies]

@@ -8,9 +8,12 @@ pub mod transfer;
 use std::{net::SocketAddr, sync::Arc};
 
 use anyhow::Result;
+#[cfg(feature = "postgres-storage")]
+use stag_api::storage::Postgres;
+#[cfg(feature = "sqlite-storage")]
+use stag_api::storage::Sqlite;
 use stag_api::{
-    event::TracingEventHandler, signer::MnemonicSigner, stag::Stag, storage::Sqlite,
-    tendermint::ReqwestClient,
+    event::TracingEventHandler, signer::MnemonicSigner, stag::Stag, tendermint::ReqwestClient,
 };
 use tokio::sync::RwLock;
 
@@ -45,16 +48,14 @@ impl Server {
         cfg_if::cfg_if! {
             if #[cfg(feature = "mnemonic-signer")] {
                 let signer = MnemonicSigner::new();
-            } else {
-                unreachable!("only mnemonic signer is supported");
             }
         }
 
         cfg_if::cfg_if! {
             if #[cfg(feature = "sqlite-storage")] {
                 let storage = Sqlite::new(&self.db_uri);
-            } else {
-                unreachable!("only sqlite storage is supported");
+            } else if #[cfg(feature = "postgres-storage")] {
+                let storage = Postgres::new(&self.db_uri);
             }
         }
 
