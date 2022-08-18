@@ -10,6 +10,9 @@ service Query {
 
     // Fetches transaction history of given chain
     rpc GetHistory (GetHistoryRequest) returns (GetHistoryResponse);
+
+    // Fetches the final on-chain denom of a solo machine token 
+    rpc GetIbcDenom (GetIbcDenomRequest) returns (GetIbcDenomResponse);
 }
 
 message GetBalanceRequest {
@@ -38,6 +41,18 @@ message GetHistoryRequest {
 message GetHistoryResponse {
     // List of operations performed
     repeated Op operations = 1;
+}
+
+message GetIbcDenomRequest {
+    // Chain ID
+    string chain_id = 1;
+    // Denom of tokens
+    string denom = 2;
+}
+
+message GetIbcDenomResponse {
+    // On-chain denom of given solo machine token
+    string ibc_denom = 1;
 }
 
 message Op {

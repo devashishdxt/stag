@@ -7,10 +7,13 @@ use stag_grpc::{
         core::{
             core_client::CoreClient, AddChainRequest, ConnectChainRequest, CreateChannelRequest,
         },
-        mnemonic_signer::{mnemonic_signer_client::MnemonicSignerClient, AddChainConfigRequest},
+        mnemonic_signer::{
+            mnemonic_signer_client::MnemonicSignerClient, AddChainConfigRequest,
+            UpdateChainConfigRequest,
+        },
         query::{
             op::OpType, query_client::QueryClient, BurnOperation, GetBalanceRequest,
-            GetHistoryRequest, MintOperation,
+            GetHistoryRequest, GetIbcDenomRequest, MintOperation,
         },
         transfer::{transfer_client::TransferClient, BurnRequest, MintRequest},
     },
@@ -219,6 +222,44 @@ async fn test_stag_grpc_transfer_flow() {
             amount: "100".to_string(),
         })
     );
+
+    // Get IBC denom
+    let ibc_denom = query_client
+        .get_ibc_denom(GetIbcDenomRequest {
+            chain_id: CHAIN_ID.to_string(),
+            denom: "gld".to_string(),
+        })
+        .await
+        .expect("failed to fetch IBC denom")
+        .into_inner()
+        .ibc_denom;
+
+    // Update signer
+    signer_client
+        .update_chain_config(UpdateChainConfigRequest {
+            chain_id: CHAIN_ID.to_string(),
+            request_id: None,
+            mnemonic: MNEMONIC_2.to_string(),
+            hd_path: None,
+            account_prefix: None,
+            algo: None,
+            memo: None,
+        })
+        .await
+        .expect("failed to update signer");
+
+    // Check IBC denom after updating signer
+    let new_ibc_denom = query_client
+        .get_ibc_denom(GetIbcDenomRequest {
+            chain_id: CHAIN_ID.to_string(),
+            denom: "gld".to_string(),
+        })
+        .await
+        .expect("failed to fetch IBC denom")
+        .into_inner()
+        .ibc_denom;
+
+    assert_eq!(ibc_denom, new_ibc_denom);
 
     test_server.stop().await;
 }

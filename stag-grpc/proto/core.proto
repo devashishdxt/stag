@@ -22,6 +22,9 @@ service Core {
 
     // Closes an ICA channel between solo machine and IBC enabled chain
     rpc CloseIcaChannel (CloseChannelRequest) returns (CloseChannelResponse);
+
+    // Updates signer for future IBC transactions
+    rpc UpdateSigner (UpdateSignerRequest) returns (UpdateSignerResponse);
 }
 
 message AddChainRequest {
@@ -97,3 +100,18 @@ message FeeConfig {
     // Gas limit to be used in each cosmos sdk transaction
     optional uint64 gas_limit = 3;
 }
+
+message UpdateSignerRequest {
+    // Chain ID of IBC enabled chain to connect to
+    string chain_id = 1;
+    // An optional request ID for tracking purposes
+    optional string request_id = 2;
+    // Hex encoded SEC1 bytes of public key
+    string new_public_key = 3;
+    // Algorithm used for address generation (default: `secp256k1`)
+    optional string new_public_key_algo = 4;
+    // Memo value to be used in cosmos sdk transaction
+    optional string memo = 5;
+}
+
+message UpdateSignerResponse {}

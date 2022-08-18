@@ -3,7 +3,11 @@ syntax = "proto3";
 package mnemonic_signer;
 
 service MnemonicSigner {
+    // Adds a signer for a chain
     rpc AddChainConfig (AddChainConfigRequest) returns (AddChainConfigResponse);
+
+    // Updates a signer for a chain
+    rpc UpdateChainConfig (UpdateChainConfigRequest) returns (UpdateChainConfigResponse);
 }
 
 message AddChainConfigRequest {
@@ -20,3 +24,22 @@ message AddChainConfigRequest {
 }
 
 message AddChainConfigResponse {}
+
+message UpdateChainConfigRequest {
+    // Chain ID
+    string chain_id = 1;
+    // An optional request ID for tracking purposes
+    optional string request_id = 2;
+    // Mnemonic phrase
+    string mnemonic = 3;
+    // HD path of signer (default: `m/44'/118'/0'/0/0`)
+    optional string hd_path = 4;
+    // Bech32 account prefix (default: `cosmos`)
+    optional string account_prefix = 5;
+    // Algorithm used for address generation (default: `secp256k1`)
+    optional string algo = 6;
+    // Memo value to be used in cosmos sdk transaction
+    optional string memo = 7;
+}
+
+message UpdateChainConfigResponse {}
