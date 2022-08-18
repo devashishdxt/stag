@@ -16,8 +16,8 @@ use tonic::{async_trait, Request, Response, Status};
 
 use crate::proto::query::{
     op::OpType, query_server::Query, BurnOperation, GetBalanceRequest, GetBalanceResponse,
-    GetHistoryRequest, GetHistoryResponse, IcaDelegateOperation, IcaSendOperation,
-    IcaUndelegateOperation, MintOperation, Op,
+    GetHistoryRequest, GetHistoryResponse, GetIbcDenomRequest, GetIbcDenomResponse,
+    IcaDelegateOperation, IcaSendOperation, IcaUndelegateOperation, MintOperation, Op,
 };
 
 pub struct QueryService<C>
@@ -120,6 +120,35 @@ where
                 .try_into()
                 .map_err(|err: Error| Status::internal(err.to_string()))?,
         ))
+    }
+
+    async fn get_ibc_denom(
+        &self,
+        request: Request<GetIbcDenomRequest>,
+    ) -> Result<Response<GetIbcDenomResponse>, Status> {
+        let request = request.into_inner();
+
+        let chain_id = request
+            .chain_id
+            .parse()
+            .context("invalid chain id")
+            .map_err(|err| Status::invalid_argument(err.to_string()))?;
+
+        let denom = request
+            .denom
+            .parse()
+            .context("invalid denom")
+            .map_err(|err| Status::invalid_argument(err.to_string()))?;
+
+        let ibc_denom = self
+            .stag
+            .read()
+            .await
+            .get_ibc_denom(&chain_id, &PortId::transfer(), &denom)
+            .await
+            .map_err(|err| Status::internal(err.to_string()))?;
+
+        Ok(Response::new(GetIbcDenomResponse { ibc_denom }))
     }
 }
 

@@ -1,6 +1,7 @@
 use std::{sync::Arc, time::Duration};
 
 use anyhow::{ensure, Context, Error, Result};
+use k256::ecdsa::VerifyingKey;
 use stag_api::{
     signer::Signer,
     stag::{Stag, StagContext, WithTransaction},
@@ -9,6 +10,7 @@ use stag_api::{
     types::{
         chain_state::{ChainConfig, Fee},
         ics::core::ics24_host::identifier::PortId,
+        public_key::{PublicKey, PublicKeyAlgo},
     },
 };
 use tokio::sync::RwLock;
@@ -17,7 +19,7 @@ use tonic::{async_trait, Request, Response, Status};
 use crate::proto::core::{
     core_server::Core, AddChainRequest, AddChainResponse, CloseChannelRequest,
     CloseChannelResponse, ConnectChainRequest, ConnectChainResponse, CreateChannelRequest,
-    CreateChannelResponse, FeeConfig,
+    CreateChannelResponse, FeeConfig, UpdateSignerRequest, UpdateSignerResponse,
 };
 
 const DEFAULT_GRPC_ADDR: &str = "http://0.0.0.0:9090";
@@ -217,6 +219,53 @@ where
             .map_err(|err| Status::internal(err.to_string()))?;
 
         Ok(Response::new(CloseChannelResponse {}))
+    }
+
+    async fn update_signer(
+        &self,
+        request: Request<UpdateSignerRequest>,
+    ) -> Result<Response<UpdateSignerResponse>, Status> {
+        let request = request.into_inner();
+
+        let chain_id = request
+            .chain_id
+            .parse()
+            .context("invalid chain id")
+            .map_err(|err| Status::invalid_argument(err.to_string()))?;
+
+        let request_id = request.request_id;
+
+        let new_public_key_bytes = hex::decode(request.new_public_key)
+            .context("unable to decode new public key")
+            .map_err(|err| Status::invalid_argument(err.to_string()))?;
+
+        let new_verifying_key = VerifyingKey::from_sec1_bytes(&new_public_key_bytes)
+            .map_err(|err| Status::invalid_argument(err.to_string()))?;
+
+        let new_public_key_algo = request
+            .new_public_key_algo
+            .map(|algo| algo.parse())
+            .transpose()
+            .context("invalid algo")
+            .map_err(|err: Error| Status::invalid_argument(err.to_string()))?
+            .unwrap_or(PublicKeyAlgo::Secp256k1);
+
+        let new_public_key = match new_public_key_algo {
+            PublicKeyAlgo::Secp256k1 => PublicKey::Secp256k1(new_verifying_key),
+            #[cfg(feature = "ethermint")]
+            PublicKeyAlgo::EthSecp256k1 => PublicKey::EthSecp256k1(new_verifying_key),
+        };
+
+        let memo = request.memo.unwrap_or_default();
+
+        self.stag
+            .read()
+            .await
+            .update_signer(chain_id, request_id, new_public_key, memo)
+            .await
+            .map_err(|err| Status::internal(err.to_string()))?;
+
+        Ok(Response::new(UpdateSignerResponse {}))
     }
 }
 
