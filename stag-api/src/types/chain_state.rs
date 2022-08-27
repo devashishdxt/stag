@@ -26,7 +26,6 @@ use crate::{
 
 /// State of an IBC enabled chain
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct ChainState {
     /// ID of chain
     pub id: ChainId,
@@ -48,7 +47,6 @@ pub struct ChainState {
 
 /// IBC connection details
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct ConnectionDetails {
     /// Client ID of solo machine client on IBC enabled chain
     pub solo_machine_client_id: ClientId,
@@ -64,7 +62,6 @@ pub struct ConnectionDetails {
 
 /// IBC channel details
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct ChannelDetails {
     /// Packet sequence of channel (used when creating transactions on chain)
     pub packet_sequence: u32,
@@ -80,7 +77,6 @@ pub struct ChannelDetails {
 
 /// Configuration related to an IBC enabled chain
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct ChainConfig {
     /// gRPC address
     pub grpc_addr: Url,
@@ -89,12 +85,16 @@ pub struct ChainConfig {
     /// Fee and gas limits
     pub fee: Fee,
     /// Trust level (e.g. 1/3)
+    #[serde(with = "serde_str")]
     pub trust_level: Ratio<u64>,
     /// Trusting period
+    #[serde(with = "humantime_serde")]
     pub trusting_period: Duration,
     /// Maximum clock drift
+    #[serde(with = "humantime_serde")]
     pub max_clock_drift: Duration,
     /// RPC timeout duration
+    #[serde(with = "humantime_serde")]
     pub rpc_timeout: Duration,
     /// Diversifier used in transactions for chain
     pub diversifier: String,
@@ -109,7 +109,6 @@ pub struct ChainConfig {
 
 /// Fee and gas configuration
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct Fee {
     /// Fee amount
     pub amount: Decimal,
@@ -121,7 +120,6 @@ pub struct Fee {
 
 /// Signer's public key entry for an IBC enabled chain
 #[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct ChainKey {
     /// ID of key
     pub id: i64,

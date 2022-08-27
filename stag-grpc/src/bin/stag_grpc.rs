@@ -13,6 +13,10 @@ pub enum Command {
         /// gRPC server database uri
         #[clap(short, long)]
         #[cfg_attr(feature = "sqlite-storage", clap(default_value = "sqlite::memory:"))]
+        #[cfg_attr(
+            feature = "postgres-storage",
+            clap(default_value = "postgresql://postgres:postgres@localhost:5432/stag")
+        )]
         db_uri: String,
     },
 }

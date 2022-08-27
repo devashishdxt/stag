@@ -8,7 +8,6 @@ use crate::types::{
 
 /// Signer's public key entry for an IBC enabled chain
 #[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
 pub struct ChainKeyRequest<'a> {
     /// Chain ID
     pub chain_id: &'a ChainId,
@@ -19,7 +18,6 @@ pub struct ChainKeyRequest<'a> {
 }
 
 #[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
 pub struct OperationRequest<'a> {
     /// Request ID for tracking purposes
     pub request_id: Option<&'a str>,

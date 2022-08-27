@@ -57,7 +57,7 @@ impl FromStr for PublicKeyAlgo {
 
 /// Public Key
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "type", content = "public_key", rename_all = "camelCase")]
+#[serde(tag = "type", content = "public_key")]
 pub enum PublicKey {
     /// Secp256k1 (tendermint)
     Secp256k1(VerifyingKey),
