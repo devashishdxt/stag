@@ -1,7 +1,6 @@
 use std::{sync::Arc, time::Duration};
 
 use anyhow::{ensure, Context, Error, Result};
-use k256::ecdsa::VerifyingKey;
 use stag_api::{
     signer::Signer,
     stag::{Stag, StagContext, WithTransaction},
@@ -235,13 +234,6 @@ where
 
         let request_id = request.request_id;
 
-        let new_public_key_bytes = hex::decode(request.new_public_key)
-            .context("unable to decode new public key")
-            .map_err(|err| Status::invalid_argument(err.to_string()))?;
-
-        let new_verifying_key = VerifyingKey::from_sec1_bytes(&new_public_key_bytes)
-            .map_err(|err| Status::invalid_argument(err.to_string()))?;
-
         let new_public_key_algo = request
             .new_public_key_algo
             .map(|algo| algo.parse())
@@ -250,11 +242,8 @@ where
             .map_err(|err: Error| Status::invalid_argument(err.to_string()))?
             .unwrap_or(PublicKeyAlgo::Secp256k1);
 
-        let new_public_key = match new_public_key_algo {
-            PublicKeyAlgo::Secp256k1 => PublicKey::Secp256k1(new_verifying_key),
-            #[cfg(feature = "ethermint")]
-            PublicKeyAlgo::EthSecp256k1 => PublicKey::EthSecp256k1(new_verifying_key),
-        };
+        let new_public_key = PublicKey::new(request.new_public_key, new_public_key_algo)
+            .map_err(|err| Status::invalid_argument(err.to_string()))?;
 
         let memo = request.memo.unwrap_or_default();
 

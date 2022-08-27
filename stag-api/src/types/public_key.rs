@@ -1,6 +1,6 @@
 use std::{fmt, str::FromStr};
 
-use anyhow::{anyhow, Error, Result};
+use anyhow::{anyhow, Context, Error, Result};
 use bech32::{ToBase32, Variant};
 use k256::ecdsa::VerifyingKey;
 #[cfg(feature = "ethermint")]
@@ -67,6 +67,20 @@ pub enum PublicKey {
 }
 
 impl PublicKey {
+    pub fn new(public_key: String, algo: PublicKeyAlgo) -> Result<Self> {
+        let public_key_bytes =
+            hex::decode(public_key).context("unable to decode new public key")?;
+
+        let verifying_key = VerifyingKey::from_sec1_bytes(&public_key_bytes)
+            .context("failed to decode sec1 bytes of new public key")?;
+
+        match algo {
+            PublicKeyAlgo::Secp256k1 => Ok(Self::Secp256k1(verifying_key)),
+            #[cfg(feature = "ethermint")]
+            PublicKeyAlgo::EthSecp256k1 => Ok(Self::EthSecp256k1(verifying_key)),
+        }
+    }
+
     /// Creates a new instance of PublicKey from a verifying key (using secp256k1)
     pub fn new_secp256k1(key: VerifyingKey) -> Self {
         Self::Secp256k1(key)
