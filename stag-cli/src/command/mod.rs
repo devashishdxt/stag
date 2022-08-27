@@ -1,12 +1,15 @@
 pub mod core_command;
 pub mod signer_command;
+pub mod transfer_command;
 
 use std::path::PathBuf;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 
-use self::{core_command::CoreCommand, signer_command::SignerCommand};
+use self::{
+    core_command::CoreCommand, signer_command::SignerCommand, transfer_command::TransferCommand,
+};
 
 #[derive(Debug, Parser)]
 pub struct Command {
@@ -43,6 +46,11 @@ pub enum SubCommand {
         #[clap(subcommand)]
         subcommand: CoreCommand,
     },
+    /// Transfer commands
+    Transfer {
+        #[clap(subcommand)]
+        subcommand: TransferCommand,
+    },
 }
 
 impl SubCommand {
@@ -50,6 +58,7 @@ impl SubCommand {
         match self {
             Self::Signer { subcommand } => subcommand.run(signer).await,
             Self::Core { subcommand } => subcommand.run(signer, &db_uri).await,
+            Self::Transfer { subcommand } => subcommand.run(signer, &db_uri).await,
         }
     }
 }
