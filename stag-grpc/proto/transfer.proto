@@ -3,8 +3,10 @@ syntax = "proto3";
 package transfer;
 
 service Transfer {
+    // Mint tokens on IBC enabled chain
     rpc Mint (MintRequest) returns (MintResponse);
 
+    // Burn tokens from IBC enabled chain
     rpc Burn (BurnRequest) returns (BurnResponse);
 }
 

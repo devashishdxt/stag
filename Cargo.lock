@@ -2483,6 +2483,7 @@ dependencies = [
  "cfg-if 1.0.0",
  "clap",
  "hex",
+ "primitive-types",
  "serde",
  "serde_yaml",
  "stag-api",
