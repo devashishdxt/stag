@@ -1,3 +1,5 @@
+use std::fmt::Write;
+
 use anyhow::{bail, ensure, Context, Result};
 use chrono::Utc;
 use cosmos_sdk_proto::ibc::{
@@ -404,7 +406,7 @@ where
 
 fn push_limit_offset(query: &mut String, limit: Option<u32>, offset: Option<u32>) -> Result<()> {
     if let Some(limit) = limit {
-        query.push_str(&format!(" LIMIT {}", limit));
+        write!(query, " LIMIT {}", limit)?;
     }
 
     if let Some(offset) = offset {
@@ -412,7 +414,7 @@ fn push_limit_offset(query: &mut String, limit: Option<u32>, offset: Option<u32>
             bail!("offset cannot be set without limit");
         }
 
-        query.push_str(&format!(" OFFSET {}", offset));
+        write!(query, " OFFSET {}", offset)?;
     }
 
     Ok(())

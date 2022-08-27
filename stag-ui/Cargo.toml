@@ -11,7 +11,7 @@ anyhow = "1.0.62"
 hex = "0.4.3"
 humantime = "2.1.0"
 primitive-types = "0.11.1"
-serde_json = "1.0.83"
+serde_json = "1.0.85"
 stag-api = { path = "../stag-api", default-features = false, features = [
     "indexed-db-storage",
     "mnemonic-signer",

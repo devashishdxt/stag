@@ -1,0 +1,15 @@
+chains:
+- chain_id: mars-1
+  mnemonic: practice empty client sauce pistol work ticket casual romance appear army
+    fault palace coyote fox super salute slim catch kite wrist three hedgehog sign
+  hd_path: null
+  account_prefix: null
+  algo: null
+- chain_id: mars-2
+  mnemonic: setup chicken slogan define emerge original sugar bitter suggest bicycle
+    increase eager rather end predict relief moment burden lonely ginger umbrella
+    secret toy trash
+  hd_path: null
+  account_prefix: null
+  algo: null
+

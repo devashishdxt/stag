@@ -8,7 +8,6 @@ use super::ics::core::ics24_host::identifier::PortId;
 
 /// Denotes an operation on an account
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct Operation {
     /// ID of operation
     pub id: i64,
@@ -28,10 +27,9 @@ pub struct Operation {
 
 /// Different types of possible operations on an account
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "camelCase")]
+#[serde(tag = "type")]
 pub enum OperationType {
     /// Mint some tokens on IBC enabled chain
-    #[serde(rename_all = "camelCase")]
     Mint {
         /// Address of the account
         to: String,
@@ -45,7 +43,6 @@ pub enum OperationType {
         amount: U256,
     },
     /// Burn some tokens on IBC enabled chain
-    #[serde(rename_all = "camelCase")]
     Burn {
         /// Address of the account
         from: String,
@@ -59,7 +56,6 @@ pub enum OperationType {
         amount: U256,
     },
     /// Send some tokens from ICA account on host chain
-    #[serde(rename_all = "camelCase")]
     IcaSend {
         /// Address of the account
         to: String,
@@ -73,7 +69,6 @@ pub enum OperationType {
         amount: U256,
     },
     /// Delegate some tokens from ICA account on host chain to validator address
-    #[serde(rename_all = "camelCase")]
     IcaDelegate {
         /// Address of the validator
         validator_address: String,
@@ -87,7 +82,6 @@ pub enum OperationType {
         amount: U256,
     },
     /// Undelegate some tokens to ICA account on host chain from validator address
-    #[serde(rename_all = "camelCase")]
     IcaUndelegate {
         /// Address of the validator
         validator_address: String,
