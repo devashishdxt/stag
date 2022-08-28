@@ -1,4 +1,6 @@
 pub mod core_command;
+pub mod ica_command;
+pub mod query_command;
 pub mod signer_command;
 pub mod transfer_command;
 
@@ -8,16 +10,23 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 
 use self::{
-    core_command::CoreCommand, signer_command::SignerCommand, transfer_command::TransferCommand,
+    core_command::CoreCommand, ica_command::IcaCommand, query_command::QueryCommand,
+    signer_command::SignerCommand, transfer_command::TransferCommand,
 };
 
 #[derive(Debug, Parser)]
 pub struct Command {
     /// Path to signer.yaml file for configuration of mnemonic-signer
-    #[clap(short, long, default_value = "signer.yaml", global = true)]
+    #[clap(
+        short,
+        long,
+        default_value = "signer.yaml",
+        env = "SOLO_SIGNER",
+        global = true
+    )]
     signer: PathBuf,
     /// Database connection string
-    #[clap(short, long, global = true)]
+    #[clap(short, long, env = "SOLO_DB_URI", global = true)]
     #[cfg_attr(feature = "sqlite-storage", clap(default_value = "sqlite://stag.db"))]
     #[cfg_attr(
         feature = "postgres-storage",
@@ -46,10 +55,20 @@ pub enum SubCommand {
         #[clap(subcommand)]
         subcommand: CoreCommand,
     },
-    /// Transfer commands
+    /// Transfer channel commands
     Transfer {
         #[clap(subcommand)]
         subcommand: TransferCommand,
+    },
+    /// ICA channel commands
+    Ica {
+        #[clap(subcommand)]
+        subcommand: IcaCommand,
+    },
+    /// Query on-chain data
+    Query {
+        #[clap(subcommand)]
+        subcommand: QueryCommand,
     },
 }
 
@@ -59,6 +78,8 @@ impl SubCommand {
             Self::Signer { subcommand } => subcommand.run(signer).await,
             Self::Core { subcommand } => subcommand.run(signer, &db_uri).await,
             Self::Transfer { subcommand } => subcommand.run(signer, &db_uri).await,
+            Self::Ica { subcommand } => subcommand.run(signer, &db_uri).await,
+            Self::Query { subcommand } => subcommand.run(signer, &db_uri).await,
         }
     }
 }
