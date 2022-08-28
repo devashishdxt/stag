@@ -1,3 +1,18 @@
+# Builds Stag CLI
+build-cli:
+  @echo 'Building Stag CLI...'
+  cd stag-cli && cargo build
+
+# Builds Stag CLI in release mode
+build-cli-release:
+  @echo 'Building Stag CLI in release mode...'
+  cd stag-cli && cargo build --release
+
+# Installs Stag CLI
+install-cli:
+  @echo 'Installing Stag CLI...'
+  cd stag-cli && cargo install --path .
+
 # Builds Stag gRPC server
 build-grpc:
   @echo 'Building Stag gRPC server...'
