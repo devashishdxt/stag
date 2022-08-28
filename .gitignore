@@ -12,3 +12,6 @@ mars
 **/lcov.info
 **/node_modules
 **/tailwind.css
+chain.yaml
+signer.yaml
+stag.db*
