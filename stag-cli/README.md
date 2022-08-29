@@ -5,7 +5,7 @@ ledgers which speak IBC.
 
 ## Installing
 
-Please refer [../README.md](../README.md) for installation instructions.
+Please refer [../README.md](../README.md#installing) for installation instructions.
 
 ## Usage
 
