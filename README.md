@@ -10,13 +10,80 @@ which speak IBC.
 Before building and using the `stag-ui`, you need to install the following dependencies:
 
 1. Rust: https://rustup.rs/
+1. Just: https://just.systems/
+1. Protocol Buffer Compiler: https://grpc.io/docs/protoc-installation/
+
+### Stag CLI
+
+#### Building
+
+To build `stag-cli`, run:
+
+```shell
+just build-cli
+```
+
+To build `stag-cli` in release mode, run:
+
+```shell
+just build-cli-release
+```
+
+#### Installing
+
+To install `stag-cli`, run:
+
+```shell
+just install-cli
+```
+
+> For documentation on using `stag-cli`, refer [./stag-cli/README.md](./stag-cli/README.md)
+
+### Stag gRPC Server
+
+#### Building
+
+To build `stag-grpc`, run:
+
+```shell
+just build-grpc
+```
+
+To build `stag-grpc` in release mode, run:
+
+```shell
+just build-grpc-release
+```
+
+#### Installing
+
+To install `stag-grpc`, run:
+
+```shell
+just install-grpc
+```
+
+#### Running
+
+To run `stag-grpc`, run:
+
+```shell
+stag run-grpc
+```
+
+> For more details on configuration options, run `stag-grpc start --help` after installing gRPC server on your local
+machine.
+
+### Stag UI
+
+#### Prerequisites
+
 1. NodeJS: https://nodejs.org/en/ (for `tailwindcss`)
 1. wasm-pack: https://rustwasm.github.io/wasm-pack/ (Trunk automatically installs it but it's better to install it
    yourself)
 1. Trunk: https://trunkrs.dev/
-1. Just: https://just.systems/
 
-### Building
+#### Building
 
 To build `stag-ui`, run:
 
@@ -32,7 +99,7 @@ just build-ui-release
 
 These will put all the built artifacts in `stag-ui/dist` directory.
 
-### Running
+#### Running
 
 To start an auto-reloading development server for `stag-ui`, run:
 

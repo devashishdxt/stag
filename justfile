@@ -23,6 +23,11 @@ build-grpc-release:
   @echo 'Building Stag gRPC server in release mode...'
   cd stag-grpc && cargo build --release
 
+# Installs Stag gRPC server
+install-grpc:
+  @echo 'Installing Stag gRPC server...'
+  cd stag-grpc && cargo install --path .
+
 # Builds Stag UI
 build-ui:
   @echo 'Building Stag UI...'
