@@ -15,6 +15,7 @@ use self::{
 };
 
 #[derive(Debug, Parser)]
+#[clap(author, version, about, long_about = None)]
 pub struct Command {
     /// Path to signer.yaml file for configuration of mnemonic-signer
     #[clap(
