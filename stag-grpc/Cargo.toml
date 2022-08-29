@@ -1,6 +1,11 @@
 [package]
 name = "stag-grpc"
 version = "0.1.0"
+authors = ["Devashish Dixit <devashishdxt@gmail.com>"]
+license = "MIT/Apache-2.0"
+description = "gRPC server for IBC solo machine implementation"
+homepage = "https://github.com/devashishdxt/stag"
+repository = "https://github.com/devashishdxt/stag"
 edition = "2021"
 
 [[bin]]
