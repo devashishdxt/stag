@@ -4,6 +4,7 @@ use stag_grpc::Server;
 use tracing::info;
 
 #[derive(Parser, Debug)]
+#[clap(author, version, about, long_about = None)]
 pub enum Command {
     /// Start Stag gRPC server
     Start {
