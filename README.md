@@ -7,7 +7,7 @@ which speak IBC.
 
 ### Prerequisites
 
-Before building and using the `stag-ui`, you need to install the following dependencies:
+Before building and using `stag`, you need to install the following dependencies:
 
 1. Rust: https://rustup.rs/
 1. Just: https://just.systems/
