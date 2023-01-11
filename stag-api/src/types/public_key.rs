@@ -103,7 +103,7 @@ impl PublicKey {
 
     /// Returns the address of the public key
     pub fn address(&self) -> Result<String> {
-        Ok(hex::encode(&self.address_bytes()?))
+        Ok(hex::encode(self.address_bytes()?))
     }
 
     /// Returns the account address of the public key
@@ -124,7 +124,7 @@ impl PublicKey {
                 Ok(hash)
             }
             Self::Secp256k1(ref key) => {
-                Ok(Ripemd160::digest(&Sha256::digest(&key.to_bytes())).to_vec())
+                Ok(Ripemd160::digest(Sha256::digest(key.to_bytes())).to_vec())
             }
         }
     }

@@ -63,7 +63,7 @@ where
             .chain_id
             .parse()
             .context("invalid chain id")
-            .map_err(|err| Status::invalid_argument(err.to_string()))?;
+            .map_err(|err| Status::invalid_argument(format!("{err:?}")))?;
 
         let mnemonic = request.mnemonic;
 
@@ -76,7 +76,7 @@ where
             .map(|algo| algo.parse())
             .transpose()
             .context("invalid algo")
-            .map_err(|err: Error| Status::invalid_argument(err.to_string()))?;
+            .map_err(|err: Error| Status::invalid_argument(format!("{err:?}")))?;
 
         let mut signer = self.signer.lock().await;
 
@@ -89,13 +89,13 @@ where
                 algo,
             )
             .context("failed to add chain config")
-            .map_err(|err| Status::internal(err.to_string()))?;
+            .map_err(|err| Status::internal(format!("{err:?}")))?;
 
         self.stag
             .write()
             .await
             .set_signer(signer.clone())
-            .map_err(|err| Status::internal(err.to_string()))?;
+            .map_err(|err| Status::internal(format!("{err:?}")))?;
 
         Ok(Response::new(AddChainConfigResponse {}))
     }
@@ -110,7 +110,7 @@ where
             .chain_id
             .parse()
             .context("invalid chain id")
-            .map_err(|err| Status::invalid_argument(err.to_string()))?;
+            .map_err(|err| Status::invalid_argument(format!("{err:?}")))?;
 
         let request_id = request.request_id;
 
@@ -125,7 +125,7 @@ where
             .map(|algo| algo.parse())
             .transpose()
             .context("invalid algo")
-            .map_err(|err: Error| Status::invalid_argument(err.to_string()))?;
+            .map_err(|err: Error| Status::invalid_argument(format!("{err:?}")))?;
 
         let new_public_key = MnemonicSigner::compute_public_key(
             &mnemonic,
@@ -134,7 +134,7 @@ where
             algo,
         )
         .context("unable to compute new public key")
-        .map_err(|err| Status::invalid_argument(err.to_string()))?;
+        .map_err(|err| Status::invalid_argument(format!("{err:?}")))?;
 
         let memo = request.memo.unwrap_or_default();
 
@@ -144,7 +144,7 @@ where
             let chain_state = stag
                 .get_chain(&chain_id)
                 .await
-                .map_err(|err| Status::internal(err.to_string()))?;
+                .map_err(|err| Status::internal(format!("{err:?}")))?;
 
             match chain_state {
                 Some(chain_state) => {
@@ -158,7 +158,7 @@ where
                 None => Ok(()),
             }
         }
-        .map_err(|err| Status::internal(err.to_string()))?;
+        .map_err(|err| Status::internal(format!("{err:?}")))?;
 
         let mut signer = self.signer.lock().await;
 
@@ -171,13 +171,13 @@ where
                 algo,
             )
             .context("failed to add chain config")
-            .map_err(|err| Status::internal(err.to_string()))?;
+            .map_err(|err| Status::internal(format!("{err:?}")))?;
 
         self.stag
             .write()
             .await
             .set_signer(signer.clone())
-            .map_err(|err| Status::internal(err.to_string()))?;
+            .map_err(|err| Status::internal(format!("{err:?}")))?;
 
         Ok(Response::new(UpdateChainConfigResponse {}))
     }

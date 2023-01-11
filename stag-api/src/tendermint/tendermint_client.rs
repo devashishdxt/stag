@@ -26,7 +26,7 @@ pub trait TendermintClient: JsonRpcClient {
             url,
             "broadcast_tx_commit",
             broadcast::tx_commit::Request {
-                tx: proto_encode(&transaction)?.into(),
+                tx: proto_encode(&transaction)?,
             },
         )
         .await

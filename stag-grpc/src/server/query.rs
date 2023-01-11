@@ -57,13 +57,13 @@ where
             .chain_id
             .parse()
             .context("invalid chain id")
-            .map_err(|err| Status::invalid_argument(err.to_string()))?;
+            .map_err(|err| Status::invalid_argument(format!("{err:?}")))?;
 
         let mut denom = request
             .denom
             .parse()
             .context("invalid denom")
-            .map_err(|err| Status::invalid_argument(err.to_string()))?;
+            .map_err(|err| Status::invalid_argument(format!("{err:?}")))?;
 
         if request.ibc_denom {
             denom = self
@@ -72,10 +72,10 @@ where
                 .await
                 .get_ibc_denom(&chain_id, &PortId::transfer(), &denom)
                 .await
-                .map_err(|err| Status::internal(err.to_string()))?
+                .map_err(|err| Status::internal(format!("{err:?}")))?
                 .parse()
                 .context("unable to parse ibc denom")
-                .map_err(|err: Error| Status::invalid_argument(err.to_string()))?;
+                .map_err(|err: Error| Status::invalid_argument(format!("{err:?}")))?;
         }
 
         let balance = self
@@ -84,7 +84,7 @@ where
             .await
             .get_balance(&chain_id, &denom)
             .await
-            .map_err(|err| Status::internal(err.to_string()))?;
+            .map_err(|err| Status::internal(format!("{err:?}")))?;
 
         Ok(Response::new(GetBalanceResponse {
             balance: balance.to_string(),
@@ -101,7 +101,7 @@ where
             .chain_id
             .parse()
             .context("invalid chain id")
-            .map_err(|err| Status::invalid_argument(err.to_string()))?;
+            .map_err(|err| Status::invalid_argument(format!("{err:?}")))?;
 
         let limit = request.limit;
 
@@ -113,13 +113,11 @@ where
             .await
             .get_history(&chain_id, limit, offset)
             .await
-            .map_err(|err| Status::internal(err.to_string()))?;
+            .map_err(|err| Status::internal(format!("{err:?}")))?;
 
-        Ok(Response::new(
-            operations
-                .try_into()
-                .map_err(|err: Error| Status::internal(err.to_string()))?,
-        ))
+        Ok(Response::new(operations.try_into().map_err(
+            |err: Error| Status::internal(format!("{err:?}")),
+        )?))
     }
 
     async fn get_ibc_denom(
@@ -132,13 +130,13 @@ where
             .chain_id
             .parse()
             .context("invalid chain id")
-            .map_err(|err| Status::invalid_argument(err.to_string()))?;
+            .map_err(|err| Status::invalid_argument(format!("{err:?}")))?;
 
         let denom = request
             .denom
             .parse()
             .context("invalid denom")
-            .map_err(|err| Status::invalid_argument(err.to_string()))?;
+            .map_err(|err| Status::invalid_argument(format!("{err:?}")))?;
 
         let ibc_denom = self
             .stag
@@ -146,7 +144,7 @@ where
             .await
             .get_ibc_denom(&chain_id, &PortId::transfer(), &denom)
             .await
-            .map_err(|err| Status::internal(err.to_string()))?;
+            .map_err(|err| Status::internal(format!("{err:?}")))?;
 
         Ok(Response::new(GetIbcDenomResponse { ibc_denom }))
     }

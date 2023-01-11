@@ -1,3 +1,4 @@
+#![allow(clippy::let_unit_value)] // TODO: migrate to yew 0.20
 mod componenets;
 mod routes;
 

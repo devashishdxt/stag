@@ -55,19 +55,19 @@ where
             .chain_id
             .parse()
             .context("invalid chain id")
-            .map_err(|err| Status::invalid_argument(err.to_string()))?;
+            .map_err(|err| Status::invalid_argument(format!("{err:?}")))?;
 
         let request_id = request.request_id;
 
         let amount = U256::from_dec_str(&request.amount)
             .context("invalid amount")
-            .map_err(|err| Status::invalid_argument(err.to_string()))?;
+            .map_err(|err| Status::invalid_argument(format!("{err:?}")))?;
 
         let denom = request
             .denom
             .parse()
             .context("invalid denom")
-            .map_err(|err| Status::invalid_argument(err.to_string()))?;
+            .map_err(|err| Status::invalid_argument(format!("{err:?}")))?;
 
         let receiver = request.receiver_address;
 
@@ -79,7 +79,7 @@ where
             .await
             .mint(chain_id, request_id, amount, denom, receiver, memo)
             .await
-            .map_err(|err| Status::internal(err.to_string()))?;
+            .map_err(|err| Status::internal(format!("{err:?}")))?;
 
         Ok(Response::new(MintResponse { transaction_hash }))
     }
@@ -91,19 +91,19 @@ where
             .chain_id
             .parse()
             .context("invalid chain id")
-            .map_err(|err| Status::invalid_argument(err.to_string()))?;
+            .map_err(|err| Status::invalid_argument(format!("{err:?}")))?;
 
         let request_id = request.request_id;
 
         let amount = U256::from_dec_str(&request.amount)
             .context("invalid amount")
-            .map_err(|err| Status::invalid_argument(err.to_string()))?;
+            .map_err(|err| Status::invalid_argument(format!("{err:?}")))?;
 
         let denom = request
             .denom
             .parse()
             .context("invalid denom")
-            .map_err(|err| Status::invalid_argument(err.to_string()))?;
+            .map_err(|err| Status::invalid_argument(format!("{err:?}")))?;
 
         let memo = request.memo.unwrap_or_default();
 
@@ -113,7 +113,7 @@ where
             .await
             .burn(chain_id, request_id, amount, denom, memo)
             .await
-            .map_err(|err| Status::internal(err.to_string()))?;
+            .map_err(|err| Status::internal(format!("{err:?}")))?;
 
         Ok(Response::new(BurnResponse { transaction_hash }))
     }
