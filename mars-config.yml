@@ -1,24 +1,40 @@
-genesis:
-  chain_id: "mars-1"
+version: 1
+build:
+  proto:
+    path: proto
+    third_party_paths:
+    - third_party/proto
+    - proto_vendor
 accounts:
-  - name: alice
-    coins: ["20000token", "200000000stake"]
-    mnemonic: "practice empty client sauce pistol work ticket casual romance appear army fault palace coyote fox super salute slim catch kite wrist three hedgehog sign"
-  - name: bob
-    coins: ["10000token", "100000000stake"]
-    mnemonic: "setup chicken slogan define emerge original sugar bitter suggest bicycle increase eager rather end predict relief moment burden lonely ginger umbrella secret toy trash"
-validator:
-  name: alice
-  staked: "100000000stake"
-client:
-  openapi:
-    path: "docs/static/openapi.yml"
-  vuex:
-    path: "vue/src/store"
+- name: alice
+  coins:
+  - 20000token
+  - 200000000stake
+  mnemonic: practice empty client sauce pistol work ticket casual romance appear army
+    fault palace coyote fox super salute slim catch kite wrist three hedgehog sign
+- name: bob
+  coins:
+  - 10000token
+  - 100000000stake
+  mnemonic: setup chicken slogan define emerge original sugar bitter suggest bicycle
+    increase eager rather end predict relief moment burden lonely ginger umbrella
+    secret toy trash
 faucet:
   name: bob
-  coins: ["5token", "100000stake"]
-init:
+  coins:
+  - 5token
+  - 100000stake
+  host: 0.0.0.0:4500
+client:
+  vuex:
+    path: vue/src/store
+  openapi:
+    path: docs/static/openapi.yml
+genesis:
+  chain_id: mars-1
+validators:
+- name: alice
+  bonded: 100000000stake
   app:
     grpc-web:
       enable-unsafe-cors: true
