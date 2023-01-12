@@ -21,10 +21,10 @@ use crate::proto::core::{
     CreateChannelResponse, FeeConfig, UpdateSignerRequest, UpdateSignerResponse,
 };
 
-const DEFAULT_GRPC_ADDR: &str = "http://0.0.0.0:22273";
-const DEFAULT_RPC_ADDR: &str = "http://0.0.0.0:19451";
-const DEFAULT_FEE_AMOUNT: &str = "3000000";
-const DEFAULT_FEE_DENOM: &str = "basecro";
+const DEFAULT_GRPC_ADDR: &str = "http://0.0.0.0:9090";
+const DEFAULT_RPC_ADDR: &str = "http://0.0.0.0:26657";
+const DEFAULT_FEE_AMOUNT: &str = "1000";
+const DEFAULT_FEE_DENOM: &str = "stake";
 const DEFAULT_GAS_LIMIT: u64 = 300000;
 const DEFAULT_TRUST_LEVEL: &str = "1/3";
 const DEFAULT_TRUSTING_PERIOD: Duration = Duration::from_secs(336 * 60 * 60); // 14 days
