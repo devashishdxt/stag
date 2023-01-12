@@ -3077,6 +3077,7 @@ dependencies = [
 [[package]]
 name = "tendermint"
 version = "0.27.0"
+source = "git+https://github.com/devashishdxt/tendermint-rs?branch=solo-machine-fix#f5af471864d28a27230aa3cebdb01f6b26f09eab"
 dependencies = [
  "bytes",
  "ed25519",
@@ -3103,6 +3104,7 @@ dependencies = [
 [[package]]
 name = "tendermint-config"
 version = "0.27.0"
+source = "git+https://github.com/devashishdxt/tendermint-rs?branch=solo-machine-fix#f5af471864d28a27230aa3cebdb01f6b26f09eab"
 dependencies = [
  "flex-error",
  "serde",
@@ -3115,6 +3117,7 @@ dependencies = [
 [[package]]
 name = "tendermint-light-client"
 version = "0.27.0"
+source = "git+https://github.com/devashishdxt/tendermint-rs?branch=solo-machine-fix#f5af471864d28a27230aa3cebdb01f6b26f09eab"
 dependencies = [
  "contracts",
  "crossbeam-channel",
@@ -3134,6 +3137,7 @@ dependencies = [
 [[package]]
 name = "tendermint-light-client-verifier"
 version = "0.27.0"
+source = "git+https://github.com/devashishdxt/tendermint-rs?branch=solo-machine-fix#f5af471864d28a27230aa3cebdb01f6b26f09eab"
 dependencies = [
  "derive_more",
  "flex-error",
@@ -3145,6 +3149,7 @@ dependencies = [
 [[package]]
 name = "tendermint-proto"
 version = "0.27.0"
+source = "git+https://github.com/devashishdxt/tendermint-rs?branch=solo-machine-fix#f5af471864d28a27230aa3cebdb01f6b26f09eab"
 dependencies = [
  "bytes",
  "flex-error",
@@ -3161,6 +3166,7 @@ dependencies = [
 [[package]]
 name = "tendermint-rpc"
 version = "0.27.0"
+source = "git+https://github.com/devashishdxt/tendermint-rs?branch=solo-machine-fix#f5af471864d28a27230aa3cebdb01f6b26f09eab"
 dependencies = [
  "bytes",
  "flex-error",
