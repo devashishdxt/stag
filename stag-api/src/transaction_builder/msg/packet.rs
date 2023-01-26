@@ -71,6 +71,8 @@ where
         timeout_timestamp: 0,
     };
 
+    let proof_height = Height::new(0, chain_state.sequence.into());
+
     let proof_commitment = get_packet_commitment_proof(
         context,
         chain_state,
@@ -79,10 +81,6 @@ where
         request_id,
     )
     .await?;
-
-    let proof_height = Height::new(0, chain_state.sequence.into());
-
-    chain_state.sequence += 1;
 
     let connection_details = chain_state
         .connection_details
@@ -138,8 +136,6 @@ where
         request_id,
     )
     .await?;
-
-    chain_state.sequence += 1;
 
     let message = MsgAcknowledgement {
         packet: Some(packet),

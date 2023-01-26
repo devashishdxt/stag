@@ -1,14 +1,17 @@
-use anyhow::Result;
-use cosmos_sdk_proto::{
-    cosmos::tx::signing::v1beta1::{
-        signature_descriptor::{
-            data::{Single as SingleSignatureData, Sum as SignatureDataInner},
-            Data as SignatureData,
-        },
-        SignMode,
-    },
-    ibc::lightclients::solomachine::v2::{SignBytes, TimestampedSignatureData},
+#[cfg(feature = "solo-machine-v3")]
+use crate::types::proto::ibc::lightclients::solomachine::v3::{
+    SignBytes, TimestampedSignatureData,
 };
+use anyhow::Result;
+use cosmos_sdk_proto::cosmos::tx::signing::v1beta1::{
+    signature_descriptor::{
+        data::{Single as SingleSignatureData, Sum as SignatureDataInner},
+        Data as SignatureData,
+    },
+    SignMode,
+};
+#[cfg(not(feature = "solo-machine-v3"))]
+use cosmos_sdk_proto::ibc::lightclients::solomachine::v2::{SignBytes, TimestampedSignatureData};
 
 use crate::{
     signer::{Message, Signer},

@@ -21,6 +21,7 @@ default = [
     "reqwest-client",
     # "sqlite-storage",
     "tracing-event-handler",
+    "solo-machine-v3",
 ]
 
 # Enables feature indicators in documentation
@@ -57,6 +58,9 @@ sqlite-storage = ["non-wasm", "sqlx/sqlite"]
 
 # Enables support for event logging using `tracing` crate
 tracing-event-handler = ["tracing"]
+
+# Enables support for solo machine v3 protocol
+solo-machine-v3 = []
 
 # Enables all the required dependencies for wasm environments
 wasm = ["getrandom", "js-sys", "tonic-web-wasm-client"]

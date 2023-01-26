@@ -1,11 +1,9 @@
+#[cfg(feature = "solo-machine-v3")]
+use crate::types::proto::ibc::lightclients::solomachine::v3::Header as SoloMachineHeader;
 use anyhow::{anyhow, bail, Result};
-use cosmos_sdk_proto::{
-    cosmos::tx::v1beta1::TxRaw,
-    ibc::{
-        core::client::v1::MsgUpdateClient,
-        lightclients::solomachine::v2::Header as SoloMachineHeader,
-    },
-};
+#[cfg(not(feature = "solo-machine-v3"))]
+use cosmos_sdk_proto::ibc::lightclients::solomachine::v2::Header as SoloMachineHeader;
+use cosmos_sdk_proto::{cosmos::tx::v1beta1::TxRaw, ibc::core::client::v1::MsgUpdateClient};
 
 use crate::{
     signer::{GetPublicKey, Signer},
@@ -33,6 +31,7 @@ where
         );
     }
 
+    #[cfg(not(feature = "solo-machine-v3"))]
     let sequence = chain_state.sequence.into();
     let any_public_key = new_public_key.to_any()?;
 
@@ -45,9 +44,8 @@ where
     )
     .await?;
 
-    chain_state.sequence += 1;
-
     let header = SoloMachineHeader {
+        #[cfg(not(feature = "solo-machine-v3"))]
         sequence,
         timestamp: to_u64_timestamp(chain_state.consensus_timestamp)?,
         signature,

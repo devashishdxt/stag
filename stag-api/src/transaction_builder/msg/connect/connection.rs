@@ -89,17 +89,11 @@ where
     let proof_try =
         get_connection_proof(context, chain_state, counterparty_connection_id, request_id).await?;
 
-    chain_state.sequence += 1;
-
     let proof_client =
         get_client_proof(context, chain_state, counterparty_client_id, request_id).await?;
 
-    chain_state.sequence += 1;
-
     let proof_consensus =
         get_consensus_proof(context, chain_state, counterparty_client_id, request_id).await?;
-
-    chain_state.sequence += 1;
 
     let message = MsgConnectionOpenAck {
         connection_id: connection_id.to_string(),
