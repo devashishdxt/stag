@@ -43,7 +43,10 @@ pub trait JsonRpcClient: Base {
 
         let result = response["result"].clone();
 
-        serde_json::from_value(result).context("jsonrpc response deserialization error")
+        serde_json::from_value(result).context(format!(
+            "jsonrpc response deserialization error [method: {}]",
+            method
+        ))
     }
 }
 

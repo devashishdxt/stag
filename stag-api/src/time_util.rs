@@ -15,18 +15,20 @@ pub fn now_utc() -> DateTime<Utc> {
 pub fn now_utc() -> DateTime<Utc> {
     let date = js_sys::Date::new_0();
 
-    let naive_date = NaiveDate::from_ymd(
+    let naive_date = NaiveDate::from_ymd_opt(
         date.get_utc_full_year() as i32,
         date.get_utc_month() + 1,
         date.get_utc_date(),
-    );
+    )
+    .unwrap();
 
-    let naive_time = NaiveTime::from_hms_milli(
+    let naive_time = NaiveTime::from_hms_milli_opt(
         date.get_utc_hours(),
         date.get_utc_minutes(),
         date.get_utc_seconds(),
         date.get_utc_milliseconds(),
-    );
+    )
+    .unwrap();
 
     let naive_date_time = NaiveDateTime::new(naive_date, naive_time);
 

@@ -91,8 +91,6 @@ where
     )
     .await?;
 
-    chain_state.sequence += 1;
-
     let message = MsgChannelOpenTry {
         port_id: port_id.to_string(),
         previous_channel_id: "".to_owned(),
@@ -143,8 +141,6 @@ where
     )
     .await?;
 
-    chain_state.sequence += 1;
-
     let message = MsgChannelOpenAck {
         port_id: port_id.to_string(),
         channel_id: channel_id.to_string(),
@@ -185,8 +181,6 @@ where
         request_id,
     )
     .await?;
-
-    chain_state.sequence += 1;
 
     let message = MsgChannelOpenConfirm {
         port_id: port_id.to_string(),
@@ -248,8 +242,6 @@ where
         request_id,
     )
     .await?;
-
-    chain_state.sequence += 1;
 
     let message = MsgChannelCloseConfirm {
         port_id: port_id.to_string(),

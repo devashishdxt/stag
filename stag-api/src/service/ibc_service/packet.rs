@@ -21,7 +21,7 @@ pub fn extract_packets(response: &TxCommitResponse) -> Result<Vec<Packet>> {
     let mut packets = vec![];
 
     for event in response.deliver_tx.events.iter() {
-        if event.type_str == "send_packet" {
+        if event.kind == "send_packet" {
             let mut attributes = HashMap::new();
 
             for tag in event.attributes.iter() {

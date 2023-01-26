@@ -1,3 +1,9 @@
 [workspace]
 members = ["stag-api", "stag-cli", "stag-grpc", "stag-ui"]
 resolver = "2"
+
+[patch.crates-io]
+tendermint = { git = "https://github.com/devashishdxt/tendermint-rs", branch = "solo-machine-fix" }
+tendermint-light-client = { git = "https://github.com/devashishdxt/tendermint-rs", branch = "solo-machine-fix" }
+tendermint-rpc = { git = "https://github.com/devashishdxt/tendermint-rs", branch = "solo-machine-fix" }
+tendermint-proto = { git = "https://github.com/devashishdxt/tendermint-rs", branch = "solo-machine-fix" }

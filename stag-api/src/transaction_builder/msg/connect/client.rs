@@ -1,4 +1,12 @@
+#[cfg(feature = "solo-machine-v3")]
+use crate::types::proto::ibc::lightclients::solomachine::v3::{
+    ClientState as SoloMachineClientState, ConsensusState as SoloMachineConsensusState,
+};
 use anyhow::{Context, Result};
+#[cfg(not(feature = "solo-machine-v3"))]
+use cosmos_sdk_proto::ibc::lightclients::solomachine::v2::{
+    ClientState as SoloMachineClientState, ConsensusState as SoloMachineConsensusState,
+};
 use cosmos_sdk_proto::{
     cosmos::{
         staking::v1beta1::{query_client::QueryClient as StakingQueryClient, QueryParamsRequest},
@@ -6,14 +14,9 @@ use cosmos_sdk_proto::{
     },
     ibc::{
         core::client::v1::{Height, MsgCreateClient},
-        lightclients::{
-            solomachine::v2::{
-                ClientState as SoloMachineClientState, ConsensusState as SoloMachineConsensusState,
-            },
-            tendermint::v1::{
-                ClientState as TendermintClientState, ConsensusState as TendermintConsensusState,
-                Fraction,
-            },
+        lightclients::tendermint::v1::{
+            ClientState as TendermintClientState, ConsensusState as TendermintConsensusState,
+            Fraction,
         },
     },
 };
@@ -68,6 +71,7 @@ where
         sequence: chain_state.sequence.into(),
         is_frozen: false,
         consensus_state: Some(consensus_state),
+        #[cfg(not(feature = "solo-machine-v3"))]
         allow_update_after_proposal: true,
     };
     let any_client_state = client_state.to_any()?;

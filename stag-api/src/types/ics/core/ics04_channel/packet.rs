@@ -15,9 +15,9 @@ impl IPacket for Packet {
 
         let mut buf = Vec::new();
 
-        buf.extend(&self.timeout_timestamp.to_be_bytes());
-        buf.extend(&timeout_height.revision_number.to_be_bytes());
-        buf.extend(&timeout_height.revision_height.to_be_bytes());
+        buf.extend(self.timeout_timestamp.to_be_bytes());
+        buf.extend(timeout_height.revision_number.to_be_bytes());
+        buf.extend(timeout_height.revision_height.to_be_bytes());
         buf.extend(Sha256::digest(&self.data));
 
         Ok(Sha256::digest(&buf).to_vec())

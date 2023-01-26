@@ -1,15 +1,12 @@
 use anyhow::{anyhow, ensure, Result};
-use tendermint::abci::{
-    tag::{Key, Tag},
-    Event as AbciEvent,
-};
+use tendermint::abci::{Event as AbciEvent, EventAttribute};
 use tendermint_rpc::endpoint::broadcast::tx_commit::Response as TxCommitResponse;
 
 pub fn extract_attribute(events: &[AbciEvent], event_type: &str, key: &str) -> Result<String> {
     let mut attribute = None;
 
     for event in events {
-        if event.type_str == event_type {
+        if event.kind == event_type {
             attribute = Some(get_attribute(&event.attributes, key)?);
         }
     }
@@ -24,11 +21,7 @@ pub fn extract_attribute(events: &[AbciEvent], event_type: &str, key: &str) -> R
     })
 }
 
-fn get_attribute(tags: &[Tag], key: &str) -> Result<String> {
-    let key: Key = key
-        .parse()
-        .map_err(|e| anyhow!("unable to parse attribute key `{}`: {}", key, e))?;
-
+fn get_attribute(tags: &[EventAttribute], key: &str) -> Result<String> {
     for tag in tags {
         if tag.key == key {
             return Ok(tag.value.to_string());

@@ -81,7 +81,7 @@ pub async fn update_chain_state<'e>(
         sqlx::query("UPDATE chain_states SET node_id = $1, config = $2, consensus_timestamp = $3, sequence = $4, connection_details = $5, updated_at = $6 WHERE id = $7")
             .bind(chain_state.node_id.to_string())
             .bind(Json(&chain_state.config))
-            .bind(&chain_state.consensus_timestamp)
+            .bind(chain_state.consensus_timestamp)
             .bind(sequence)
             .bind(chain_state.connection_details.as_ref().map(Json))
             .bind(Utc::now())

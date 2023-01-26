@@ -15,22 +15,23 @@ name = "stag"
 path = "src/main.rs"
 
 [features]
-default = ["ethermint", "sqlite-storage"]
+default = ["ethermint", "solo-machine-v3", "sqlite-storage"]
 ethermint = ["stag-api/ethermint"]
 postgres-storage = ["stag-api/postgres-storage"]
+solo-machine-v3 = ["stag-api/solo-machine-v3"]
 sqlite-storage = ["stag-api/sqlite-storage"]
 
 [dependencies]
-anyhow = "1.0.64"
+anyhow = "1.0.68"
 cfg-if = "1.0.0"
-clap = { version = "3.2.20", features = ["derive", "env"] }
+clap = { version = "4.0.32", features = ["derive", "env"] }
 hex = "0.4.3"
-primitive-types = "0.11.1"
-serde = { version = "1.0.144", features = ["derive"] }
-serde_yaml = "0.9.11"
+primitive-types = "0.12.1"
+serde = { version = "1.0.152", features = ["derive"] }
+serde_yaml = "0.9.16"
 stag-api = { version = "0.1.0", path = "../stag-api", default-features = false, features = [
     "mnemonic-signer",
     "reqwest-client",
     "tracing-event-handler",
 ] }
-tokio = { version = "1.21.0", features = ["rt-multi-thread", "macros", "fs"] }
+tokio = { version = "1.24.1", features = ["rt-multi-thread", "macros", "fs"] }

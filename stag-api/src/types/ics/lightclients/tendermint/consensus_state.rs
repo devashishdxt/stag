@@ -10,12 +10,12 @@ pub trait IConsensusState: Sized {
 
 impl IConsensusState for ConsensusState {
     fn from_block_header(header: BlockHeader) -> Self {
-        let timestamp =
-            cosmos_sdk_proto::tendermint::google::protobuf::Timestamp::from(header.time);
+        let timestamp: cosmos_sdk_proto::tendermint::google::protobuf::Timestamp =
+            header.time.into();
 
         Self {
             root: Some(MerkleRoot {
-                hash: header.app_hash.value(),
+                hash: header.app_hash.into(),
             }),
             timestamp: Some(Timestamp {
                 seconds: timestamp.seconds,

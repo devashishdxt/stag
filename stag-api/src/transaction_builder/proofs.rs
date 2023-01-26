@@ -1,12 +1,14 @@
+#[cfg(feature = "solo-machine-v3")]
+use crate::types::proto::ibc::lightclients::solomachine::v3::{HeaderData, SignBytes};
 use anyhow::{anyhow, Context, Result};
-use cosmos_sdk_proto::ibc::{
-    core::channel::v1::Packet,
-    lightclients::solomachine::v2::{
-        ChannelStateData, ClientStateData, ConnectionStateData, ConsensusStateData, DataType,
-        HeaderData, PacketAcknowledgementData, PacketCommitmentData, SignBytes,
-    },
+use cosmos_sdk_proto::ibc::core::channel::v1::Packet;
+#[cfg(not(feature = "solo-machine-v3"))]
+use cosmos_sdk_proto::ibc::lightclients::solomachine::v2::{
+    ChannelStateData, ClientStateData, ConnectionStateData, ConsensusStateData, DataType,
+    HeaderData, PacketAcknowledgementData, PacketCommitmentData, SignBytes,
 };
 use prost_types::Any;
+use sha2::Digest;
 
 use crate::{
     signer::Signer,
@@ -36,7 +38,7 @@ use super::{
 
 pub async fn get_packet_acknowledgement_proof<C>(
     context: &C,
-    chain_state: &ChainState,
+    chain_state: &mut ChainState,
     port_id: &PortId,
     acknowledgement: Vec<u8>,
     packet_sequence: u64,
@@ -65,27 +67,41 @@ where
     );
     acknowledgement_path.apply_prefix(&"ibc".parse().unwrap());
 
-    let acknowledgement_data = PacketAcknowledgementData {
-        path: acknowledgement_path.into_bytes(),
-        acknowledgement,
-    };
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "solo-machine-v3")] {
+            let sign_bytes = SignBytes {
+                sequence: chain_state.sequence.into(),
+                timestamp: to_u64_timestamp(chain_state.consensus_timestamp)?,
+                diversifier: chain_state.config.diversifier.to_owned(),
+                path: acknowledgement_path.into_bytes(),
+                data: sha2::Sha256::digest(&acknowledgement).to_vec(),
+            };
+        } else {
+            let acknowledgement_data = PacketAcknowledgementData {
+                path: acknowledgement_path.into_bytes(),
+                acknowledgement,
+            };
 
-    let acknowledgement_data_bytes = proto_encode(&acknowledgement_data)?;
+            let acknowledgement_data_bytes = proto_encode(&acknowledgement_data)?;
 
-    let sign_bytes = SignBytes {
-        sequence: chain_state.sequence.into(),
-        timestamp: to_u64_timestamp(chain_state.consensus_timestamp)?,
-        diversifier: chain_state.config.diversifier.to_owned(),
-        data_type: DataType::PacketAcknowledgement.into(),
-        data: acknowledgement_data_bytes,
-    };
+            let sign_bytes = SignBytes {
+                sequence: chain_state.sequence.into(),
+                timestamp: to_u64_timestamp(chain_state.consensus_timestamp)?,
+                diversifier: chain_state.config.diversifier.to_owned(),
+                data_type: DataType::PacketAcknowledgement.into(),
+                data: acknowledgement_data_bytes,
+            };
+        }
+    }
+
+    chain_state.sequence += 1;
 
     timestamped_sign(context, chain_state, sign_bytes, request_id).await
 }
 
 pub async fn get_packet_commitment_proof<C>(
     context: &C,
-    chain_state: &ChainState,
+    chain_state: &mut ChainState,
     port_id: &PortId,
     packet: &Packet,
     request_id: Option<&str>,
@@ -115,27 +131,41 @@ where
     );
     commitment_path.apply_prefix(&"ibc".parse().unwrap());
 
-    let packet_commitment_data = PacketCommitmentData {
-        path: commitment_path.into_bytes(),
-        commitment: commitment_bytes,
-    };
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "solo-machine-v3")] {
+            let sign_bytes = SignBytes {
+                sequence: chain_state.sequence.into(),
+                timestamp: to_u64_timestamp(chain_state.consensus_timestamp)?,
+                diversifier: chain_state.config.diversifier.to_owned(),
+                path: commitment_path.into_bytes(),
+                data: commitment_bytes,
+            };
+        } else {
+            let packet_commitment_data = PacketCommitmentData {
+                path: commitment_path.into_bytes(),
+                commitment: commitment_bytes,
+            };
 
-    let packet_commitment_data_bytes = proto_encode(&packet_commitment_data)?;
+            let packet_commitment_data_bytes = proto_encode(&packet_commitment_data)?;
 
-    let sign_bytes = SignBytes {
-        sequence: chain_state.sequence.into(),
-        timestamp: to_u64_timestamp(chain_state.consensus_timestamp)?,
-        diversifier: chain_state.config.diversifier.to_owned(),
-        data_type: DataType::PacketCommitment.into(),
-        data: packet_commitment_data_bytes,
-    };
+            let sign_bytes = SignBytes {
+                sequence: chain_state.sequence.into(),
+                timestamp: to_u64_timestamp(chain_state.consensus_timestamp)?,
+                diversifier: chain_state.config.diversifier.to_owned(),
+                data_type: DataType::PacketCommitment.into(),
+                data: packet_commitment_data_bytes,
+            };
+        }
+    }
+
+    chain_state.sequence += 1;
 
     timestamped_sign(context, chain_state, sign_bytes, request_id).await
 }
 
 pub async fn get_channel_proof<C>(
     context: &C,
-    chain_state: &ChainState,
+    chain_state: &mut ChainState,
     channel_id: &ChannelId,
     port_id: &PortId,
     request_id: Option<&str>,
@@ -160,27 +190,44 @@ where
     let mut channel_path = ChannelPath::new(port_id, channel_id);
     channel_path.apply_prefix(&"ibc".parse().unwrap());
 
-    let channel_state_data = ChannelStateData {
-        path: channel_path.into_bytes(),
-        channel: Some(channel),
-    };
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "solo-machine-v3")] {
 
-    let channel_state_data_bytes = proto_encode(&channel_state_data)?;
+            let channel_state_bytes = proto_encode(&channel)?;
 
-    let sign_bytes = SignBytes {
-        sequence: chain_state.sequence.into(),
-        timestamp: to_u64_timestamp(chain_state.consensus_timestamp)?,
-        diversifier: chain_state.config.diversifier.to_owned(),
-        data_type: DataType::ChannelState.into(),
-        data: channel_state_data_bytes,
-    };
+            let sign_bytes = SignBytes {
+                sequence: chain_state.sequence.into(),
+                timestamp: to_u64_timestamp(chain_state.consensus_timestamp)?,
+                diversifier: chain_state.config.diversifier.to_owned(),
+                path: channel_path.into_bytes(),
+                data: channel_state_bytes,
+            };
+        } else {
+            let channel_state_data = ChannelStateData {
+                path: channel_path.into_bytes(),
+                channel: Some(channel),
+            };
+
+            let channel_state_data_bytes = proto_encode(&channel_state_data)?;
+
+            let sign_bytes = SignBytes {
+                sequence: chain_state.sequence.into(),
+                timestamp: to_u64_timestamp(chain_state.consensus_timestamp)?,
+                diversifier: chain_state.config.diversifier.to_owned(),
+                data_type: DataType::ChannelState.into(),
+                data: channel_state_data_bytes,
+            };
+        }
+    }
+
+    chain_state.sequence += 1;
 
     timestamped_sign(context, chain_state, sign_bytes, request_id).await
 }
 
 pub async fn get_connection_proof<C>(
     context: &C,
-    chain_state: &ChainState,
+    chain_state: &mut ChainState,
     connection_id: &ConnectionId,
     request_id: Option<&str>,
 ) -> Result<Vec<u8>>
@@ -198,27 +245,43 @@ where
     let mut connection_path = ConnectionPath::new(connection_id);
     connection_path.apply_prefix(&"ibc".parse().unwrap());
 
-    let connection_state_data = ConnectionStateData {
-        path: connection_path.into_bytes(),
-        connection: Some(connection),
-    };
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "solo-machine-v3")] {
+            let connection_state_bytes = proto_encode(&connection)?;
 
-    let connection_state_data_bytes = proto_encode(&connection_state_data)?;
+            let sign_bytes = SignBytes {
+                sequence: chain_state.sequence.into(),
+                timestamp: to_u64_timestamp(chain_state.consensus_timestamp)?,
+                diversifier: chain_state.config.diversifier.to_owned(),
+                path: connection_path.into_bytes(),
+                data: connection_state_bytes,
+            };
+        } else {
+            let connection_state_data = ConnectionStateData {
+                path: connection_path.into_bytes(),
+                connection: Some(connection),
+            };
 
-    let sign_bytes = SignBytes {
-        sequence: chain_state.sequence.into(),
-        timestamp: to_u64_timestamp(chain_state.consensus_timestamp)?,
-        diversifier: chain_state.config.diversifier.to_owned(),
-        data_type: DataType::ConnectionState.into(),
-        data: connection_state_data_bytes,
-    };
+            let connection_state_data_bytes = proto_encode(&connection_state_data)?;
+
+            let sign_bytes = SignBytes {
+                sequence: chain_state.sequence.into(),
+                timestamp: to_u64_timestamp(chain_state.consensus_timestamp)?,
+                diversifier: chain_state.config.diversifier.to_owned(),
+                data_type: DataType::ConnectionState.into(),
+                data: connection_state_data_bytes,
+            };
+        }
+    }
+
+    chain_state.sequence += 1;
 
     timestamped_sign(context, chain_state, sign_bytes, request_id).await
 }
 
 pub async fn get_client_proof<C>(
     context: &C,
-    chain_state: &ChainState,
+    chain_state: &mut ChainState,
     client_id: &ClientId,
     request_id: Option<&str>,
 ) -> Result<Vec<u8>>
@@ -237,27 +300,43 @@ where
     let mut client_state_path = ClientStatePath::new(client_id);
     client_state_path.apply_prefix(&"ibc".parse().unwrap());
 
-    let client_state_data = ClientStateData {
-        path: client_state_path.into_bytes(),
-        client_state: Some(client_state),
-    };
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "solo-machine-v3")] {
+            let client_state_bytes = proto_encode(&client_state)?;
 
-    let client_state_data_bytes = proto_encode(&client_state_data)?;
+            let sign_bytes = SignBytes {
+                sequence: chain_state.sequence.into(),
+                timestamp: to_u64_timestamp(chain_state.consensus_timestamp)?,
+                diversifier: chain_state.config.diversifier.to_owned(),
+                path: client_state_path.into_bytes(),
+                data: client_state_bytes,
+            };
+        } else {
+            let client_state_data = ClientStateData {
+                path: client_state_path.into_bytes(),
+                client_state: Some(client_state),
+            };
 
-    let sign_bytes = SignBytes {
-        sequence: chain_state.sequence.into(),
-        timestamp: to_u64_timestamp(chain_state.consensus_timestamp)?,
-        diversifier: chain_state.config.diversifier.to_owned(),
-        data_type: DataType::ClientState.into(),
-        data: client_state_data_bytes,
-    };
+            let client_state_data_bytes = proto_encode(&client_state_data)?;
+
+            let sign_bytes = SignBytes {
+                sequence: chain_state.sequence.into(),
+                timestamp: to_u64_timestamp(chain_state.consensus_timestamp)?,
+                diversifier: chain_state.config.diversifier.to_owned(),
+                data_type: DataType::ClientState.into(),
+                data: client_state_data_bytes,
+            };
+        }
+    }
+
+    chain_state.sequence += 1;
 
     timestamped_sign(context, chain_state, sign_bytes, request_id).await
 }
 
 pub async fn get_consensus_proof<C>(
     context: &C,
-    chain_state: &ChainState,
+    chain_state: &mut ChainState,
     client_id: &ClientId,
     request_id: Option<&str>,
 ) -> Result<Vec<u8>>
@@ -292,20 +371,36 @@ where
     let mut consensus_state_path = ConsensusStatePath::new(client_id, &height);
     consensus_state_path.apply_prefix(&"ibc".parse().unwrap());
 
-    let consensus_state_data = ConsensusStateData {
-        path: consensus_state_path.into_bytes(),
-        consensus_state: Some(consensus_state),
-    };
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "solo-machine-v3")] {
+            let consensus_state_bytes = proto_encode(&consensus_state)?;
 
-    let consensus_state_data_bytes = proto_encode(&consensus_state_data)?;
+            let sign_bytes = SignBytes {
+                sequence: chain_state.sequence.into(),
+                timestamp: to_u64_timestamp(chain_state.consensus_timestamp)?,
+                diversifier: chain_state.config.diversifier.to_owned(),
+                path: consensus_state_path.into_bytes(),
+                data: consensus_state_bytes,
+            };
+        } else {
+            let consensus_state_data = ConsensusStateData {
+                path: consensus_state_path.into_bytes(),
+                consensus_state: Some(consensus_state),
+            };
 
-    let sign_bytes = SignBytes {
-        sequence: chain_state.sequence.into(),
-        timestamp: to_u64_timestamp(chain_state.consensus_timestamp)?,
-        diversifier: chain_state.config.diversifier.to_owned(),
-        data_type: DataType::ConsensusState.into(),
-        data: consensus_state_data_bytes,
-    };
+            let consensus_state_data_bytes = proto_encode(&consensus_state_data)?;
+
+            let sign_bytes = SignBytes {
+                sequence: chain_state.sequence.into(),
+                timestamp: to_u64_timestamp(chain_state.consensus_timestamp)?,
+                diversifier: chain_state.config.diversifier.to_owned(),
+                data_type: DataType::ConsensusState.into(),
+                data: consensus_state_data_bytes,
+            };
+        }
+    }
+
+    chain_state.sequence += 1;
 
     timestamped_sign(context, chain_state, sign_bytes, request_id).await
 }
@@ -328,13 +423,25 @@ where
 
     let header_data_bytes = proto_encode(&header_data)?;
 
-    let sign_bytes = SignBytes {
-        sequence: chain_state.sequence.into(),
-        timestamp: to_u64_timestamp(chain_state.consensus_timestamp)?,
-        diversifier: chain_state.config.diversifier.to_owned(),
-        data_type: DataType::Header.into(),
-        data: header_data_bytes,
-    };
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "solo-machine-v3")] {
+            let sign_bytes = SignBytes {
+                sequence: chain_state.sequence.into(),
+                timestamp: to_u64_timestamp(chain_state.consensus_timestamp)?,
+                diversifier: chain_state.config.diversifier.to_owned(),
+                path: "solomachine:header".as_bytes().to_vec(),
+                data: header_data_bytes,
+            };
+        } else {
+            let sign_bytes = SignBytes {
+                sequence: chain_state.sequence.into(),
+                timestamp: to_u64_timestamp(chain_state.consensus_timestamp)?,
+                diversifier: chain_state.config.diversifier.to_owned(),
+                data_type: DataType::Header.into(),
+                data: header_data_bytes,
+            };
+        }
+    }
 
     sign(context, request_id, &chain_state.id, sign_bytes).await
 }

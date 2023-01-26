@@ -16,3 +16,14 @@ pub mod ethermint {
         }
     }
 }
+
+#[cfg(feature = "solo-machine-v3")]
+pub mod ibc {
+    pub mod lightclients {
+        pub mod solomachine {
+            pub mod v3 {
+                tonic::include_proto!("ibc.lightclients.solomachine.v3");
+            }
+        }
+    }
+}

@@ -13,32 +13,33 @@ name = "stag-grpc"
 path = "./src/bin/stag_grpc.rs"
 
 [features]
-default = ["ethermint", "mnemonic-signer", "sqlite-storage"]
+default = ["ethermint", "mnemonic-signer", "solo-machine-v3", "sqlite-storage"]
 ethermint = ["stag-api/ethermint"]
 mnemonic-signer = ["stag-api/mnemonic-signer"]
 postgres-storage = ["stag-api/postgres-storage"]
+solo-machine-v3 = ["stag-api/solo-machine-v3"]
 sqlite-storage = ["stag-api/sqlite-storage"]
 
 [dependencies]
-anyhow = "1.0.64"
+anyhow = "1.0.68"
 cfg-if = "1.0.0"
-clap = { version = "3.2.20", features = ["derive"] }
+clap = { version = "4.0.32", features = ["derive"] }
 hex = "0.4.3"
-primitive-types = "0.11.1"
-prost = "0.11.0"
-prost-types = "0.11.1"
+primitive-types = "0.12.1"
+prost = "0.11.5"
+prost-types = "0.11.5"
 stag-api = { path = "../stag-api", default-features = false, features = [
     "reqwest-client",
     "tracing-event-handler",
 ] }
-tokio = { version = "1.21.0", features = ["sync"] }
-tonic = "0.8.1"
-tracing = "0.1.36"
-tracing-subscriber = "0.3.15"
+tokio = { version = "1.24.1", features = ["sync"] }
+tonic = "0.8.3"
+tracing = "0.1.37"
+tracing-subscriber = "0.3.16"
 
 [build-dependencies]
 cfg-if = "1.0.0"
-tonic-build = "0.8.0"
+tonic-build = "0.8.4"
 
 [dev-dependencies]
-tokio = { version = "1.21.0", features = ["fs", "macros", "rt", "time"] }
+tokio = { version = "1.24.1", features = ["fs", "macros", "rt", "time"] }

@@ -16,7 +16,8 @@ impl TypedValueParser for U256Parser {
         let inner = StringValueParser::new();
         let val = inner.parse_ref(cmd, arg, value)?;
 
-        U256::from_dec_str(&val)
-            .map_err(|err| clap::Error::raw(clap::ErrorKind::InvalidValue, err.to_string()))
+        U256::from_dec_str(&val).map_err(|err| {
+            clap::Error::raw(clap::error::ErrorKind::InvalidValue, format!("{err:?}"))
+        })
     }
 }
