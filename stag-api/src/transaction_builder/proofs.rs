@@ -8,6 +8,7 @@ use cosmos_sdk_proto::ibc::lightclients::solomachine::v2::{
     HeaderData, PacketAcknowledgementData, PacketCommitmentData, SignBytes,
 };
 use prost_types::Any;
+use sha2::Digest;
 
 use crate::{
     signer::Signer,
@@ -73,7 +74,7 @@ where
                 timestamp: to_u64_timestamp(chain_state.consensus_timestamp)?,
                 diversifier: chain_state.config.diversifier.to_owned(),
                 path: acknowledgement_path.into_bytes(),
-                data: acknowledgement,
+                data: sha2::Sha256::digest(&acknowledgement).to_vec(),
             };
         } else {
             let acknowledgement_data = PacketAcknowledgementData {

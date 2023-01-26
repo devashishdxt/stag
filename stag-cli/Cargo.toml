@@ -15,9 +15,10 @@ name = "stag"
 path = "src/main.rs"
 
 [features]
-default = ["ethermint", "sqlite-storage"]
+default = ["ethermint", "solo-machine-v3", "sqlite-storage"]
 ethermint = ["stag-api/ethermint"]
 postgres-storage = ["stag-api/postgres-storage"]
+solo-machine-v3 = ["stag-api/solo-machine-v3"]
 sqlite-storage = ["stag-api/sqlite-storage"]
 
 [dependencies]
